@@ -154,6 +154,7 @@ export { BrandButton, brandButtonVariants, type BrandButtonProps } from './Brand
 export { MetaChip, type MetaChipProps } from './MetaChip'
 export { RatingStars, type RatingStarsProps } from './RatingStars'
 export { EmptyState, type EmptyStateProps } from './EmptyState'
+export { LockedFeature, type LockedFeatureProps } from './LockedFeature'
 export { MerchantCard, type MerchantCardProps, type MerchantBadge, type MerchantMode } from './MerchantCard'
 export { SectionHeading, type SectionHeadingProps } from './SectionHeading'
 export { CarouselHeader, type CarouselHeaderProps } from './CarouselHeader'
