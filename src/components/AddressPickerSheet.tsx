@@ -47,7 +47,7 @@ import { EmptyState } from './EmptyState'
  * fabricated-location guard, the a11y — and takes the provider in as three
  * async functions plus a `renderMap` render prop. The Google glue lives in
  * the consumer. When a second consumer needs the identical glue, graduate
- * *that* into an optional `@augmara/autara-ui/maps-google` subpath rather
+ * *that* into an optional `@autara-au/autara-ui/maps-google` subpath rather
  * than widening this component's dependencies.
  *
  * ## The fabricated-location guard

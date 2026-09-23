@@ -24,7 +24,7 @@
  * modifier (`bg-autara-bg/50`), which needs a bare channel triple. Accepted
  * deliberately: `presets` is a Tailwind v3 mechanism, v4 replaced it with
  * `@theme`, and all three current consumers (merchant-mobile, customer-web,
- * merchant-web) are on v4 and import `@augmara/autara-ui/tokens` rather than
+ * merchant-web) are on v4 and import `@autara-au/autara-ui/tokens` rather than
  * this preset. Correctness beats an opacity modifier no live consumer can
  * reach. If a v3 consumer ever needs it, split the channels in colors.css —
  * do NOT reintroduce a second copy of the numbers here.

@@ -7,7 +7,7 @@ import { cn } from '../lib/cn'
  * `.field-input` utility class from `autara-ui/utilities/forms.css`,
  * which encodes the hairline border, the signature focus treatment, and
  * the `aria-invalid` red-ring state. Consumers who already import
- * `@augmara/autara-ui/utilities` (every web app does) get the look
+ * `@autara-au/autara-ui/utilities` (every web app does) get the look
  * automatically.
  *
  * Visual rules — see [`autara-ui/CLAUDE.md` § Aesthetic invariants](../../CLAUDE.md):

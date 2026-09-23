@@ -2,7 +2,7 @@
  *
  * Satoshi is bundled inside the package. v1.0.x required consumers to
  * load the font themselves via next/font/local; v1.1.0 makes
- * `@import "@augmara/autara-ui/tokens"` enough.
+ * `@import "@autara-au/autara-ui/tokens"` enough.
  *
  * Note: Satoshi doesn't ship a Bold (700) weight — autara-customer-web
  * mapped Satoshi-Black to CSS weight 700 (the heavier Black reads as

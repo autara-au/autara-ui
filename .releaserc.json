@@ -1,5 +1,5 @@
 {
-  "_comment": "@semantic-release/git intentionally NOT used. Branch protection on main blocks any push outside a PR, which the plugin can't satisfy from CI (its `git push HEAD:main` gets rejected). Without it, semantic-release still publishes the npm package, creates the GitHub release, and pushes the git tag — only the package.json version-bump commit on main is skipped. The trade-off: package.json on main stays at the prior version. Consumers resolve via npm so they always see the bump. To inspect the published version: `npm view @augmara/autara-ui version` or check GitHub Releases.",
+  "_comment": "@semantic-release/git intentionally NOT used. Branch protection on main blocks any push outside a PR, which the plugin can't satisfy from CI (its `git push HEAD:main` gets rejected). Without it, semantic-release still publishes the npm package, creates the GitHub release, and pushes the git tag — only the package.json version-bump commit on main is skipped. The trade-off: package.json on main stays at the prior version. Consumers resolve via npm so they always see the bump. To inspect the published version: `npm view @autara-au/autara-ui version` or check GitHub Releases.",
   "branches": ["main"],
   "tagFormat": "v${version}",
   "plugins": [
