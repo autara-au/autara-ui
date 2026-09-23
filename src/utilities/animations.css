@@ -103,7 +103,7 @@
  * installed by every consumer as well as by this package, because Tailwind
  * generates utilities from the CONSUMER's config — which is precisely the
  * coupling that produced the bug. Real CSS ships inside
- * `@augmara/autara-ui/utilities`, which every consumer already imports, and
+ * `@autara-au/autara-ui/utilities`, which every consumer already imports, and
  * cannot silently stop existing.
  *
  * ─── Reduced motion ─────────────────────────────────────────────────────

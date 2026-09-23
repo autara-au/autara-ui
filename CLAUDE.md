@@ -2,7 +2,7 @@
 
 > The canonical UI package. Every reusable component, design token, and
 > Tailwind preset for every Autara surface lives here. Published as
-> `@augmara/autara-ui` on GitHub Packages.
+> `@autara-au/autara-ui` on GitHub Packages.
 
 Read the workspace [`CLAUDE.md`](../CLAUDE.md) end-to-end before any work
 in this repo — three gates apply, "Storybook-first" is a hard rule, and
@@ -30,7 +30,7 @@ Component architecture](../CLAUDE.md#component-architecture--storybook-first-alw
 | Tokens | CSS custom properties via Tailwind v4 `@theme inline` |
 | Storybook | v10 + `@storybook/react-vite` + Tailwind v4 via `@tailwindcss/vite` |
 | Release | semantic-release on PR merge → GitHub Packages |
-| Distribution | `@augmara/autara-ui` (consumer pins via `package.json`) |
+| Distribution | `@autara-au/autara-ui` (consumer pins via `package.json`) |
 
 ## Local dev
 

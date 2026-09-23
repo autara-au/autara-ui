@@ -38,14 +38,14 @@ jobs:
           version: 9
 
       # After pnpm, because `cache: pnpm` needs the binary to resolve the
-      # store path. Registry config mirrors release.yml so a scoped @augmara
+      # store path. Registry config mirrors release.yml so a scoped @autara-au
       # dependency resolves here too.
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: pnpm
           registry-url: "https://npm.pkg.github.com"
-          scope: "@augmara"
+          scope: "@autara-au"
 
       - name: Install
         run: pnpm install --frozen-lockfile

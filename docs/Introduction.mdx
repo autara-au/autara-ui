@@ -50,26 +50,26 @@ Material — the warm-cream `#FBFAF6` surface plus the brand purple
 ## Where this lives
 
 Source: `autara-ui` (PR-only repo, semantic-release publishes
-`@augmara/autara-ui` to GitHub Packages on merge).
+`@autara-au/autara-ui` to GitHub Packages on merge).
 
 Consumers pin via `package.json`:
 
 ```json
-"@augmara/autara-ui": "^1.1.0"
+"@autara-au/autara-ui": "^1.1.0"
 ```
 
 CSS-side imports from the package:
 
 ```css
-@import "@augmara/autara-ui/tokens";
-@import "@augmara/autara-ui/utilities";
+@import "@autara-au/autara-ui/tokens";
+@import "@autara-au/autara-ui/utilities";
 ```
 
 Tailwind preset:
 
 ```js
 // tailwind.config.mjs
-import preset from "@augmara/autara-ui/preset";
+import preset from "@autara-au/autara-ui/preset";
 export default { presets: [preset] };
 ```
 

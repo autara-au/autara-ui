@@ -1,5 +1,5 @@
 {
-  "name": "@augmara/autara-ui",
+  "name": "@autara-au/autara-ui",
   "version": "1.1.0",
   "description": "Shared UI components, design tokens, and Tailwind preset for Autara web apps",
   "type": "module",
@@ -45,7 +45,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/augmara/autara-ui.git"
+    "url": "https://github.com/autara-au/autara-ui.git"
   },
   "keywords": [
     "autara",
