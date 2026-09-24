@@ -237,3 +237,27 @@ export const Interactive: Story = {
         </div>
     ),
 }
+
+/** AUTM-1426 — four tiles in one row, one with an icon, one with a long label:
+ *  the values must sit on one line. This is the story to look at before
+ *  touching the header row or the label. */
+export const AlignedRow: Story = {
+    name: 'AUTM-1426 — values align across mixed tiles',
+    render: () => (
+        <div className="grid grid-cols-4 gap-3">
+            <StatTile label="Today" value="$426" caption="5 jobs" hero />
+            <StatTile label="Pending payouts" value="$202" caption="Awaiting Stripe transfer" />
+            <StatTile
+                label="This month, including the long label that used to wrap"
+                value="$4,247"
+                caption="Through Tue, 8 Sept"
+            />
+            <StatTile
+                label="Next payout"
+                value="$1,874"
+                caption="Pays Thu, 10 Sept"
+                icon={<span aria-hidden>$</span>}
+            />
+        </div>
+    ),
+}

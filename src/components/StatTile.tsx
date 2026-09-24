@@ -180,10 +180,17 @@ export function StatTile({
 
     const body = (
         <>
-            <div className="flex items-start justify-between gap-2">
+            {/* AUTM-1426 — the header row is ALWAYS the icon's height (h-7) and the
+                label is ALWAYS one line, so the value below starts at the same
+                y in every tile of a row. Before this, a tile with an icon next
+                to one without, or a label that wrapped, pushed its number down
+                (seen on the marketing capture of Today, 2026-09-24). The label
+                truncates rather than wraps; it keeps its full text in `title`. */}
+            <div className="mb-3 flex min-h-7 items-start justify-between gap-2">
                 <p
+                    title={label}
                     className={cn(
-                        'mb-3 text-[0.8125rem] font-medium',
+                        'min-w-0 truncate text-[0.8125rem] font-medium leading-7',
                         hero
                             ? // Slightly held back from full on-accent so the
                               // number still out-shouts its own label.
