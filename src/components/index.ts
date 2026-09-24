@@ -298,3 +298,4 @@ export {
     type PolicyTimelineProps,
     type PolicyTimelineStep,
 } from './PolicyTimeline'
+export { DeviceFrame, type DeviceFrameProps, type DeviceKind } from './DeviceFrame'
