@@ -160,7 +160,11 @@ export function StatTile({
 }: StatTileProps) {
     const interactive = typeof onClick === 'function'
     const shell = cn(
-        'rounded-[14px] px-5 py-[18px] text-left transition-colors',
+        /* AUTM-1426 — the same column layout whether the shell is a <div>
+         * or a <button>: a button centres its content vertically by default,
+         * so an interactive tile beside a static one sat its number 15px
+         * lower (Today beside Pending payouts, 2026-09-24). */
+        'flex flex-col items-stretch justify-start rounded-[14px] px-5 py-[18px] text-left transition-colors',
         hero
             ? // No border: the fill IS the edge. A hairline on a filled
               // tile reads as a seam against its own colour.
