@@ -1,15 +1,11 @@
 name: Release (UI)
 
+# AUTM-1434: no longer triggered by a push. ci.yml calls this as its `release`
+# job, after `validate` has passed on the same commit. It used to run in
+# parallel with CI, so a failing test could not stop a publish. The manual
+# trigger moved with it: dispatch CI on main to validate then release.
 on:
-  push:
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.claude/**'
-      - 'LICENSE'
-      - '.gitignore'
-    branches: [main]
-  workflow_dispatch:
+  workflow_call:
 
 jobs:
   release:

@@ -14,6 +14,9 @@ on:
   pull_request:
   push:
     branches: [main]
+  # AUTM-1434: replaces release.yml's own workflow_dispatch. Dispatched on
+  # main it runs validate and then the release; elsewhere, validate only.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -21,12 +24,18 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # AUTM-1434: PR runs only. A main run now carries the release, and
+  # cancelling it partway could leave a tag pushed with no package behind it.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   validate:
     name: validate
     runs-on: ubuntu-latest
+    # AUTM-1434: the default is 360 minutes. Install, typecheck, test and build
+    # measured ~40s locally; 15 leaves room for a cold cache and a slow runner
+    # while stopping a hung install from burning six hours of the quota.
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -62,3 +71,30 @@ jobs:
       # that broke.
       - name: Build
         run: pnpm run build
+
+  # AUTM-1434 — Release used to be its own workflow on push to main, running
+  # IN PARALLEL with this one, so a red build or a failing test here did not
+  # stop the package every web surface renders through from publishing. It now
+  # runs only after validate passes, in the same run, on the same commit, by
+  # calling release.yml (unchanged apart from its trigger).
+  #
+  # Why `needs:` + a local reusable workflow, not `workflow_run`:
+  #  - `needs:` guarantees the released commit is the one validated. A
+  #    workflow_run release checks out the default branch as it is when the
+  #    second workflow starts, which can already be a newer, untested commit.
+  #  - GITHUB_TOKEN behaves exactly as before. A called workflow gets the
+  #    caller's token, capped at the permissions granted on this job, which
+  #    are the four release.yml's job already declared. semantic-release still
+  #    sees a push event on refs/heads/main.
+  #  - It can be read and exercised from a PR: workflow_run only ever fires
+  #    from the copy of the file on the default branch.
+  release:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    permissions:
+      contents: write
+      packages: write
+      issues: write
+      pull-requests: write
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
