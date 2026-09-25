@@ -117,6 +117,36 @@ describe('DatePicker', () => {
     })
 })
 
+describe('DatePicker with a caller-written <label htmlFor> (AUTM-1267)', () => {
+    it('carries the id on the group, is named by the label, and a click on the label focuses the day holding the tab stop without choosing it', () => {
+        // Every merchant form writes `<Label htmlFor="invoice-due">` above the
+        // picker because every other field on the form works that way. The
+        // component used to ignore the id, so the label pointed at nothing.
+        const onChange = vi.fn()
+        render(
+            <>
+                <label htmlFor="invoice-due">Due date</label>
+                <DatePicker id="invoice-due" value="" today={TODAY} onChange={onChange} stripDays={5} testId="d" />
+            </>,
+        )
+        const group = screen.getByRole('radiogroup', { name: 'Due date' })
+        expect(document.getElementById('invoice-due')).toBe(group)
+
+        fireEvent.click(screen.getByText('Due date'))
+        const active = screen.getAllByRole('radio').find((r) => r.getAttribute('tabindex') === '0')
+        expect(active).toBeTruthy()
+        expect(document.activeElement).toBe(active)
+        // A label click must never pick a date: that is what focusing a plain
+        // input does, and it is all the customer asked for.
+        expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('keeps its own name when nothing points at its id', () => {
+        render(<DatePicker id="lonely" value="" today={TODAY} onChange={() => {}} stripDays={3} label="Date" />)
+        expect(screen.getByRole('radiogroup', { name: 'Date' }).id).toBe('lonely')
+    })
+})
+
 describe('DatePicker month sheet navigation (AUTM-1266)', () => {
     it('names Back and Next by the words printed on them, so speech input can reach them', () => {
         // WCAG 2.5.3 Label in Name: "Previous month" as the accessible name of

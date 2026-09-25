@@ -77,3 +77,19 @@ export const TextScale200: Story = {
         </div>
     ),
 }
+
+/**
+ * AUTM-1267 — a visible `<label htmlFor>` above the grid, as every merchant
+ * form writes it. The id lands on the group, the label names it, and a click
+ * on the label focuses the slot holding the tab stop.
+ */
+export const WithVisibleLabel: Story = {
+    render: () => (
+        <div className="flex max-w-xl flex-col gap-2">
+            <label htmlFor="story-start-time" className="text-sm font-medium text-[var(--text-strong)]">
+                Start time
+            </label>
+            <Controlled id="story-start-time" />
+        </div>
+    ),
+}

@@ -130,3 +130,23 @@ describe('TimePicker', () => {
         expect(screen.getByTestId('t-slot-10:00').className).toContain('whitespace-nowrap')
     })
 })
+
+describe('TimePicker with a caller-written <label htmlFor> (AUTM-1267)', () => {
+    it('carries the id on the group, is named by the label, and a click on the label focuses the slot holding the tab stop without choosing it', () => {
+        const onChange = vi.fn()
+        render(
+            <>
+                <label htmlFor="booking-time">Start time</label>
+                <TimePicker id="booking-time" value="" onChange={onChange} startTime="09:00" endTime="10:00" testId="t" />
+            </>,
+        )
+        const group = screen.getByRole('radiogroup', { name: 'Start time' })
+        expect(document.getElementById('booking-time')).toBe(group)
+
+        fireEvent.click(screen.getByText('Start time'))
+        const active = screen.getAllByRole('radio').find((r) => r.getAttribute('tabindex') === '0')
+        expect(active).toBeTruthy()
+        expect(document.activeElement).toBe(active)
+        expect(onChange).not.toHaveBeenCalled()
+    })
+})
