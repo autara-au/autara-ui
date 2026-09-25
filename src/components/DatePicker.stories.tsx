@@ -90,3 +90,19 @@ export const WithVisibleLabel: Story = {
         </div>
     ),
 }
+
+/**
+ * AUTM-1373 — in context: a narrow, positioned, vertically scrolling panel,
+ * the shape of a dialog body (merchant-mobile's Block time sheet). The rail
+ * scrolls; the panel must not gain a horizontal scrollbar.
+ */
+export const InScrollingPanel: Story = {
+    render: () => (
+        <div className="relative max-h-80 w-[448px] overflow-y-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-6">
+            <p className="mb-3 text-sm text-[var(--text-muted)]">
+                Fourteen days in a 400px column. Only the rail scrolls sideways.
+            </p>
+            <Controlled stripDays={14} />
+        </div>
+    ),
+}
