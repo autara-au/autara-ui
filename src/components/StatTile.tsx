@@ -196,9 +196,12 @@ export function StatTile({
                     className={cn(
                         'min-w-0 truncate text-[0.8125rem] font-medium leading-7',
                         hero
-                            ? // Slightly held back from full on-accent so the
-                              // number still out-shouts its own label.
-                              'text-[var(--on-accent)]/75'
+                            ? // AUTM-1194 — full on-accent. At 75% the label
+                              // measured 4.36:1 on the dark accent fill (and
+                              // about 3.6:1 on its hover fill), under the 4.5:1
+                              // floor for text this size. The value still
+                              // out-shouts it through size and weight.
+                              'text-[var(--on-accent)]'
                             : 'text-[var(--text-muted)]',
                     )}
                 >
@@ -242,7 +245,8 @@ export function StatTile({
                 <p
                     className={cn(
                         'mt-2 text-[0.875rem]',
-                        hero ? 'text-[var(--on-accent)]/75' : 'text-[var(--text-muted)]',
+                        // AUTM-1194 — full on-accent, as the label above.
+                        hero ? 'text-[var(--on-accent)]' : 'text-[var(--text-muted)]',
                     )}
                     /* On a hero the fill already owns the colour, and a green
                      * delta on brand purple reads as a defect rather than as
