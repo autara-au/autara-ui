@@ -119,6 +119,20 @@
  *
  * `radial-gradient` is cheap: one paint, no per-frame work. The ground is
  * not the performance risk — the blur on top of it is.
+ *
+ * AUTM-1376 — the falloff is eased, and the ellipses grow with the viewport.
+ * Each bloom used to run from its peak straight to `transparent` at 60% of
+ * the ellipse in ONE linear stop. A linear ramp that stops dead is a slope
+ * discontinuity, and the eye reads that as a ring (a Mach band), so on a
+ * 2560px screen the merchant landing's hero showed a hard circular edge on
+ * the right where the teal bloom ended, because at that width a fixed 50rem
+ * ellipse is a small disc on a wide canvas. Now the alpha steps down along
+ * a bell curve (100, 85, 55, 28, 9, 0) and only reaches zero at the ellipse
+ * edge, so the slope is already near flat where the colour runs out, and
+ * each ellipse is the larger of its rem size and a share of the viewport,
+ * so it never turns into a disc on a wide screen. The peak stays at
+ * `--bloom-alpha`, so the contrast cap measured in `tokens/glass.css` is
+ * unchanged: the ease only ever LOWERS the alpha between centre and edge.
  */
 
 .gradient-ground {
@@ -126,22 +140,31 @@
     background-color: var(--background);
     background-image:
         radial-gradient(
-            60rem 40rem at 8% -10%,
-            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 100%), transparent)
-                0%,
-            transparent 60%
+            max(60rem, 44vw) max(40rem, 30vw) at 8% -10%,
+            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 100%), transparent) 0%,
+            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 85%), transparent) 20%,
+            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 55%), transparent) 40%,
+            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 28%), transparent) 60%,
+            color-mix(in srgb, var(--bloom-act) calc(var(--bloom-alpha) * 9%), transparent) 80%,
+            transparent 100%
         ),
         radial-gradient(
-            50rem 36rem at 92% 8%,
-            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 100%), transparent)
-                0%,
-            transparent 62%
+            max(50rem, 40vw) max(36rem, 28vw) at 92% 8%,
+            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 100%), transparent) 0%,
+            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 85%), transparent) 20%,
+            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 55%), transparent) 40%,
+            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 28%), transparent) 60%,
+            color-mix(in srgb, var(--bloom-flight) calc(var(--bloom-alpha) * 9%), transparent) 80%,
+            transparent 100%
         ),
         radial-gradient(
-            46rem 34rem at 50% 108%,
-            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 100%), transparent)
-                0%,
-            transparent 62%
+            max(46rem, 36vw) max(34rem, 26vw) at 50% 108%,
+            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 100%), transparent) 0%,
+            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 85%), transparent) 20%,
+            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 55%), transparent) 40%,
+            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 28%), transparent) 60%,
+            color-mix(in srgb, var(--bloom-money) calc(var(--bloom-alpha) * 9%), transparent) 80%,
+            transparent 100%
         );
 }
 

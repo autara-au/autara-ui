@@ -37,3 +37,39 @@ describe('gradient-ground does not clobber a child position', () => {
         expect(CODE).not.toMatch(/\.gradient-ground::(before|after)/)
     })
 })
+
+/**
+ * AUTM-1376 — each bloom used to fall from its peak straight to `transparent`
+ * at 60% of the ellipse in one linear stop. A linear ramp that stops dead is
+ * a slope discontinuity, which the eye reads as a ring, so at 2560px the
+ * merchant landing's hero showed a hard circular edge where the teal bloom
+ * ended. The fix is an eased falloff that reaches zero only at the ellipse
+ * edge, on an ellipse that grows with the viewport. Pinned here because the
+ * ring is invisible at 1440 and nobody reviews a PR at 2560.
+ */
+describe('gradient-ground blooms fade out without a hard edge', () => {
+    const ground = CODE.match(/\.gradient-ground\s*\{([^}]*)\}/)?.[1] ?? ''
+    const blooms = ground.match(/radial-gradient\([\s\S]*?\n\s*\)/g) ?? []
+
+    it('paints three blooms', () => {
+        expect(blooms).toHaveLength(3)
+    })
+
+    it.each(blooms.map((b, i) => [i, b]))('bloom %i only reaches transparent at the ellipse edge', (_i, bloom) => {
+        // The last stop is `transparent 100%`, never `transparent 60%`.
+        expect(bloom).toMatch(/transparent\s+100%\s*\)\s*$/)
+        expect(bloom).not.toMatch(/transparent\s+[1-9]?\d%/)
+    })
+
+    it.each(blooms.map((b, i) => [i, b]))('bloom %i steps its alpha down through intermediate stops', (_i, bloom) => {
+        // A bell-shaped ramp needs stops between the peak and the edge; one
+        // peak stop plus `transparent` is the linear ramp this guards against.
+        const alphaStops = bloom.match(/--bloom-alpha\)\s*\*\s*\d+%/g) ?? []
+        expect(alphaStops.length).toBeGreaterThanOrEqual(4)
+        expect(alphaStops[0]).toMatch(/\*\s*100%/)
+    })
+
+    it.each(blooms.map((b, i) => [i, b]))('bloom %i grows with the viewport', (_i, bloom) => {
+        expect(bloom).toMatch(/max\(\d+rem,\s*\d+vw\)\s+max\(\d+rem,\s*\d+vw\)\s+at/)
+    })
+})
