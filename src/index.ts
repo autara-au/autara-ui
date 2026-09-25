@@ -36,6 +36,8 @@ export {
     Avatar, AvatarImage, AvatarFallback, avatarVariants,
     Tooltip, TooltipTrigger, TooltipContent, TooltipProvider,
     Progress,
+    // AUTM-1046 — indeterminate busy indicator for work in progress.
+    Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone,
     MultiSelect, type MultiSelectOption, type MultiSelectProps,
     Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption,
     // v1.1.0 — promoted from autara-customer-web
