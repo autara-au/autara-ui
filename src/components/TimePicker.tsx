@@ -3,6 +3,7 @@
 import * as React from 'react'
 
 import { cn } from '../lib/cn'
+import { useLabelFor } from '../lib/use-label-for'
 import { isISOTime, timeLabel, timeSlots } from '../lib/calendar'
 
 /**
@@ -30,6 +31,12 @@ export interface TimePickerProps {
     invalid?: boolean
     /** Names the group for screen readers. @default 'Time' */
     label?: string
+    /**
+     * AUTM-1267 — the id a caller's `<Label htmlFor>` points at. It goes on
+     * the group, the label names the group, and a click on the label focuses
+     * the slot holding the tab stop. See `lib/use-label-for.ts`.
+     */
+    id?: string
     testId?: string
     className?: string
 }
@@ -64,6 +71,7 @@ export function TimePicker({
     disabled = false,
     invalid = false,
     label = 'Time',
+    id,
     testId,
     className,
 }: TimePickerProps) {
@@ -117,11 +125,17 @@ export function TimePicker({
         moveFocus(map[event.key])
     }
 
+    const labelledBy = useLabelFor(id, () =>
+        gridRef.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]'),
+    )
+
     return (
         <div
             ref={gridRef}
+            id={id}
             role="radiogroup"
-            aria-label={label}
+            aria-labelledby={labelledBy}
+            aria-label={labelledBy ? undefined : label}
             aria-invalid={invalid || undefined}
             onKeyDown={onKeyDown}
             data-testid={testId}

@@ -73,3 +73,20 @@ export const TextScale200: Story = {
         </div>
     ),
 }
+
+/**
+ * AUTM-1267 — the way every merchant form actually writes this control: a
+ * visible `<label htmlFor>` above it, as for any other field. The picker puts
+ * the id on its group, takes its accessible name from that label, and a click
+ * on the label focuses the day holding the tab stop (without choosing it).
+ */
+export const WithVisibleLabel: Story = {
+    render: () => (
+        <div className="flex max-w-xl flex-col gap-2">
+            <label htmlFor="story-due-date" className="text-sm font-medium text-[var(--text-strong)]">
+                Due date
+            </label>
+            <Controlled id="story-due-date" />
+        </div>
+    ),
+}

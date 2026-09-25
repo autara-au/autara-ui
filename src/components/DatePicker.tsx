@@ -3,6 +3,7 @@
 import * as React from 'react'
 
 import { cn } from '../lib/cn'
+import { useLabelFor } from '../lib/use-label-for'
 import {
     addDays,
     dayOfMonth,
@@ -53,6 +54,12 @@ export interface DatePickerProps {
     invalid?: boolean
     /** Names the group for screen readers. @default 'Date' */
     label?: string
+    /**
+     * AUTM-1267 — the id a caller's `<Label htmlFor>` points at. It goes on
+     * the group, the label names the group, and a click on the label focuses
+     * the day holding the tab stop. See `lib/use-label-for.ts`.
+     */
+    id?: string
     testId?: string
     className?: string
 }
@@ -106,6 +113,7 @@ export function DatePicker({
     disabled = false,
     invalid = false,
     label = 'Date',
+    id,
     testId,
     className,
 }: DatePickerProps) {
@@ -157,12 +165,18 @@ export function DatePicker({
         moveFocus(map[event.key])
     }
 
+    const labelledBy = useLabelFor(id, () =>
+        railRef.current?.querySelector<HTMLElement>('[role="radio"][tabindex="0"]'),
+    )
+
     return (
         <div className={cn('flex flex-col gap-2', className)} data-testid={testId}>
             <div
                 ref={railRef}
+                id={id}
                 role="radiogroup"
-                aria-label={label}
+                aria-labelledby={labelledBy}
+                aria-label={labelledBy ? undefined : label}
                 aria-invalid={invalid || undefined}
                 onKeyDown={onRailKeyDown}
                 className={cn(
@@ -322,7 +336,6 @@ function MonthSheet({
                         variant="ghost"
                         size="sm"
                         disabled={!canGoBack}
-                        aria-label="Previous month"
                         onClick={() => setCursor(addDays(`${cursor.slice(0, 7)}-01`, -1))}
                     >
                         Back
@@ -334,7 +347,6 @@ function MonthSheet({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        aria-label="Next month"
                         onClick={() => setCursor(addDays(`${cursor.slice(0, 7)}-01`, 32))}
                     >
                         Next
