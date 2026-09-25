@@ -116,3 +116,16 @@ describe('DatePicker', () => {
         expect(screen.getByTestId('d-day-2026-09-09').getAttribute('aria-checked')).toBe('false')
     })
 })
+
+describe('DatePicker month sheet navigation (AUTM-1266)', () => {
+    it('names Back and Next by the words printed on them, so speech input can reach them', () => {
+        // WCAG 2.5.3 Label in Name: "Previous month" as the accessible name of
+        // a button that reads "Back" meant saying "click Back" did nothing.
+        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
+        fireEvent.click(screen.getByTestId('d-more'))
+        expect(screen.getByRole('button', { name: 'Back' })).toBeTruthy()
+        expect(screen.getByRole('button', { name: 'Next' })).toBeTruthy()
+        expect(screen.queryByRole('button', { name: /previous month/i })).toBeNull()
+        expect(screen.queryByRole('button', { name: /next month/i })).toBeNull()
+    })
+})

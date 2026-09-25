@@ -322,7 +322,6 @@ function MonthSheet({
                         variant="ghost"
                         size="sm"
                         disabled={!canGoBack}
-                        aria-label="Previous month"
                         onClick={() => setCursor(addDays(`${cursor.slice(0, 7)}-01`, -1))}
                     >
                         Back
@@ -334,7 +333,6 @@ function MonthSheet({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        aria-label="Next month"
                         onClick={() => setCursor(addDays(`${cursor.slice(0, 7)}-01`, 32))}
                     >
                         Next
