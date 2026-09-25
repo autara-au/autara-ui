@@ -136,6 +136,8 @@ export { RadioGroup, RadioGroupItem } from './Radio'
 export { Avatar, AvatarImage, AvatarFallback, avatarVariants } from './Avatar'
 export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from './Tooltip'
 export { Progress } from './Progress'
+// AUTM-1046 — indeterminate busy indicator for work in progress (uploads, saves).
+export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone } from './Spinner'
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from './MultiSelect'
 
 export {
