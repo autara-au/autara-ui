@@ -18,6 +18,17 @@ describe('DatePicker', () => {
         expect(screen.queryByTestId('d-day-2027-03-04')).toBeNull()
     })
 
+    it('contains its own days, so a scrolling parent does not scroll sideways (AUTM-1373)', () => {
+        // jsdom has no layout, so this pins the mechanism rather than the
+        // measurement: the rail must be the containing block for the day
+        // buttons' absolutely positioned sr-only labels. The measurement lives
+        // in the InScrollingPanel story.
+        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
+        const rail = screen.getByRole('radiogroup')
+        expect(rail.className.split(/\s+/)).toContain('relative')
+        expect(rail.className).toContain('overflow-x-auto')
+    })
+
     it('starts at `min` when it is later than today', () => {
         render(
             <DatePicker

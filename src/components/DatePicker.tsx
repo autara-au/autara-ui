@@ -180,7 +180,13 @@ export function DatePicker({
                 aria-invalid={invalid || undefined}
                 onKeyDown={onRailKeyDown}
                 className={cn(
-                    'flex gap-1.5 overflow-x-auto pb-1',
+                    // AUTM-1373 — `relative` makes the rail the containing block
+                    // for each day's `sr-only` label, which is absolutely
+                    // positioned. Without it those labels escaped the rail's
+                    // overflow and widened the nearest positioned ancestor: in
+                    // a scrolling dialog the whole sheet scrolled sideways
+                    // (805px of content in a 448px sheet) instead of the rail.
+                    'relative flex gap-1.5 overflow-x-auto pb-1',
                     // Momentum scrolling that stops on a whole day rather than
                     // halfway through one.
                     'snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
