@@ -164,7 +164,7 @@ const OpenSheet: React.FC<{ side?: 'right' | 'bottom'; showHitArea?: boolean }> 
             </div>
             <SheetFooter>
                 <Button variant="quiet">Clear all</Button>
-                <Button variant="strong">Show 12 bookings</Button>
+                <Button>Show 12 bookings</Button>
             </SheetFooter>
         </SheetContent>
     </Sheet>
@@ -217,7 +217,7 @@ export const FocusReturnsWithoutTrigger: Story = {
         return (
             <div className="flex flex-col items-start gap-3">
                 <Button variant="quiet">Share your link</Button>
-                <Button variant="strong" onClick={() => setOpen(true)}>
+                <Button onClick={() => setOpen(true)}>
                     Pause new bookings
                 </Button>
                 <Sheet open={open} onOpenChange={setOpen}>
@@ -232,7 +232,7 @@ export const FocusReturnsWithoutTrigger: Story = {
                             <Button variant="quiet" onClick={() => setOpen(false)}>
                                 Keep taking bookings
                             </Button>
-                            <Button variant="strong" onClick={() => setOpen(false)}>
+                            <Button onClick={() => setOpen(false)}>
                                 Pause
                             </Button>
                         </SheetFooter>

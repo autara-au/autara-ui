@@ -55,7 +55,7 @@ import { useReturnFocus } from '../lib/use-return-focus'
  *             <DialogBody>…the form…</DialogBody>
  *             <DialogFooter>
  *                 <Button variant="quiet">Cancel</Button>
- *                 <Button variant="strong">Confirm address</Button>
+ *                 <Button>Confirm address</Button>
  *             </DialogFooter>
  *         </DialogContent>
  *     </Dialog>

@@ -85,7 +85,7 @@ export const LongCopyNarrow: Story = {
 
 const DUPLICATE_ACTIONS = (
     <>
-        <Button variant="strong" size="sm">
+        <Button size="sm">
             Continue
         </Button>
         {/* A text action: a quiet button is band on band here and vanishes. */}

@@ -381,7 +381,7 @@ export function PickerSheet<T = unknown>(props: PickerSheetProps<T>) {
                     <span className="text-sm text-[var(--text-muted)]">
                         {selectedSet.size} selected
                     </span>
-                    <Button variant="strong" onClick={() => onOpenChange(false)}>
+                    <Button variant="primary" onClick={() => onOpenChange(false)}>
                         {confirmLabel}
                     </Button>
                 </div>

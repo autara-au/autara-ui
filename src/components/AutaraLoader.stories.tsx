@@ -79,7 +79,7 @@ export const BothThemes: Story = {
                     </div>
                     <div className="flex gap-2">
                         <Button busy>Save</Button>
-                        <Button busy variant="strong">
+                        <Button busy>
                             Save
                         </Button>
                     </div>
@@ -197,7 +197,7 @@ export const ButtonLoading: Story = {
                         <Button size={size} busy={busy}>
                             Book and pay
                         </Button>
-                        <Button size={size} variant="strong" busy={busy}>
+                        <Button size={size} busy={busy}>
                             Confirm booking
                         </Button>
                         <Button size={size} variant="quiet" busy={busy}>

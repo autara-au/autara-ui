@@ -404,7 +404,7 @@ export const JsTokens: Story = {
                     </p>
                     <div className="flex flex-col gap-3">
                         <div>
-                            <Button variant="strong" onClick={() => setOpen((v) => !v)}>
+                            <Button onClick={() => setOpen((v) => !v)}>
                                 {open ? 'Hide the panel' : 'Show the panel'}
                             </Button>
                         </div>

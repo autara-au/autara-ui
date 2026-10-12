@@ -79,17 +79,18 @@ describe("Button — variant + size styling", () => {
      * every variant paints from a custom property (so it themes), and no two
      * variants collapse to the same look.
      */
-    // AUTM-1594: the sheet's variants. Legacy names are covered below.
+    // AUTM-1594: the sheet's variants (AUTM-1838: `strong` became a name for
+    // `primary`, and `danger` joined). Legacy names are covered below.
     const VARIANTS = [
         "primary",
-        "strong",
         "quiet",
+        "danger",
         "ondeep",
         "link",
         "ghost",
     ] as const;
 
-    const FILLED = ["primary", "strong", "quiet", "ondeep"] as const;
+    const FILLED = ["primary", "quiet", "danger", "ondeep"] as const;
 
     it.each(FILLED)("variant=%s paints from a theme token", (variant) => {
         render(<Button variant={variant}>X</Button>);
@@ -131,13 +132,15 @@ describe("Button — variant + size styling", () => {
 
     /**
      * Each legacy name renders exactly as the sheet variant that does its job,
-     * so a consumer bump changes the look and nothing else. `destructive` is
-     * `strong`: the sheet has no red button.
+     * so a consumer bump changes the look and nothing else. AUTM-1838: the ink
+     * names (`strong`, `dark`) are the lime primary, and `destructive` is
+     * `danger`.
      */
     it.each([
-        ["dark", "strong"],
-        ["destructive", "strong"],
-        ["light-destructive", "strong"],
+        ["strong", "primary"],
+        ["dark", "primary"],
+        ["destructive", "danger"],
+        ["light-destructive", "danger"],
         ["acid", "primary"],
         ["light-primary", "primary"],
         ["outline", "quiet"],
@@ -152,10 +155,41 @@ describe("Button — variant + size styling", () => {
         expect(buttonVariants({ variant: legacy })).toBe(buttonVariants({ variant: sheet }));
     });
 
-    it("no variant paints a red fill", () => {
-        for (const v of ["destructive", "light-destructive"] as const) {
-            expect(buttonVariants({ variant: v })).not.toMatch(/rose|red|danger/);
+    const EVERY_NAME = [
+        "primary", "strong", "quiet", "danger", "ondeep", "link", "ghost",
+        "dark", "outline", "secondary", "destructive", "acid", "glass", "light",
+        "light-primary", "light-outline", "light-ghost", "light-secondary",
+        "light-destructive", "light-link",
+    ] as const;
+
+    it("no variant paints a red fill (AUTM-1594: no red buttons)", () => {
+        for (const v of EVERY_NAME) {
+            const fills = buttonVariants({ variant: v }).split(/\s+/).filter((c) => /(^|:)bg-/.test(c));
+            expect(fills.join(" "), v).not.toMatch(/rose|red|danger/);
         }
+    });
+
+    // AUTM-1838 (Don, 2026-10-12): no black buttons anywhere.
+    it("no variant paints an ink (black) fill", () => {
+        for (const v of EVERY_NAME) {
+            expect(buttonVariants({ variant: v }), v).not.toMatch(/bg-\[var\(--strong\)\]|bg-black/);
+        }
+    });
+
+    // AUTM-1838: lime says go. A destructive action is never lime, whichever
+    // name asks for it.
+    it.each(["danger", "destructive", "light-destructive"] as const)(
+        "the destructive name %s never renders lime, and says danger in red words on band",
+        (v) => {
+            const cls = buttonVariants({ variant: v });
+            expect(cls).not.toMatch(/lime/);
+            expect(cls).toMatch(/bg-\[var\(--band\)\]/);
+            expect(cls).toMatch(/text-\[var\(--danger\)\]/);
+        },
+    );
+
+    it("strong is the lime primary with ink (AUTM-1838)", () => {
+        expect(buttonVariants({ variant: "strong" })).toBe(buttonVariants({ variant: "primary" }));
     });
 
     it("primary is lime with ink, the sheet's one action", () => {
@@ -376,7 +410,7 @@ describe("Button: busy (AUTM-1594, AUTM-1706)", () => {
 });
 
 describe("Button: disabled keeps the real colour (AUTM-1719)", () => {
-    it.each(["primary", "strong", "quiet", "ghost", "link", "ondeep"] as const)(
+    it.each(["primary", "strong", "quiet", "danger", "ghost", "link", "ondeep"] as const)(
         "%s disabled carries exactly the resting classes plus nothing that mutes it",
         (variant) => {
             const { rerender } = render(<Button variant={variant}>Continue</Button>);

@@ -10,8 +10,8 @@ import type { ReactNode } from "react";
  * in, left-aligned, 10px between parts:
  *   - Optional 44px icon disc (raised)
  *   - 18px Bold title + 15px description at 72% ink
- *   - Optional action, full width. On band the action is ink: pass a
- *     `Button variant="strong" size="sm"`.
+ *   - Optional action, full width: the lime primary, `Button size="sm"`
+ *     (AUTM-1838: no black buttons, on band as on paper).
  *
  * Copy guidance — recoverable + specific:
  *   - Bad: "No data"

@@ -7,12 +7,15 @@ import { Input } from "./Input";
 import { SocialButton } from "./SocialButton";
 
 /**
- * Button — canvas v44's "Buttons" (AUTM-1594).
+ * Button — canvas v44's "Buttons" (AUTM-1594), as amended by AUTM-1838
+ * (Don, 2026-10-12: no black buttons anywhere; lime is the one primary
+ * action on a screen, the rest are quiet secondaries).
  *
- *   - `primary`  lime with ink: the one action, on paper only
- *   - `strong`   ink (white in dark): the action on band, in sheets and
- *                dialogs, and the destructive action (no red buttons)
+ *   - `primary`  lime with ink: the one action, on paper, band, sheets and
+ *                dialogs alike. `strong` is now a name for it.
  *   - `quiet`    band: secondary choices
+ *   - `danger`   band with red words: the destructive action. Never lime,
+ *                never a red fill
  *   - `ondeep`   translucent white on a brand-deep hero
  *   - `link`     brand text, 44px tall
  *   - `ghost`    no fill, for toolbars (not on the sheet)
@@ -28,7 +31,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["primary", "strong", "quiet", "ondeep", "link", "ghost"],
+      options: ["primary", "quiet", "danger", "ondeep", "link", "ghost", "strong"],
     },
     size: { control: { type: "select" }, options: ["sm", "md", "lg"] },
     disabled: { control: "boolean" },
@@ -82,8 +85,11 @@ const Count = ({ n }: { n: number }) => (
 );
 
 export const Primary: Story = { args: { leadingIcon: <Calendar />, children: "New booking", size: "lg" } };
+/** AUTM-1838: `strong` was the ink button. It is now a name for `primary`: lime. */
 export const Strong: Story = { args: { variant: "strong", children: "Confirm" } };
 export const Quiet: Story = { args: { variant: "quiet", children: "Add service", leadingIcon: <Tag /> } };
+/** AUTM-1838: the destructive action. Red words on band, never lime, never a red fill. */
+export const Danger: Story = { args: { variant: "danger", children: "Cancel booking" } };
 export const Link: Story = { args: { variant: "link", size: "sm", children: "View all bookings" } };
 export const Ghost: Story = { args: { variant: "ghost", children: "Skip" } };
 export const Busy: Story = { args: { busy: true, children: "Save changes" } };
@@ -99,8 +105,8 @@ export const Press: Story = {
     <div className="flex max-w-sm flex-col gap-3">
       <div className="flex flex-wrap gap-3">
         <Button>Book now</Button>
-        <Button variant="strong">Confirm</Button>
         <Button variant="quiet">Add service</Button>
+        <Button variant="danger">Remove</Button>
       </div>
       <Button fullWidth size="lg">Pay the deposit (98.5%)</Button>
       <div className="flex flex-wrap items-center gap-3">
@@ -128,7 +134,7 @@ export const Disabled: Story = {
   ),
 };
 
-const SHEET_VARIANTS = ["primary", "strong", "quiet", "ghost", "link"] as const;
+const SHEET_VARIANTS = ["primary", "quiet", "danger", "ghost", "link"] as const;
 
 /**
  * AUTM-1719 (Don, 2026-10-04): "don't mute the button colours even if
@@ -271,20 +277,30 @@ export const OnBrandDeep: Story = {
   ),
 };
 
-/** No red buttons: the consequence is said in danger text beside a strong action. */
+/**
+ * AUTM-1838: the destructive action is `danger`, red words on band, beside a
+ * quiet way back. Never lime (lime says go), never a red fill (AUTM-1594).
+ * `destructive` and `light-destructive` render the same, and ConfirmDialog
+ * `tone="destructive"` draws it.
+ */
 export const Destructive: Story = {
   render: () => (
-    <div className="flex flex-wrap items-center gap-2.5">
-      <Button variant="strong" size="lg">
-        Confirm cancellation
-      </Button>
+    <div className="flex max-w-md flex-col gap-2.5">
       <span className="text-sm text-[var(--danger)]">Inside 4 hours the deposit is retained.</span>
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Button variant="quiet" size="lg">
+          Keep booking
+        </Button>
+        <Button variant="danger" size="lg">
+          Cancel booking
+        </Button>
+      </div>
     </div>
   ),
 };
 
 export const AsAnchor: Story = {
-  args: { asChild: true, variant: "strong" },
+  args: { asChild: true, variant: "primary" },
   render: (args) => (
     <Button {...args}>
       <a href="#example">Open as anchor</a>
@@ -305,7 +321,7 @@ export const LongLabelAtTextScale: Story = {
         <div key={col.label}>
           <p className="mb-3 text-sm font-medium text-[var(--text-muted)]">{col.label}</p>
           <div style={{ fontSize: col.size, width: "183px" }} className="space-y-3">
-            <Button variant="strong" fullWidth>
+            <Button fullWidth>
               Go to your dashboard
             </Button>
             <Button variant="quiet" fullWidth size="sm">
@@ -334,7 +350,7 @@ export const FocusRingPerVariant: Story = {
         <div key={col.label} data-theme={col.theme} className="space-y-3 rounded-[1.5rem] bg-[var(--background)] p-5">
           <p className="text-sm font-medium text-[var(--text-muted)]">{col.label}</p>
           <div className="flex flex-wrap items-center gap-4">
-            {(["primary", "strong", "quiet", "link", "ghost"] as const).map((variant) => (
+            {(["primary", "quiet", "danger", "link", "ghost"] as const).map((variant) => (
               <Button key={variant} variant={variant} className="ring-2 ring-[var(--accent)] ring-offset-2 ring-offset-[var(--background)]">
                 {variant}
               </Button>
@@ -371,28 +387,29 @@ export const Sheet: Story = {
         <div className="flex flex-col gap-1.5">
           <h2 className="text-section m-0">Buttons</h2>
           <p className="text-body m-0 text-[var(--text-muted)]">
-            Pills, 44px minimum. Primary is lime on paper; on band and in dark dialogs the strong action is ink (white in dark). Destructive actions are a strong button whose label says what happens; danger stays in the text.
+            Pills, 44px minimum. Lime is the one primary action on a screen, on paper, band, sheets and dialogs alike; the rest are quiet. No black buttons. A destructive action is danger: red words on band, never lime and never a red fill.
           </p>
         </div>
         <div className="grid grid-cols-3 gap-x-10 gap-y-8">
-          <Specimen name="Primary" component="Button variant=primary" note="Lime with ink text, on paper only.">
+          <Specimen name="Primary" component="Button variant=primary (or strong)" note="Lime with ink text. One per screen, on any surface.">
             <Button size="lg" leadingIcon={<Calendar />}>New booking</Button>
             <Button size="md">Continue</Button>
             <Button size="sm">Save</Button>
           </Specimen>
-          <Specimen name="Strong" component="Button variant=strong" note="Ink. The action inside band cards, sheets and checklists.">
-            <Button variant="strong" size="lg">Confirm</Button>
-            <Button variant="strong" size="md">Send request</Button>
-            <Button variant="strong" size="sm">Connect</Button>
+          <Specimen name="On band" component="Button variant=primary" note="The action inside a band card or sheet is lime too; the ink label identifies it.">
+            <div className="flex flex-wrap gap-2 rounded-[1.25rem] bg-[var(--band)] p-3.5">
+              <Button size="md">Send request</Button>
+              <Button variant="quiet" size="md" className="bg-[var(--raised)]">Not now</Button>
+            </div>
           </Specimen>
           <Specimen name="Quiet" component="Button variant=quiet" note="Band. Secondary choices; never competes with the primary.">
             <Button variant="quiet" size="lg">Cancel</Button>
             <Button variant="quiet" size="md" leadingIcon={<Tag />}>Add service</Button>
             <Button variant="quiet" size="sm">Back</Button>
           </Specimen>
-          <Specimen name="Destructive" component="Button variant=strong + ConfirmDialog" note="No red buttons: the consequence is said in danger text beside it.">
-            <Button variant="strong" size="lg">Confirm cancellation</Button>
-            <span className="text-sm text-[var(--danger)]">Inside 4 hours the deposit is retained.</span>
+          <Specimen name="Destructive" component="Button variant=danger + ConfirmDialog" note="Red words on band beside a quiet way back. Never lime, never a red fill.">
+            <Button variant="quiet" size="lg">Keep booking</Button>
+            <Button variant="danger" size="lg">Cancel booking</Button>
           </Specimen>
           <Specimen name="On brand-deep" component="Button variant=ondeep" note="Lime leads; the rest are translucent white.">
             <div className="flex gap-2 rounded-[1.25rem] bg-[var(--hero)] p-3.5">

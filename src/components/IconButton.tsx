@@ -6,7 +6,10 @@ import { cn } from "../lib/cn";
  * IconButton — the icon disc (AUTM-1594, canvas v44 "Icon disc").
  *
  * A 44px round action holding an icon and nothing else: band by default,
- * `strong` or `ondeep` where the surface asks for it. `label` is required and
+ * `strong` or `ondeep` where the surface asks for it. Since AUTM-1838 (no
+ * black buttons, Don 2026-10-12) `strong` is the lime disc: the one icon
+ * action that leads, such as Send. A utility control (pause, play, close)
+ * is `quiet` (or `ondeep` on a brand-deep hero), never lime. `label` is required and
  * becomes the accessible name, because every icon-only control needs one and
  * an optional prop is one that gets forgotten.
  *

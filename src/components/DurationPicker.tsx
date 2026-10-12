@@ -908,7 +908,7 @@ function DurationSheet({
                         Cancel
                     </Button>
                     <Button
-                        variant="strong"
+                        variant="primary"
                         size="md"
                         disabled={!canDone}
                         onClick={commit}

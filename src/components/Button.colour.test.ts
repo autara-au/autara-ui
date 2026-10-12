@@ -59,8 +59,10 @@ const THEMES: Theme[] = ['light', 'dark']
 /** Each sheet variant: its label, and the fill it sits on (its own, or the page). */
 const VARIANTS: [string, string, (t: Theme) => RGB][] = [
     ['primary', 'on-lime', (t) => token('lime', t)],
-    ['strong', 'on-strong', (t) => token('strong', t)],
     ['quiet', 'text-strong', (t) => token('band', t)],
+    // AUTM-1838: the destructive action, red words on band, and on its hover.
+    ['danger', 'danger', (t) => token('band', t)],
+    ['danger (hover)', 'danger', (t) => token('band-press', t)],
     ['ghost', 'text-strong', (t) => token('background', t)],
     ['link', 'accent', (t) => token('background', t)],
     // Translucent white over the brand-deep hero it is drawn for.
@@ -70,7 +72,9 @@ const VARIANTS: [string, string, (t: Theme) => RGB][] = [
 describe('Button: every variant label reads on its fill, which is now also its disabled and busy colour', () => {
     it('the variant table above is still what Button.tsx draws', () => {
         expect(BUTTON).toContain('bg-[var(--lime)] text-[var(--on-lime)]')
-        expect(BUTTON).toContain('bg-[var(--strong)] text-[var(--on-strong)]')
+        expect(BUTTON).toContain('bg-[var(--band)] text-[var(--danger)]')
+        // AUTM-1838: no black buttons. `strong` is a name for primary.
+        expect(BUTTON).not.toContain('bg-[var(--strong)]')
         expect(BUTTON).toContain('bg-[var(--band)] text-[var(--text-strong)]')
         expect(BUTTON).toContain('bg-[rgba(255,255,255,0.14)] text-[var(--on-deep)]')
         expect(BUTTON).toContain('text-[var(--accent)]')

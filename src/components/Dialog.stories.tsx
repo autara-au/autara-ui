@@ -233,7 +233,7 @@ function AddressDialog({
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Cancel</Button>
-                    <Button variant="strong">Confirm address</Button>
+                    <Button>Confirm address</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -258,7 +258,7 @@ export const ResponsiveFromTrigger: Story = {
     render: () => (
         <AddressDialog
             defaultOpen={false}
-            trigger={<Button variant="strong">Edit business address</Button>}
+            trigger={<Button>Edit business address</Button>}
         />
     ),
 }
@@ -296,7 +296,7 @@ export const ResponsiveShort: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Keep taking bookings</Button>
-                    <Button variant="strong">Pause</Button>
+                    <Button>Pause</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -339,7 +339,7 @@ export const ResponsiveLongList: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Clear all</Button>
-                    <Button variant="strong">Save 8 suburbs</Button>
+                    <Button>Save 8 suburbs</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -371,7 +371,7 @@ export const ResponsiveLongCopy: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Keep Saturday as it is</Button>
-                    <Button variant="strong">Ask customers to move to the following Saturday</Button>
+                    <Button>Ask customers to move to the following Saturday</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -414,7 +414,7 @@ export const FocusReturnsWithoutTrigger: Story = {
         return (
             <div className="flex flex-col items-start gap-3">
                 <Button variant="quiet">Message customer</Button>
-                <Button variant="strong" onClick={() => setOpen(true)}>
+                <Button onClick={() => setOpen(true)}>
                     Confirm booking
                 </Button>
                 <Button variant="quiet">Decline</Button>
@@ -430,7 +430,7 @@ export const FocusReturnsWithoutTrigger: Story = {
                             <Button variant="quiet" onClick={() => setOpen(false)}>
                                 Not yet
                             </Button>
-                            <Button variant="strong" onClick={() => setOpen(false)}>
+                            <Button onClick={() => setOpen(false)}>
                                 Confirm
                             </Button>
                         </DialogFooter>
