@@ -370,7 +370,7 @@ export const BookingPickerGrid: Story = {
           <p className="text-sm text-[var(--text-muted)]" aria-live="polite">
             {chosen ? `${MENU.find((s) => s.id === chosen)?.name} selected` : "Choose a service to continue"}
           </p>
-          <Button variant="strong" disabled={!chosen}>
+          <Button disabled={!chosen}>
             Continue
           </Button>
         </div>

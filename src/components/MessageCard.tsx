@@ -30,7 +30,8 @@ import { cn } from "../lib/cn";
  *
  * Surface: the band card of the Autara Web palette (raised in dark, where
  * band on dark paper is 1.1:1), via `--message-card`. Actions on it are
- * `strong` and a raised quiet, because lime is never placed on band.
+ * the lime primary and a raised quiet (AUTM-1838: no black buttons; the ink
+ * label on lime is what identifies it, on band as on paper).
  */
 export type MessageCardState = "waiting" | "approved" | "declined" | "expired";
 
@@ -174,7 +175,7 @@ export function MessageCard({
             return (
               <Button
                 key={i}
-                variant={isPrimary ? "strong" : "quiet"}
+                variant={isPrimary ? "primary" : "quiet"}
                 size="md"
                 busy={a.busy}
                 disabled={a.disabled || (busy && !a.busy)}

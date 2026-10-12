@@ -17,6 +17,13 @@ describe("IconButton (AUTM-1594)", () => {
         expect(cls).toMatch(/bg-\[var\(--band\)\]/);
     });
 
+    it("AUTM-1838: strong is the lime disc, never ink", () => {
+        render(<IconButton icon={<svg aria-hidden="true" />} label="Send message" variant="strong" />);
+        const cls = screen.getByRole("button").className;
+        expect(cls).toMatch(/bg-\[var\(--lime\)\]/);
+        expect(cls).not.toMatch(/--strong\)/);
+    });
+
     it("draws the badge without adding it to the accessible name", () => {
         render(
             <IconButton

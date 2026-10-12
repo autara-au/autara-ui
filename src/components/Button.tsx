@@ -10,19 +10,29 @@ import { AutaraLoader, type AutaraLoaderSize } from "./AutaraLoader";
  * (the latter was discovered to be doing the same job, so it's now
  * just a re-export of this component — see `BrandButton.tsx`).
  *
- * AUTM-1594 — canvas v44's component sheet ("Buttons"), approved by Don:
+ * AUTM-1594 — canvas v44's component sheet ("Buttons"), approved by Don, as
+ * amended by AUTM-1838 (Don, 2026-10-12: "no black buttons anywhere. Lime is
+ * the one primary action on a screen, the rest are quiet secondaries"):
  *
- *   - `primary`  lime with ink text. The one action on a page, on paper only:
- *                lime on band is 1.03:1, so on band the action is `strong`.
- *   - `strong`   ink (white in dark). The action inside band cards, sheets,
- *                dialogs and checklists. Also the DESTRUCTIVE action: there
- *                are no red buttons, the consequence is said in danger text
- *                beside it and a ConfirmDialog asks first.
+ *   - `primary`  lime with ink text. The one action on a screen, on paper,
+ *                on band, in sheets and dialogs alike. The ink label is what
+ *                identifies it (16.9:1); lime on paper is already 1.15:1 and
+ *                on band 1.03:1, so no surface needs a darker action.
  *   - `quiet`    band. Secondary choices; never competes with the primary.
+ *   - `danger`   band with the label in `--danger`. The DESTRUCTIVE action:
+ *                cancel, void, delete, discard, remove. Never lime, which says
+ *                go; never a red fill (AUTM-1594 "no red buttons"). It is
+ *                Apple's destructive style, red words on the same surface, and
+ *                a ConfirmDialog asks first.
  *   - `ondeep`   translucent white on a brand-deep hero; lime leads there.
  *   - `link`     brand text, 44px tall, no fill.
  *   - `ghost`    no fill, ink text, band on hover. Not on the sheet: kept for
  *                toolbars where a band pill would be one too many.
+ *
+ * `strong` was the ink (black) button. Since AUTM-1838 it is a name for
+ * `primary`, so every consumer's `variant="strong"` turns lime on its next
+ * bump. A screen that used `strong` BESIDE a lime primary now has two limes:
+ * the second one is `quiet`. A destructive `strong` is `danger`.
  *
  * Sizes: `sm` 44 → `md`/`default` 48 → `lg` 52; `icon` is a 44px disc
  * (prefer `IconButton`, which requires the label an icon-only control needs).
@@ -56,9 +66,10 @@ import { AutaraLoader, type AutaraLoaderSize } from "./AutaraLoader";
  * via `asChild`. autara-ui never imports next/link or react-router-dom.
  */
 
-type SheetVariant = "primary" | "strong" | "quiet" | "ondeep" | "link" | "ghost";
+type SheetVariant = "primary" | "quiet" | "danger" | "ondeep" | "link" | "ghost";
 
 type LegacyVariant =
+  | "strong"
   | "dark"
   | "outline"
   | "secondary"
@@ -79,14 +90,17 @@ type Size = "sm" | "md" | "lg" | "icon" | "default";
 
 /**
  * AUTM-1594 — every legacy name resolves to the sheet variant that does its
- * job. `destructive` is `strong` because the sheet has no red button; `glass`,
- * `outline` and `secondary` are `quiet` because band is the only secondary
- * fill left (no outlines, no translucent panels on paper).
+ * job. `glass`, `outline` and `secondary` are `quiet` because band is the only
+ * secondary fill left (no outlines, no translucent panels on paper).
+ *
+ * AUTM-1838 — `strong` and `dark` (the ink button) are `primary`: there are
+ * no black buttons. `destructive` is `danger`, never lime.
  */
 const LEGACY: Record<LegacyVariant, SheetVariant> = {
-  dark: "strong",
-  destructive: "strong",
-  "light-destructive": "strong",
+  strong: "primary",
+  dark: "primary",
+  destructive: "danger",
+  "light-destructive": "danger",
   acid: "primary",
   "light-primary": "primary",
   outline: "quiet",
@@ -145,10 +159,12 @@ const SIZES: Record<Exclude<Size, "default">, string> = {
 const VARIANT_CLASSES: Record<SheetVariant, string> = {
   primary:
     "bg-[var(--lime)] text-[var(--on-lime)] not-disabled:hover:bg-[var(--lime-press)]",
-  strong:
-    "bg-[var(--strong)] text-[var(--on-strong)] not-disabled:hover:bg-[var(--strong-hover)]",
   quiet:
     "bg-[var(--band)] text-[var(--text-strong)] not-disabled:hover:bg-[var(--band-press)]",
+  // AUTM-1838: quiet's fill, the label in danger red (5.9:1 on band light,
+  // 8.0:1 dark). Never lime, never a red fill.
+  danger:
+    "bg-[var(--band)] text-[var(--danger)] not-disabled:hover:bg-[var(--band-press)]",
   ondeep:
     "bg-[rgba(255,255,255,0.14)] text-[var(--on-deep)] not-disabled:hover:bg-[rgba(255,255,255,0.22)]",
   // No padding: a text action sits on the line it belongs to. Still 44px

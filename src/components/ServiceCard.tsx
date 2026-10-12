@@ -848,9 +848,13 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                 {selected ? <CheckIcon /> : null}
               </span>
             ) : mode === "link" && action ? (
+              /* AUTM-1838 (Don, 2026-10-12: no black buttons, the rest are
+                 quiet): a list repeats this pill on every card, so it is the
+                 quiet secondary, raised on the band card. The page's one lime
+                 action lives outside the list. */
               <span
                 aria-hidden="true"
-                className="inline-flex min-h-9 shrink-0 items-center rounded-[1.125rem] bg-[var(--strong)] px-4 text-[0.9375rem] font-medium leading-tight text-[var(--on-strong)] transition-colors duration-[var(--motion-panel-in)] group-hover/service:bg-[var(--strong-hover)]"
+                className="inline-flex min-h-9 shrink-0 items-center rounded-[1.125rem] bg-[var(--raised)] px-4 text-[0.9375rem] font-medium leading-tight text-[var(--text-strong)] transition-colors duration-[var(--motion-panel-in)]"
               >
                 {action}
               </span>
