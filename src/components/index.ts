@@ -336,6 +336,15 @@ export { Banner, type BannerProps } from './Banner'
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog'
 export { NativeSelect, type NativeSelectProps } from './NativeSelect'
 export { MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow, type MoneyTone } from './MoneyBreakdown'
+// AUTM-1856 — one link, ready to hand over (payment link, business link):
+// a summary, a QR, the link, and the ways it leaves.
+export {
+    LinkShareSheet,
+    shareHrefs,
+    type LinkShareSheetProps,
+    type LinkShareSheetPrimary,
+    type ShareTarget,
+} from './LinkShareSheet'
 // AUTM-1737 — one invoice status colour system: due and overdue red, partially
 // paid amber, paid lime, draft and void neutral.
 export {

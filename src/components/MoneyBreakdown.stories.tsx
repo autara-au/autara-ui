@@ -79,9 +79,10 @@ export const LongLabelsNarrow: Story = {
 }
 
 /**
- * AUTM-1797 / AUTM-1799: the same rows as chips, the amount over its words,
- * coloured by what the money is: a hold in flight (aqua), paid or refunded
- * (lime), yours to pay (purple), the rest band.
+ * AUTM-1797 / AUTM-1799: the same rows as chips, the label over the amount.
+ * AUTM-1856 (Don, 2026-10-13): every chip is the neutral band card with the
+ * amount in ink, and what the money is doing is a small solid badge beside
+ * the label: aqua on hold, grey a balance still due.
  */
 export const Chips: Story = {
     args: {
@@ -89,8 +90,8 @@ export const Chips: Story = {
         label: 'When you pay',
         title: 'Payment',
         rows: [
-            { label: 'On hold', value: '$54', tone: 'flight' },
-            { label: 'After the job', value: '$126' },
+            { label: 'Deposit', value: '$54', tone: 'flight', state: 'On hold' },
+            { label: 'Balance', value: '$126', state: 'Balance due' },
         ],
     },
     render: (args) => (
@@ -100,16 +101,21 @@ export const Chips: Story = {
     ),
 }
 
-/** Every tone side by side, and a long qualifier wrapping inside its chip. */
+/**
+ * Every state badge side by side (AUTM-1856): lime paid or captured, aqua on
+ * hold or pending, purple yours to act on, grey otherwise; and a row with no
+ * state, which draws no badge.
+ */
 export const ChipTones: Story = {
     args: {
         variant: 'chips',
         label: 'Money',
         rows: [
-            { label: 'Paid', value: '$54', tone: 'money' },
-            { label: 'To pay', value: '$126', tone: 'act' },
-            { label: 'Refunded Thu 8 Oct', value: '$54', tone: 'money' },
-            { label: 'Refund on its way', value: '$27', tone: 'flight' },
+            { label: 'Deposit', value: '$54', tone: 'money', state: 'Captured' },
+            { label: 'Deposit', value: '$54', tone: 'flight', state: 'On hold' },
+            { label: 'To pay', value: '$126', tone: 'act', state: 'Your move' },
+            { label: 'Balance', value: '$126', state: 'Balance due' },
+            { label: 'Refund on its way', value: '$27', tone: 'flight', state: 'Pending' },
             { label: 'Kept by the pro', value: '$27' },
         ],
     },
