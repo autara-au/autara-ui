@@ -293,3 +293,109 @@ describe("ServiceCard with a plain anchor", () => {
         window.location.hash = before;
     });
 });
+
+/**
+ * AUTM-1848: More used to appear only after hydration, as a row of its own,
+ * so the first card's text block grew and its price moved down on every load
+ * of /m with a long description (CLS 0.0016, the page's whole CLS). Here the
+ * server's HTML goes in first and is painted, then React hydrates it, and the
+ * cards must not move: same boxes, and no layout-shift entry from inside
+ * them, while More does appear.
+ */
+describe.each([390, 412, 1440] as const)("ServiceCard hydrating at %ipx (AUTM-1848)", (width) => {
+    const frames = () =>
+        new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+
+    function boxes(root: HTMLElement) {
+        return Array.from(root.querySelectorAll<HTMLElement>('[data-slot="service-card"], [data-testid^="price-"]')).map(
+            (el) => {
+                const r = el.getBoundingClientRect();
+                return { id: el.dataset.testid, top: r.top, height: r.height, width: r.width };
+            },
+        );
+    }
+
+    it.each(["adaptive", "vertical"] as const)("a %s card keeps its box when More arrives", async (layout) => {
+        await page.viewport(width, 900);
+        const { renderToString } = await import("react-dom/server");
+        const { hydrateRoot } = await import("react-dom/client");
+        const { act } = await import("react");
+
+        const menu = (
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {SERVICES.map((s) => (
+                    <li key={s.id} className="flex flex-col">
+                        <ServiceCard
+                            layout={layout}
+                            name={s.name}
+                            description={LONG}
+                            coverImageUrl={PHOTO}
+                            durationLabel="2 hr"
+                            priceLabel="$188.82"
+                            priceLines={[
+                                { label: "Service", value: "$180" },
+                                { label: "+ booking fee", value: "$8.82" },
+                            ]}
+                            href={`/m/wish-car-care/book/checkout?serviceId=${s.id}`}
+                            as={RecordingLink}
+                            testId={`card-${s.id}`}
+                            testIds={{ price: `price-${s.id}`, descriptionToggle: `more-${s.id}` }}
+                        />
+                    </li>
+                ))}
+            </ul>
+        );
+
+        const host = document.createElement("div");
+        document.body.append(host);
+        host.innerHTML = renderToString(menu);
+        // The server's HTML has the description and no More.
+        expect(host.querySelector('[data-testid="more-interior"]')).toBeNull();
+        await frames();
+        const before = boxes(host);
+
+        const shifts: string[] = [];
+        const observer = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries() as unknown as {
+                value: number;
+                sources?: { node?: Node | null }[];
+            }[]) {
+                const inside = (entry.sources ?? []).filter((s) => s.node && host.contains(s.node));
+                if (inside.length > 0) {
+                    shifts.push(
+                        `${entry.value.toFixed(4)} from ${inside.map((s) => (s.node as Element).outerHTML?.slice(0, 80) ?? s.node?.nodeName).join(", ")}`,
+                    );
+                }
+            }
+        });
+        observer.observe({ type: "layout-shift" });
+
+        const root = await act(async () => hydrateRoot(host, menu));
+        await frames();
+        await frames();
+
+        try {
+            // More is there now.
+            const more = host.querySelector<HTMLElement>('[data-testid="more-interior"]');
+            expect(more).not.toBeNull();
+            expect(more!.getAttribute("aria-expanded")).toBe("false");
+
+            // And nothing moved for it.
+            expect(boxes(host)).toEqual(before);
+            await new Promise((resolve) => setTimeout(resolve, 50));
+            expect(shifts).toEqual([]);
+
+            // It sits over the end of the clamped second line.
+            const text = more!.previousElementSibling as HTMLElement;
+            expect(text.dataset.clamped).toBe("true");
+            const m = more!.getBoundingClientRect();
+            const t = text.getBoundingClientRect();
+            expect(Math.abs(m.bottom - t.bottom)).toBeLessThan(1.5);
+            expect(Math.abs(m.right - t.right)).toBeLessThan(1.5);
+        } finally {
+            observer.disconnect();
+            act(() => root.unmount());
+            host.remove();
+        }
+    });
+});
