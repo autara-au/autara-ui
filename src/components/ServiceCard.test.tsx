@@ -368,9 +368,21 @@ describe('ServiceCard description', () => {
         expect(toggle).toHaveAttribute('aria-expanded', 'false')
         const text = screen.getByText(LONG)
         expect(text.className).toContain('line-clamp-2')
+        // AUTM-1848: collapsed, More is laid over the second line's end and
+        // takes no room, so it can appear after hydration without moving the
+        // card. The line fades under it.
+        expect(toggle.className.split(' ')).toContain('absolute')
+        expect(text).toHaveAttribute('data-clamped', 'true')
+        expect(text.style.maskImage || text.style.getPropertyValue('-webkit-mask-image')).toContain('linear-gradient')
         await user.click(toggle)
         expect(screen.getByRole('button', { name: 'Less about Full wash' })).toHaveAttribute('aria-expanded', 'true')
         expect(text.className).not.toContain('line-clamp-2')
+        // Open, Less sits in the flow under the whole text, unmasked.
+        expect(toggle.className.split(' ')).not.toContain('absolute')
+        expect(text).not.toHaveAttribute('data-clamped')
+        expect(text.style.maskImage).toBe('')
+        // The same button, so focus stays on it.
+        expect(screen.getByRole('button', { name: 'Less about Full wash' })).toBe(toggle)
     })
 
     it('reading more never selects the card', async () => {

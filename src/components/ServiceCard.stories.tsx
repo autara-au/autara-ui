@@ -117,7 +117,7 @@ export const LongName: Story = {
   ),
 };
 
-/** Two lines, then More, in place. More never books or selects. */
+/** Two lines, then More over the second line's end, in place. More never books or selects. */
 export const LongDescription: Story = {
   args: {
     coverImageUrl: PHOTO.interior,
@@ -135,6 +135,50 @@ export const LongDescription: Story = {
       <ServiceCard {...args} layout="horizontal" />
     </div>
   ),
+};
+
+/**
+ * AUTM-1848: More takes no room of its own. It can only be decided in the
+ * browser, after hydration, so it sits over the clamped second line's end (the
+ * line fades out under it) instead of adding a row: the card is the same
+ * height before and after it appears, and the price never moves. Open, Less
+ * sits under the text. A phone's rows, a long and a short description, plain
+ * and selected; the short one has no More.
+ */
+export const MoreTakesNoRoom: Story = {
+  args: {
+    coverImageUrl: PHOTO.interior,
+    name: "Interior steam clean",
+    description:
+      "Hot-water extraction on carpets and cloth seats, leather cleaned and conditioned, headliner spot-cleaned, every vent and seam steamed, glass inside and out.",
+    priceLabel: "$188.82",
+    priceLines: withFee("$180", "$8.82"),
+    durationLabel: "2 hr",
+  },
+  parameters: { viewport: { defaultViewport: "phone" } },
+  render: (args) => (
+    <div className="grid max-w-[24rem] gap-3">
+      <ServiceCard {...args} layout="adaptive" href="#book" testIds={{ descriptionToggle: "more-long" }} />
+      <ServiceCard
+        {...args}
+        layout="adaptive"
+        name="Exterior hand wash"
+        description="Two-bucket hand wash and a blower dry."
+        coverImageUrl={PHOTO.wash}
+        href="#book"
+      />
+      <div role="radiogroup" aria-label="Services">
+        <ServiceCard {...args} layout="adaptive" groupName="more-demo" value="interior" selected onSelect={() => {}} />
+      </div>
+    </div>
+  ),
+};
+
+/** The same in dark: the fade is a mask, so it needs no colour to match the card. */
+export const MoreTakesNoRoomDark: Story = {
+  ...MoreTakesNoRoom,
+  globals: { theme: "dark" },
+  parameters: { ...MoreTakesNoRoom.parameters, backgrounds: { default: "Paper, dark" } },
 };
 
 /** A job measured in working days, left at the workshop. The consumer adds the drop-off chip. */

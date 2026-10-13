@@ -871,6 +871,16 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
  * measured rather than guessed from its length, and it sits above the card's
  * stretched hit area so it never books or selects. The full text is always in
  * the DOM, so a screen reader reads all of it either way.
+ *
+ * AUTM-1848: the measurement can only run in the browser, after hydration, so
+ * the server never draws More. While collapsed it therefore takes no room of
+ * its own: it sits over the end of the second line, which fades out under it
+ * (a mask, so it works on any card colour, selected, hovered or dark), and
+ * the card's box is the same before and after the script decides. It joins
+ * the flow below the text only once the reader opens it, as "Less", and a
+ * shift the reader caused is not a layout shift. Before this, More appeared
+ * as its own row after hydration and moved the price down (CLS on every /m
+ * with a long description).
  */
 function Description({
   id,
@@ -902,42 +912,73 @@ function Description({
     return () => observer.disconnect();
   }, [text, expanded]);
 
+  const overlaid = clamped && !expanded;
+
   return (
-    <div className={cn("flex flex-col items-start gap-1", className)}>
-      <p
-        ref={ref}
-        id={id}
-        className={cn(
-          "text-sm leading-normal [overflow-wrap:anywhere]",
-          !expanded && "line-clamp-2",
-          selected ? "text-[var(--on-selected)]" : "text-[var(--text-muted)]",
-        )}
-      >
-        {text}
-      </p>
-      {clamped || expanded ? (
-        <button
-          type="button"
-          aria-expanded={expanded}
-          aria-controls={id}
-          data-testid={toggleTestId}
-          onClick={() => setExpanded((v) => !v)}
+    // The outer box is the layout's cell, which a row layout stretches to the
+    // photo's height; the inner one hugs the text, so "the second line's end"
+    // is the paragraph's corner and not the cell's.
+    <div className={className}>
+      <div className="relative flex flex-col items-start gap-1">
+        <p
+          ref={ref}
+          id={id}
+          data-clamped={overlaid || undefined}
+          style={overlaid ? MORE_FADE : undefined}
           className={cn(
-            "relative z-[2] cursor-pointer rounded-md text-sm font-medium underline underline-offset-4",
-            // A 44px hit area around a one-line label, without adding the
-            // height to the card.
-            "before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
-            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
-            selected ? "text-[var(--on-selected)]" : "text-[var(--accent)]",
+            "text-sm leading-normal [overflow-wrap:anywhere]",
+            !expanded && "line-clamp-2",
+            selected ? "text-[var(--on-selected)]" : "text-[var(--text-muted)]",
           )}
         >
-          {expanded ? "Less" : "More"}
-          <span className="sr-only"> about {name}</span>
-        </button>
-      ) : null}
+          {text}
+        </p>
+        {clamped || expanded ? (
+          <button
+            type="button"
+            aria-expanded={expanded}
+            aria-controls={id}
+            data-testid={toggleTestId}
+            onClick={() => setExpanded((v) => !v)}
+            className={cn(
+              "z-[2] cursor-pointer rounded-md text-sm font-medium leading-normal underline underline-offset-4",
+              // Collapsed, on the second line's end (see above); open, in the
+              // flow under the whole text.
+              overlaid ? "absolute bottom-0 end-0" : "relative",
+              // A 44px hit area around a one-line label, without adding the
+              // height to the card.
+              "before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
+              "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]",
+              selected ? "text-[var(--on-selected)]" : "text-[var(--accent)]",
+            )}
+          >
+            {expanded ? "Less" : "More"}
+            <span className="sr-only"> about {name}</span>
+          </button>
+        ) : null}
+      </div>
     </div>
   );
 }
+
+/* The clamped paragraph's second line fades out where More sits over it:
+ * every line but the last fully drawn, the last clear for the label's width
+ * (about 2.4em of "More" at text-sm medium, plus room) and soft before it.
+ * A mask rather than a scrim, so no colour has to match the card's. Paint
+ * only, never layout. */
+const MORE_FADE_IMAGE = "linear-gradient(#000, #000), linear-gradient(to left, transparent 3.25em, #000 5em)";
+const MORE_FADE_SIZE = "100% calc(100% - 1lh), 100% 1lh";
+const MORE_FADE_POSITION = "0 0, 0 100%";
+const MORE_FADE: CSSProperties = {
+  maskImage: MORE_FADE_IMAGE,
+  maskSize: MORE_FADE_SIZE,
+  maskPosition: MORE_FADE_POSITION,
+  maskRepeat: "no-repeat",
+  WebkitMaskImage: MORE_FADE_IMAGE,
+  WebkitMaskSize: MORE_FADE_SIZE,
+  WebkitMaskPosition: MORE_FADE_POSITION,
+  WebkitMaskRepeat: "no-repeat",
+};
 
 /**
  * The no-photo panel: paper, one tonal step from the band card in both
