@@ -151,6 +151,8 @@ export {
     ConfirmDialog, type ConfirmDialogProps,
     NativeSelect, type NativeSelectProps,
     MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow, type MoneyTone,
+    // AUTM-1856 — one link, ready to hand over: summary, QR, link, the ways it leaves.
+    LinkShareSheet, shareHrefs, type LinkShareSheetProps, type LinkShareSheetPrimary, type ShareTarget,
     // AUTM-1737 — one invoice status colour system.
     InvoiceStatusBadge, invoiceStatusTone, invoiceStatusLabel, type InvoiceStatusBadgeProps, type InvoicePaymentState, type InvoiceStatusTone,
     // AUTM-1221 — graduated from customer-web (plan item U5)

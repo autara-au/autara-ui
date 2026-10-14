@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { cn } from '../lib/cn'
+import { Badge } from './Badge'
 import { MoneyFigure } from './MoneyFigure'
 
 /**
@@ -39,6 +40,15 @@ import { MoneyFigure } from './MoneyFigure'
  * out of its chip: where the whole figure is wider than the chip, it scales
  * down to fit (MoneyFigure measures it). The chips sit side by side down to
  * 8rem each.
+ *
+ * AUTM-1856 (Don, 2026-10-13, every surface): no big coloured money tiles.
+ * Every chip is the neutral band card with the amount in ink; what the money
+ * is doing moves to a SMALL SOLID badge, `state`, coloured by `tone` (aqua on
+ * hold or pending, lime paid or captured, purple yours to act on, grey a
+ * balance still due). The label and the badge share the top line, the amount
+ * sits under them. A row without `state` draws no badge, so `tone` alone no
+ * longer paints anything. The `<dl>` is unchanged: the label and the badge
+ * are the `<dt>` ("Deposit, Captured"), the amount the `<dd>`.
  */
 export interface MoneyRow {
     label: ReactNode
@@ -49,18 +59,28 @@ export interface MoneyRow {
     emphasis?: boolean
     /** `data-testid` on the row, so a spec can read one line. */
     testId?: string
-    /** `variant="chips"`: what the money is. */
+    /** `variant="chips"`: what the money is, which colours the `state` badge. */
     tone?: MoneyTone
+    /**
+     * `variant="chips"`: what the money is doing, as a small solid badge beside
+     * the label ("Captured", "On hold", "Balance due"). AUTM-1856.
+     */
+    state?: ReactNode
 }
 
-/** The chips' palette: lime money in, aqua in flight, purple yours to act on, band otherwise. */
+/** The state badge's palette: lime money in, aqua in flight, purple yours to act on, grey otherwise. */
 export type MoneyTone = 'money' | 'flight' | 'act' | 'neutral'
 
-const CHIP_TONE: Record<MoneyTone, string> = {
-    money: 'bg-[var(--lime)] text-[var(--on-lime)] [&>dt]:text-[color-mix(in_srgb,var(--on-lime)_78%,transparent)]',
-    flight: 'bg-[var(--aqua)] text-[var(--on-aqua)] [&>dt]:text-[color-mix(in_srgb,var(--on-aqua)_78%,transparent)]',
-    act: 'bg-[var(--brand)] text-[var(--on-brand)] [&>dt]:text-[var(--on-deep-muted)]',
-    neutral: 'bg-[var(--band)] text-[var(--text-strong)] [&>dt]:text-[var(--text-muted)]',
+/**
+ * AUTM-1856: the badge, not the chip, carries the tone. Grey is band-press,
+ * one step down from the band card it sits on, so it reads as a badge and
+ * not as a hole in the card; its words are ink on it (16:1 light, 14:1 dark).
+ */
+const STATE_BADGE: Record<MoneyTone, { variant: 'lime' | 'aqua' | 'brand' | 'band'; className?: string }> = {
+    money: { variant: 'lime' },
+    flight: { variant: 'aqua' },
+    act: { variant: 'brand' },
+    neutral: { variant: 'band', className: 'bg-[var(--band-press)]' },
 }
 
 export interface MoneyBreakdownProps {
@@ -82,16 +102,24 @@ export interface MoneyBreakdownProps {
 }
 
 function Chip({ row }: { row: MoneyRow }) {
+    const tone = row.tone ?? 'neutral'
+    const badge = STATE_BADGE[tone]
     return (
         <div
             data-testid={row.testId}
-            data-tone={row.tone ?? 'neutral'}
-            className={cn(
-                'flex min-w-0 flex-col-reverse justify-end gap-0.5 rounded-[1.25rem] px-4 pt-3.5 pb-[0.9375rem]',
-                CHIP_TONE[row.tone ?? 'neutral'],
-            )}
+            data-tone={tone}
+            className="flex min-w-0 flex-col gap-1.5 rounded-[1.25rem] bg-[var(--band)] px-4 pt-3.5 pb-[0.9375rem] text-[var(--text-strong)]"
         >
-            <dt className="min-w-0 text-[0.9375rem] leading-snug font-medium">{row.label}</dt>
+            {/* The label and its state on one line, wrapping under each other
+                when the chip is narrow or the text is large. */}
+            <dt className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[0.9375rem] leading-snug font-medium text-[var(--text-muted)]">
+                <span className="min-w-0">{row.label}</span>
+                {row.state != null && row.state !== false ? (
+                    <Badge variant={badge.variant} className={badge.className} data-money-state={tone}>
+                        {row.state}
+                    </Badge>
+                ) : null}
+            </dt>
             {/* Whole: an amount never breaks mid-number, and fits its chip. */}
             <MoneyFigure className="leading-[1.1] font-black tracking-[-0.02em] tabular-nums">{row.value}</MoneyFigure>
         </div>
