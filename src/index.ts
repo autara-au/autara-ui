@@ -164,6 +164,11 @@ export {
     // AUTM-1195 — pick one of a few, as cards
     ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps,
     SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption,
+    // AUTM-1870: a car in a few taps, drawn as itself.
+    VehiclePicker, validateVehiclePicker, vehiclePickerStepFor, EMPTY_VEHICLE_PICKER_VALUE, VEHICLE_PICKER_MESSAGES,
+    type VehiclePickerProps, type VehiclePickerValue, type VehiclePickerStep, type VehiclePickerField, type VehiclePickerErrors,
+    VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps,
+    VehicleCard, VehicleAddCard, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
     // AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
     CategoryArt, categoryArtKind, type CategoryArtKind,
     MerchantProfileCover, MerchantProfileCoverArt, MerchantProfileHeader,
@@ -197,6 +202,31 @@ export {
     type MotionDurationName,
     type MotionTransitionName,
 } from './lib/motion-tokens'
+
+/* AUTM-1870: the Australian make, model and body catalog behind VehiclePicker
+ * (customer-api's vehicleData.ts names, plus a body per model), the paints,
+ * and the search the picker runs. */
+export {
+    AU_VEHICLE_CATALOG,
+    VEHICLE_BODIES,
+    VEHICLE_PAINTS,
+    vehicleBodyLabel,
+    isVehicleBody,
+    vehiclePaint,
+    findVehicleMake,
+    findVehicleModel,
+    inferVehicleBody,
+    searchVehicleCatalog,
+    popularVehicleMakes,
+    otherVehicleMakes,
+    vehicleSlug,
+    type VehicleBody,
+    type VehiclePaint,
+    type VehicleCatalog,
+    type VehicleCatalogMake,
+    type VehicleCatalogModel,
+    type VehicleSearchResult,
+} from './lib/vehicle-catalog'
 
 /* AUTM-1781: the direction of the next screen change, for `.motion-screen`. */
 export {

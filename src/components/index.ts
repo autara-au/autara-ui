@@ -363,6 +363,28 @@ export {
 // ─── AUTM-1195 — pick one of a few, as cards: a real radio group ────────
 export { ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps } from './ChoiceCard'
 export { SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption } from './SwatchRadioGroup'
+// AUTM-1870: a car in a few taps, drawn as itself: the picker, the silhouette per body type, the garage card.
+export {
+    VehiclePicker,
+    validateVehiclePicker,
+    vehiclePickerStepFor,
+    EMPTY_VEHICLE_PICKER_VALUE,
+    VEHICLE_PICKER_MESSAGES,
+    type VehiclePickerProps,
+    type VehiclePickerValue,
+    type VehiclePickerStep,
+    type VehiclePickerField,
+    type VehiclePickerErrors,
+} from './VehiclePicker'
+export { VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps } from './VehicleSilhouette'
+export {
+    VehicleCard,
+    VehicleAddCard,
+    vehicleCardFacts,
+    type VehicleCardProps,
+    type VehicleAddCardProps,
+    type VehicleCardSelectable,
+} from './VehicleCard'
 // ─── AUTM-1221 — graduated from customer-web (plan item U5) ──────────────
 // Countdown: a deadline the server enforces, counted down and announced
 // once a minute; PolicyTimeline: the tiers of a policy with the live one lit.
