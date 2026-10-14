@@ -435,7 +435,13 @@ export function VehiclePicker({
                                         >
                                             {/* The make's mark, then the name: "Toyota HiLux", with
                                                 what it is under it (Don, 2026-10-14). */}
-                                            <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-autara-sm)] bg-[var(--band)] text-[var(--text-strong)]">
+                                            <span
+                                                className={cn(
+                                                    'grid size-10 shrink-0 place-items-center rounded-[var(--radius-autara-sm)] text-[var(--text-strong)]',
+                                                    /* The mark's plate stays apart from the active row's band. */
+                                                    on ? 'bg-[var(--paper)]' : 'bg-[var(--band)]'
+                                                )}
+                                            >
                                                 <VehicleMakeMark make={r.make} className="size-6" />
                                             </span>
                                             <span className="flex min-w-0 flex-1 flex-col">
