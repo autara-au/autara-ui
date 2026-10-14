@@ -4,7 +4,13 @@ import { ServiceCard, ServiceCardSkeleton } from "./ServiceCard";
 import { CardGrid } from "./CardGrid";
 import { Badge } from "./Badge";
 import { Button } from "./Button";
-import { listingPrice, serviceDurationLabel, workingDaysLabel, DROP_OFF_TAG } from "../lib/service-listing";
+import {
+  listingPrice,
+  serviceDurationLabel,
+  serviceLocationLabel,
+  workingDaysLabel,
+  DROP_OFF_TAG,
+} from "../lib/service-listing";
 
 /**
  * AUTM-1694: one card for the merchant page's service list and the booking
@@ -747,6 +753,293 @@ export const PricedFromAQuote: Story = {
       </ul>
     );
   },
+};
+
+/* ─── AUTM-1866: the menu row ────────────────────────────────────────────
+ *
+ * Don, 2026-10-14, after Mobbin (Fresha's plain rows; Careem, Swiggy and
+ * foodpanda with the text left and the photo right; Wise's one line plus one
+ * detail line): text left, a square-ish photo right and no placeholder
+ * without one; the name, then ONE meta line; two lines of description and no
+ * More, because the card opens the service; the all-in total with the fee on
+ * one small line; a quiet Book of its own, 44px. Check each at the phone and
+ * desktop viewports, and in the Theme toolbar's dark.
+ */
+
+/** The figures the page has: the server's quote through `listingPrice`. */
+const TYRE = listingPrice({
+  priceCents: 1000,
+  priceBreakdown: { bookingFeeLabel: "Booking fee", serviceTotalCents: 1000, bookingFeeTotalCents: 99, totalCents: 1099 },
+});
+
+const MENU_ARGS = {
+  layout: "menu" as const,
+  name: "Tyre shine",
+  description: "Tyres cleaned and dressed with a water-based shine that dries to a satin finish, never greasy.",
+  durationLabel: "15 min",
+  locationLabel: "At the workshop",
+  priceLabel: TYRE.headline,
+  priceNote: TYRE.note,
+  href: "#open-tyre-shine",
+  bookHref: "#book-tyre-shine",
+};
+
+/** The menu row with a photo: the card opens the service, Book books. Two focus stops. */
+export const Menu: Story = {
+  args: { ...MENU_ARGS, coverImageUrl: PHOTO.wash },
+  render: (args) => (
+    <div className="max-w-md">
+      <ServiceCard {...args} />
+    </div>
+  ),
+};
+
+/** No photo, no placeholder: the text takes the full width, Book stays at the foot's end. */
+export const MenuNoPhoto: Story = {
+  args: { ...MENU_ARGS, coverImageUrl: null },
+  render: (args) => (
+    <div className="max-w-md">
+      <ServiceCard {...args} />
+    </div>
+  ),
+};
+
+/** A long name wraps in full beside the photo; the price and Book hold their places. */
+export const MenuLongName: Story = {
+  args: {
+    ...MENU_ARGS,
+    name: "Ceramic coating, stage two, with single-stage paint correction and wheel faces sealed",
+    coverImageUrl: PHOTO.sport,
+    durationLabel: "6 hr 30 min",
+    pricePrefix: "From",
+    priceLabel: "$1,309.88",
+    priceNote: "incl. $59.88 booking fee",
+  },
+  render: (args) => (
+    <div className="grid max-w-3xl gap-3 sm:grid-cols-2">
+      <ServiceCard {...args} />
+      <ServiceCard {...args} coverImageUrl={null} />
+    </div>
+  ),
+};
+
+/** A long description stops at two lines, with no More: the card opens the service to read the rest. */
+export const MenuLongDescription: Story = {
+  args: {
+    ...MENU_ARGS,
+    name: "Interior steam clean",
+    description:
+      "Hot-water extraction on carpets and cloth seats, leather cleaned and conditioned, headliner spot-cleaned, every vent and seam steamed, glass inside and out, and the boot done the same way. We bring our own water and power.",
+    coverImageUrl: PHOTO.interior,
+    durationLabel: "2 hr",
+    priceLabel: "$188.82",
+    priceNote: "incl. $8.82 booking fee",
+  },
+  render: (args) => (
+    <div className="max-w-md">
+      <ServiceCard {...args} />
+    </div>
+  ),
+};
+
+/** No fee charged (the fee off, as on prod before 1.2.2): the price alone, no note. */
+export const MenuNoFee: Story = {
+  args: { ...MENU_ARGS, coverImageUrl: PHOTO.wash, priceLabel: "$10", priceNote: null },
+  render: (args) => (
+    <div className="max-w-md">
+      <ServiceCard {...args} />
+    </div>
+  ),
+};
+
+/** A mobile pro: "Comes to you", worded by `serviceLocationLabel` from the pro's booking modes. */
+export const MenuComesToYou: Story = {
+  args: {
+    ...MENU_ARGS,
+    name: "Maintenance wash",
+    description: "A two-bucket hand wash at your home or work, wheels and door shuts included.",
+    coverImageUrl: PHOTO.bay,
+    durationLabel: "1 hr",
+    locationLabel: serviceLocationLabel(["MOBILE"]),
+    priceLabel: "$83.92",
+    priceNote: "incl. $3.92 booking fee",
+  },
+  render: (args) => (
+    <div className="max-w-md">
+      <ServiceCard {...args} />
+    </div>
+  ),
+};
+
+type MenuDemo = {
+  id: string;
+  name: string;
+  description?: string;
+  photo?: string;
+  minutes: number;
+  days?: number;
+  serviceCents: number;
+  feeCents: number;
+};
+
+const MENU_ROWS: MenuDemo[] = [
+  { id: "tyre", name: "Tyre shine", description: "Tyres cleaned and dressed with a water-based shine that dries to a satin finish.", photo: PHOTO.wash, minutes: 15, serviceCents: 1000, feeCents: 99 },
+  { id: "interior", name: "Interior steam clean", description: "Hot-water extraction on carpets and cloth seats, leather cleaned and conditioned, headliner spot-cleaned, every vent and seam steamed.", photo: PHOTO.interior, minutes: 120, serviceCents: 18000, feeCents: 882 },
+  { id: "ceramic", name: "Ceramic coating, two layers", description: "Decontamination, a single-stage polish and two layers of coating, cured overnight.", minutes: 4320, days: 3, serviceCents: 90000, feeCents: 4410 },
+  { id: "paint", name: "Paint correction, single stage", description: "Machine polish to lift swirls and light scratches, finished with a sealant.", photo: PHOTO.sport, minutes: 300, serviceCents: 45000, feeCents: 2205 },
+  { id: "headlights", name: "Headlight restoration", minutes: 60, serviceCents: 12000, feeCents: 588 },
+];
+
+const quoted = (row: MenuDemo) =>
+  listingPrice({
+    priceCents: row.serviceCents,
+    priceBreakdown: {
+      bookingFeeLabel: "Booking fee",
+      serviceTotalCents: row.serviceCents,
+      bookingFeeTotalCents: row.feeCents,
+      totalCents: row.serviceCents + row.feeCents,
+    },
+  });
+
+/**
+ * In context, the pro's page: the menu in the library's `.service-card-grid`,
+ * worded by the library's helpers (`listingPrice().note`,
+ * `serviceDurationLabel`, `serviceLocationLabel`, the multi-day words). The
+ * whole card opens the service; Book goes to checkout; the page's one lime
+ * action stays outside the list. Run at the phone, tablet and desktop
+ * viewports.
+ */
+export const MenuProPage: Story = {
+  parameters: { layout: "fullscreen" },
+  render: () => (
+    <section aria-labelledby="menu-heading" className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      <div className="mb-4 flex items-baseline justify-between gap-3">
+        <h2 id="menu-heading" className="text-xl font-bold text-[var(--text-strong)]">
+          Services
+        </h2>
+        <span className="text-sm text-[var(--text-muted)]">{MENU_ROWS.length} services</span>
+      </div>
+      <ul className="service-card-grid service-card-grid--adaptive" role="list">
+        {MENU_ROWS.map((row, i) => {
+          const price = quoted(row);
+          const multiDay = row.days != null;
+          return (
+            <li key={row.id} data-testid={`merchant-profile-service-${row.id}`}>
+              <ServiceCard
+                layout="menu"
+                name={row.name}
+                description={row.description}
+                coverImageUrl={row.photo}
+                durationLabel={multiDay ? null : serviceDurationLabel(row.minutes)}
+                workingDaysLabel={multiDay ? workingDaysLabel(row.days as number) : null}
+                locationLabel={multiDay ? null : serviceLocationLabel(["WORKSHOP"])}
+                chips={multiDay ? [{ label: DROP_OFF_TAG, testId: "merchant-profile-service-dropoff-tag" }] : undefined}
+                priceLabel={price.headline}
+                priceNote={price.note}
+                href={`#open-${row.id}`}
+                bookHref={`#book-${row.id}`}
+                revealIndex={i}
+                testId="merchant-profile-service-row"
+                testIds={{
+                  action: "merchant-profile-service-open",
+                  book: "merchant-profile-service-book",
+                  price: "merchant-profile-service-price",
+                  priceLines: "merchant-profile-service-price-parts",
+                  duration: "merchant-profile-service-duration",
+                  workingDays: "merchant-profile-service-working-days",
+                }}
+              />
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  ),
+};
+
+/** The pro's page in dark: the band card on dark paper, the pill one tonal step off it. */
+export const MenuProPageDark: Story = {
+  ...MenuProPage,
+  globals: { theme: "dark" },
+  parameters: { layout: "fullscreen", backgrounds: { default: "Paper, dark" } },
+};
+
+/**
+ * In context, the booking picker: the same row in select mode, one radio
+ * group. A tap anywhere chooses; the state light sits under the photo where
+ * Book sits on the page; Continue lives outside the list.
+ */
+export const MenuPicker: Story = {
+  parameters: { layout: "fullscreen" },
+  render: function Render() {
+    const [chosen, setChosen] = useState<string | null>("interior");
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <h1 id="menu-pick-heading" className="text-[1.75rem] font-black leading-tight text-[var(--text-strong)]">
+          Pick a service
+        </h1>
+        <fieldset aria-labelledby="menu-pick-heading" className="m-0 mt-6 min-w-0 border-0 p-0">
+          <ul className="service-card-grid service-card-grid--adaptive" role="list">
+            {MENU_ROWS.map((row, i) => {
+              const price = quoted(row);
+              const multiDay = row.days != null;
+              return (
+                <li key={row.id} data-testid="booking-service-select">
+                  <ServiceCard
+                    layout="menu"
+                    nameAs="h2"
+                    name={row.name}
+                    description={row.description}
+                    coverImageUrl={row.photo}
+                    durationLabel={multiDay ? null : serviceDurationLabel(row.minutes)}
+                    workingDaysLabel={multiDay ? workingDaysLabel(row.days as number) : null}
+                    locationLabel={multiDay ? null : serviceLocationLabel(["MOBILE", "WORKSHOP"])}
+                    chips={multiDay ? [{ label: DROP_OFF_TAG }] : undefined}
+                    priceLabel={price.headline}
+                    priceNote={price.note}
+                    groupName="menu-picker"
+                    value={row.id}
+                    selected={chosen === row.id}
+                    onSelect={() => setChosen(row.id)}
+                    revealIndex={i}
+                    testIds={{
+                      action: "booking-service-radio",
+                      price: "booking-service-price",
+                      priceLines: "booking-service-price-parts",
+                    }}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </fieldset>
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <p className="text-sm text-[var(--text-muted)]" aria-live="polite">
+            {chosen ? `${MENU_ROWS.find((r) => r.id === chosen)?.name} selected` : "Choose a service to continue"}
+          </p>
+          <Button>Continue</Button>
+        </div>
+      </div>
+    );
+  },
+};
+
+/** The picker in dark, with the chosen row in the selected colour. */
+export const MenuPickerDark: Story = {
+  ...MenuPicker,
+  globals: { theme: "dark" },
+  parameters: { layout: "fullscreen", backgrounds: { default: "Paper, dark" } },
+};
+
+/** The menu row loading. Silent by default; announce once from the list. */
+export const MenuSkeleton: Story = {
+  render: () => (
+    <div role="status" aria-live="polite" className="grid max-w-3xl gap-3 sm:grid-cols-2">
+      <span className="sr-only">Loading services</span>
+      <ServiceCardSkeleton layout="menu" />
+      <ServiceCardSkeleton layout="menu" />
+    </div>
+  ),
 };
 
 /** Solar-style drop-off glyph for the consumer chip in these stories. */

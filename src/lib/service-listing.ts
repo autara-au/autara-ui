@@ -70,6 +70,13 @@ export type ListingPrice = {
     lines: ListingPriceLine[] | null
     /** True when the headline is a total with a booking fee inside it. */
     includesFee: boolean
+    /**
+     * AUTM-1866: the same facts as ONE small line under the headline, for
+     * ServiceCard's `priceNote`: "incl. $0.99 booking fee" when the total has a
+     * fee inside it, the "Plus a booking fee" line when no quote arrived and
+     * one is expected, else null. The fee figure is the server's, formatted.
+     */
+    note: string | null
 }
 
 export interface ListingPriceInput {
@@ -111,6 +118,7 @@ export function listingPrice(
             parts: { first: `${lines[0].label} ${lines[0].value}`, second: `${lines[1].label} ${lines[1].value}` },
             lines,
             includesFee: true,
+            note: `incl. ${lines[1].value} ${feeLabel}`,
         }
     }
     const unquoted = priceBreakdown === null && feeExpected
@@ -120,6 +128,7 @@ export function listingPrice(
         parts: unquoted ? { first: 'Plus a booking fee,', second: 'shown before you pay' } : null,
         lines: unquoted ? [{ label: 'Plus a booking fee,', value: 'shown before you pay' }] : null,
         includesFee: false,
+        note: unquoted ? 'Plus a booking fee, shown before you pay' : null,
     }
 }
 
@@ -166,3 +175,23 @@ export function workingDaysLabel(workingDays: number): string {
 
 /** The tag a multi-day service carries wherever it is listed. */
 export const DROP_OFF_TAG = 'Drop off at the workshop'
+
+// ── Where it is done ─────────────────────────────────────────────────────
+
+/** A pro's booking modes, as customer-api's `availableBookingModes` names them. */
+export type ListingBookingMode = 'MOBILE' | 'WORKSHOP'
+
+/**
+ * AUTM-1866: where a timed service is done, for the card's meta line after
+ * its length: "Comes to you", "At the workshop", or both. Null with neither,
+ * so nothing is claimed. Not for a multi-day job, which is always left at the
+ * workshop and says so with `DROP_OFF_TAG`.
+ */
+export function serviceLocationLabel(modes: readonly string[] | null | undefined): string | null {
+    const mobile = Boolean(modes?.includes('MOBILE'))
+    const workshop = Boolean(modes?.includes('WORKSHOP'))
+    if (mobile && workshop) return 'Comes to you or at the workshop'
+    if (mobile) return 'Comes to you'
+    if (workshop) return 'At the workshop'
+    return null
+}

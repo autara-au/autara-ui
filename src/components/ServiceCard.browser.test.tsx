@@ -399,3 +399,197 @@ describe.each([390, 412, 1440] as const)("ServiceCard hydrating at %ipx (AUTM-18
         }
     });
 });
+
+/* ─── AUTM-1866: the menu row ─────────────────────────────────────────── */
+
+const OPEN = "/m/wish-car-care/services/interior";
+
+/* The pro page's menu as Don ruled it: the card opens the service, Book is
+ * its own link. One card without a photo. */
+function MenuList({ scope = "" }: { scope?: string }) {
+    return (
+        <ul className={`grid gap-3 sm:grid-cols-2 ${scope}`}>
+            {SERVICES.map((s, i) => (
+                <li key={s.id} className="flex flex-col">
+                    <ServiceCard
+                        layout="menu"
+                        name={s.name}
+                        description={LONG}
+                        coverImageUrl={s.id === "wheels" ? null : PHOTO}
+                        durationLabel="2 hr"
+                        locationLabel="At the workshop"
+                        priceLabel="$188.82"
+                        priceNote="incl. $8.82 booking fee"
+                        href={`/m/wish-car-care/services/${s.id}`}
+                        bookHref={`/m/wish-car-care/book/checkout?serviceId=${s.id}`}
+                        as={RecordingLink}
+                        revealIndex={i}
+                        testId={`card-${s.id}`}
+                        testIds={{ price: `price-${s.id}`, book: `book-${s.id}` }}
+                    />
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+function markMenu(region: "media" | "description" | "price") {
+    const card = screen.getByTestId("card-interior");
+    const el =
+        region === "media"
+            ? card.querySelector('[data-slot="media"]')
+            : region === "price"
+              ? screen.getByTestId("price-interior")
+              : card.querySelector('[data-slot="description"]');
+    if (!el) throw new Error(`no ${region} on the card`);
+    el.setAttribute("data-press", region);
+    return `[data-press="${region}"]`;
+}
+
+const box = (el: Element) => el.getBoundingClientRect();
+
+describe.each(WIDTHS)("ServiceCard menu at %ipx (AUTM-1866)", (width) => {
+    beforeEach(async () => {
+        await page.viewport(width, 900);
+    });
+
+    it.each(REGIONS)("a press on the %s opens the service, under customer-web's press rule", async (region) => {
+        render(<MenuList scope="consumer-press" />);
+        await commands.pressAt(markMenu(region));
+        expect(opened).toEqual([OPEN]);
+    });
+
+    it("a press on Book books, and the card does not take it", async () => {
+        render(<MenuList scope="consumer-press" />);
+        await commands.pressAt('[data-testid="book-interior"]');
+        expect(opened).toEqual([BOOK]);
+    });
+
+    it("a tap on Book books", async () => {
+        render(<MenuList scope="consumer-press" />);
+        await commands.pressAt('[data-testid="book-interior"]', { pointer: "touch" });
+        expect(opened).toEqual([BOOK]);
+    });
+
+    it("text left, a square photo right, Book under the photo at its width and 44px tall", () => {
+        render(<MenuList />);
+        const card = screen.getByTestId("card-interior");
+        const media = box(card.querySelector('[data-slot="media"]')!);
+        const name = box(screen.getByRole("heading", { name: "Interior steam clean" }));
+        const book = box(screen.getByTestId("book-interior"));
+        expect(media.left).toBeGreaterThan(name.right);
+        expect(Math.abs(media.width - media.height)).toBeLessThan(1);
+        expect(Math.abs(book.width - media.width), JSON.stringify({ book, media })).toBeLessThan(1);
+        expect(Math.abs(book.right - media.right)).toBeLessThan(1);
+        expect(book.top).toBeGreaterThanOrEqual(media.bottom);
+        expect(book.height).toBeGreaterThanOrEqual(44);
+        expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+    });
+
+    it("with no photo the text takes the card's width", () => {
+        render(<MenuList />);
+        const card = screen.getByTestId("card-wheels");
+        expect(card.querySelector('[data-slot="media"]')).toBeNull();
+        const desc = box(card.querySelector('[data-slot="description"]')!);
+        const inner = box(card);
+        // The card's 10px padding and the text's 6px inset on each side.
+        expect(desc.width).toBeGreaterThan(inner.width - 40);
+    });
+});
+
+describe("ServiceCard menu at 200% text (AUTM-1866)", () => {
+    afterEach(() => {
+        document.documentElement.style.fontSize = "";
+    });
+
+    it.each([390, 1440] as const)("reflows to a column at %ipx, nothing cut or crushed", async (width) => {
+        await page.viewport(width, 900);
+        document.documentElement.style.fontSize = "32px";
+        render(<MenuList />);
+        const card = screen.getByTestId("card-interior");
+        const media = box(card.querySelector('[data-slot="media"]')!);
+        const name = box(screen.getByRole("heading", { name: "Interior steam clean" }));
+        if (width === 390) {
+            // Under 16rem of card: the photo on top at full width, the name under it.
+            expect(name.top).toBeGreaterThanOrEqual(media.bottom);
+            const pad = parseFloat(getComputedStyle(card).paddingLeft) * 2;
+            expect(Math.abs(media.width - (box(card).width - pad))).toBeLessThan(1);
+        }
+        expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+        expect(box(screen.getByTestId("book-interior")).height).toBeGreaterThanOrEqual(88);
+        expect(box(screen.getByTestId("price-interior")).width).toBeGreaterThan(0);
+    });
+});
+
+describe("ServiceCard menu from the keyboard (AUTM-1866)", () => {
+    it("the card and Book are two focus stops, and Enter on each goes to its own place", async () => {
+        render(<MenuList scope="consumer-press" />);
+        const open = screen.getByRole("link", { name: "Interior steam clean" });
+        const book = screen.getByRole("link", { name: "Book Interior steam clean" });
+        open.focus();
+        await userEvent.keyboard("{Enter}");
+        await userEvent.tab();
+        expect(document.activeElement).toBe(book);
+        await userEvent.keyboard("{Enter}");
+        expect(opened).toEqual([OPEN, BOOK]);
+    });
+});
+
+/* WCAG contrast of the menu row's text on its own surfaces, as painted, in
+ * both themes: the name, the meta line, the description, the total, the note
+ * on the band card; Book's label on its pill, at rest and with the card
+ * hovered (the pill swaps to band). Alpha text is blended over its ground. */
+type RGBA = [number, number, number, number];
+const rgba = (css: string): RGBA => {
+    const m = css.match(/rgba?\(([^)]+)\)/);
+    if (!m) throw new Error(`not a colour: ${css}`);
+    const [r, g, b, a = "1"] = m[1].split(/[ ,/]+/).filter(Boolean);
+    return [Number(r), Number(g), Number(b), Number(a)];
+};
+const over = (fg: RGBA, bg: RGBA): RGBA => [
+    fg[0] * fg[3] + bg[0] * (1 - fg[3]),
+    fg[1] * fg[3] + bg[1] * (1 - fg[3]),
+    fg[2] * fg[3] + bg[2] * (1 - fg[3]),
+    1,
+];
+const lum = ([r, g, b]: RGBA) => {
+    const c = (v: number) => {
+        const s = v / 255;
+        return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * c(r) + 0.7152 * c(g) + 0.0722 * c(b);
+};
+const ratio = (fg: RGBA, bg: RGBA) => {
+    const [a, b] = [lum(over(fg, bg)), lum(bg)].sort((x, y) => y - x);
+    return (a + 0.05) / (b + 0.05);
+};
+
+describe.each(["light", "dark"] as const)("ServiceCard menu contrast, %s (AUTM-1866)", (theme) => {
+    afterEach(() => {
+        document.documentElement.removeAttribute("data-theme");
+    });
+
+    it("every text clears 4.5:1 on what it sits on", async () => {
+        await page.viewport(390, 900);
+        document.documentElement.setAttribute("data-theme", theme);
+        render(<MenuList />);
+        const card = screen.getByTestId("card-interior");
+        const ground = rgba(getComputedStyle(card).backgroundColor);
+        const parts = [
+            card.querySelector('[data-slot="action"]')!,
+            card.querySelector('[data-slot="meta"]')!,
+            card.querySelector('[data-slot="description"]')!,
+            screen.getByTestId("price-interior"),
+            card.querySelector('[data-slot="price-note"]')!,
+        ];
+        for (const el of parts) {
+            const r = ratio(rgba(getComputedStyle(el).color), ground);
+            expect(r, `${el.textContent?.slice(0, 24)} on the card`).toBeGreaterThanOrEqual(4.5);
+        }
+        const book = screen.getByTestId("book-interior");
+        const pill = rgba(getComputedStyle(book).backgroundColor);
+        expect(ratio(rgba(getComputedStyle(book).color), pill)).toBeGreaterThanOrEqual(4.5);
+        // The pill is never the card's own colour: it stays a visible step off it.
+        expect(pill.slice(0, 3)).not.toEqual(ground.slice(0, 3));
+    });
+});

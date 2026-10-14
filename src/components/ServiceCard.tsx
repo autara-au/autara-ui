@@ -15,6 +15,7 @@ import {
 } from "react";
 import { cn } from "../lib/cn";
 import { Badge } from "./Badge";
+import { buttonVariants } from "./Button";
 
 /**
  * ServiceCard: one bookable service, the same card on the merchant page's
@@ -87,9 +88,31 @@ import { Badge } from "./Badge";
  *     `packageSaving` (lib/package-listing) does, from the server's figures.
  *
  * `PackageCard` is this card with a package's words; reach for it first.
+ *
+ * AUTM-1866 (Don, 2026-10-14, after Mobbin: Fresha's plain rows; Careem,
+ * Swiggy and foodpanda with the text left and the photo right; Wise's one line
+ * plus one detail line). The customer's menu row is `layout="menu"`:
+ *
+ *   - Text left, a square-ish photo right. No photo, no placeholder: the text
+ *     takes the full width (`fallback` and `noPhotoLabel` are not drawn).
+ *   - The name (Satoshi 500), then ONE meta line: duration or working days,
+ *     where (`locationLabel`: "At the workshop", "Comes to you"), and any
+ *     chips, as plain text joined by a middle dot. No chip pills, no icons.
+ *   - Two lines of description, clamped, with no More: the card itself opens
+ *     the service (link mode, or `onOpen` for a sheet).
+ *   - The all-in total as the headline, and `priceNote` on one small line
+ *     under it ("incl. $0.99 booking fee", from `listingPrice().note`).
+ *   - Book, a quiet pill under the photo, at least 44px. With `bookHref` or
+ *     `onBook` it is a control of its own, a second focus target that the
+ *     card's click never swallows.
+ *
+ * Under 16rem of card (200% text on a phone) the row reflows: the photo on
+ * top at full width, the text under it, so the name is never crushed.
+ *
+ * Every other layout is unchanged, and so is every existing prop.
  */
 
-export type ServiceCardLayout = "horizontal" | "vertical" | "adaptive";
+export type ServiceCardLayout = "horizontal" | "vertical" | "adaptive" | "menu";
 
 /** A chip on the meta row. `icon` should be a Solar glyph, decorative. */
 export interface ServiceCardChip {
@@ -136,14 +159,24 @@ export interface ServiceCardTestIds {
   saving?: string;
   /** The price headline. */
   price?: string;
-  /** The list of price lines. */
+  /**
+   * The list of price lines. Also lands on the `priceNote` line when no
+   * `priceNote` id is given, so a locator keeps finding what sits under the
+   * headline when a consumer moves from lines to the note.
+   */
   priceLines?: string;
-  /** The duration chip. */
+  /** The one line under the headline (`priceNote`). Defaults to `priceLines`. */
+  priceNote?: string;
+  /** The duration chip, or its part of the `menu` meta line. */
   duration?: string;
-  /** The working-days chip. */
+  /** The working-days chip, or its part of the `menu` meta line. */
   workingDays?: string;
-  /** The description's More / Less toggle. */
+  /** Where the service is done (`locationLabel`), on the meta line. */
+  location?: string;
+  /** The description's More / Less toggle. Never drawn by `layout="menu"`. */
   descriptionToggle?: string;
+  /** The Book control (`bookHref` or `onBook`). */
+  book?: string;
 }
 
 export interface ServiceCardProps {
@@ -161,8 +194,19 @@ export interface ServiceCardProps {
    * the wording; pass nothing to show the headline alone.
    */
   priceLines?: ReadonlyArray<ServiceCardPriceLine> | null;
+  /**
+   * AUTM-1866: ONE small line under the headline, e.g. "incl. $0.99 booking
+   * fee" (`listingPrice().note`). Drawn in place of `priceLines` when both
+   * are passed. The consumer owns the words; the card adds none.
+   */
+  priceNote?: string | null;
   /** Pre-formatted duration, e.g. "45 min". Renders as a chip with a clock. */
   durationLabel?: string | null;
+  /**
+   * AUTM-1866: where the service is done, e.g. "At the workshop" or "Comes to
+   * you" (`serviceLocationLabel`). Joins the meta line after the duration.
+   */
+  locationLabel?: string | null;
   /** Multi-day jobs, e.g. "3 working days". Renders as a chip with a calendar. */
   workingDaysLabel?: string | null;
   /** More chips after duration and working days, e.g. a drop-off tag. */
@@ -220,10 +264,28 @@ export interface ServiceCardProps {
   href?: string;
   /** Link mode: the link component, e.g. Next's `Link`. Default `a`. */
   as?: ElementType;
-  /** Link mode: a visual pill at the foot, e.g. "Book". The whole card is the link. */
+  /**
+   * The pill's words, e.g. "Book". Without `bookHref` or `onBook` it is a
+   * picture of the card's own action (link or open mode): the whole card is
+   * the target. With either, it is a control of its own. Default "Book" then.
+   */
   actionLabel?: string;
   /** @deprecated use `actionLabel`. */
   trailingLabel?: string;
+
+  /**
+   * Open mode (AUTM-1866): the card is a button, e.g. to open the service's
+   * detail in a sheet. `href` wins when both are passed.
+   */
+  onOpen?: () => void;
+  /**
+   * AUTM-1866: Book as its own control, a link (through `as`) separate from
+   * the card's target. Its own focus stop, its own click; the card never
+   * takes it. Named "Book <service>" for a screen reader.
+   */
+  bookHref?: string;
+  /** AUTM-1866: Book as its own button. `bookHref` wins when both are passed. */
+  onBook?: () => void;
 
   /** Select mode: called when the card is chosen. Passing it turns select mode on. */
   onSelect?: () => void;
@@ -247,7 +309,7 @@ export interface ServiceCardProps {
   className?: string;
 }
 
-type Mode = "link" | "select" | "static";
+type Mode = "link" | "button" | "select" | "static";
 
 /* The grid, per layout. Four parts: the photo, the content (name and
  * description), the chips, and the foot (price, then the Book pill or the
@@ -281,53 +343,80 @@ type Mode = "link" | "select" | "static";
  * Only a tile fills its cell's height (`h-full`, the foot on the last row),
  * because tiles share grid rows and their prices should line up. A row takes
  * its own height: stretched beside a taller tile, its rows would spread apart
- * and open gaps between the name and the description. */
+ * and open gaps between the name and the description.
+ *
+ *   menu        (AUTM-1866) the customer's menu row, text left and photo
+ *               right. Under 16rem of card it is a column: the photo on top,
+ *               the text, then the foot pushed to the bottom (`mt-auto`). From
+ *               16rem it is a two-column grid: the text and the photo on the
+ *               first row, the foot on the second, which is a subgrid so the
+ *               Book pill takes exactly the photo's column. 16rem is about
+ *               256px at default text, so every phone from 320px keeps the
+ *               row; at 150% and 200% text a phone gets the column. The menu
+ *               fills its cell's height, so a grid of rows lines up its
+ *               prices and pills. */
 const ROW: Record<ServiceCardLayout, string> = {
   vertical: "grid h-full grid-cols-1 grid-rows-[auto_1fr_auto] gap-3",
   horizontal:
     "grid grid-cols-1 gap-3 @min-[19rem]:grid-cols-[auto_minmax(0,1fr)] @min-[19rem]:gap-x-3 @min-[19rem]:gap-y-2 @min-[40rem]:grid-cols-[auto_minmax(0,1fr)_auto]",
   adaptive:
     "grid grid-cols-1 gap-3 sm:h-full sm:grid-rows-[auto_1fr_auto] max-sm:@min-[19rem]:grid-cols-[auto_minmax(0,1fr)] max-sm:@min-[19rem]:gap-x-3 max-sm:@min-[19rem]:gap-y-2",
+  menu: "flex h-full flex-col gap-3 @min-[16rem]:grid @min-[16rem]:grid-cols-[minmax(0,1fr)_auto] @min-[16rem]:grid-rows-[1fr_auto] @min-[16rem]:gap-x-4",
 };
 
+/* The photo box. The 4:3 tile everywhere but the menu row, whose photo is a
+ * square at 30% of the card (container units, so it follows the card, not the
+ * text size, and the text column keeps its share at 200%), at most 8.5rem. */
 const MEDIA_BOX: Record<ServiceCardLayout, string> = {
-  vertical: "w-full",
+  vertical: "aspect-[4/3] w-full",
   horizontal:
-    "w-full @min-[19rem]:w-32 @min-[19rem]:self-start @min-[30rem]:w-40 @min-[44rem]:w-48 @min-[19rem]:@max-[40rem]:row-span-2",
+    "aspect-[4/3] w-full @min-[19rem]:w-32 @min-[19rem]:self-start @min-[30rem]:w-40 @min-[44rem]:w-48 @min-[19rem]:@max-[40rem]:row-span-2",
   adaptive:
-    "w-full max-sm:@min-[19rem]:w-32 max-sm:@min-[19rem]:self-start max-sm:@min-[19rem]:row-span-2",
+    "aspect-[4/3] w-full max-sm:@min-[19rem]:w-32 max-sm:@min-[19rem]:self-start max-sm:@min-[19rem]:row-span-2",
+  menu: "aspect-[16/9] w-full @min-[16rem]:col-start-2 @min-[16rem]:row-start-1 @min-[16rem]:aspect-square @min-[16rem]:w-[min(30cqi,8.5rem)] @min-[16rem]:self-start @min-[16rem]:justify-self-end",
 };
 
 const CONTENT: Record<ServiceCardLayout, string> = {
   vertical: "px-1.5",
   horizontal: "px-1.5 @min-[19rem]:@max-[40rem]:contents @min-[40rem]:py-1 @min-[40rem]:pl-0",
   adaptive: "px-1.5 max-sm:@min-[19rem]:contents",
+  menu: "gap-1 px-1.5 pt-1 @min-[16rem]:col-start-1 @min-[16rem]:row-start-1 @min-[16rem]:pr-0",
 };
+
+/* The menu row's text with no photo beside it: across both columns. */
+const MENU_CONTENT_FULL = "@min-[16rem]:col-span-2 @min-[16rem]:pr-1.5";
 
 const NAME: Record<ServiceCardLayout, string> = {
   vertical: "",
   horizontal:
     "@min-[19rem]:@max-[40rem]:col-start-2 @min-[19rem]:@max-[40rem]:pt-1 @min-[19rem]:@max-[40rem]:pr-1.5",
   adaptive: "max-sm:@min-[19rem]:col-start-2 max-sm:@min-[19rem]:pt-1 max-sm:@min-[19rem]:pr-1.5",
+  menu: "",
 };
 
 const DESC: Record<ServiceCardLayout, string> = {
   vertical: "",
   horizontal: "@min-[19rem]:@max-[40rem]:col-start-2 @min-[19rem]:@max-[40rem]:pr-1.5",
   adaptive: "max-sm:@min-[19rem]:col-start-2 max-sm:@min-[19rem]:pr-1.5",
+  menu: "",
 };
 
 const CHIPS: Record<ServiceCardLayout, string> = {
   vertical: "",
   horizontal: "@min-[19rem]:@max-[40rem]:col-span-2 @min-[19rem]:@max-[40rem]:px-1.5",
   adaptive: "max-sm:@min-[19rem]:col-span-2 max-sm:@min-[19rem]:px-1.5",
+  menu: "",
 };
 
+/* The menu's foot: the price in the text column, the action in the photo's
+ * column (a subgrid), so Book sits under the photo at its width. No bottom or
+ * right pad: the pill is inset by the card's own padding, as the photo is. */
 const FOOT: Record<ServiceCardLayout, string> = {
   vertical: "px-1.5 pb-1.5",
   horizontal:
     "px-1.5 pb-1.5 @min-[19rem]:@max-[40rem]:col-span-2 @min-[40rem]:flex-col @min-[40rem]:items-end @min-[40rem]:pl-0 @min-[40rem]:pt-1 @min-[40rem]:text-right",
   adaptive: "px-1.5 pb-1.5 max-sm:@min-[19rem]:col-span-2",
+  menu: "mt-auto items-center pl-1.5 @min-[16rem]:col-span-2 @min-[16rem]:row-start-2 @min-[16rem]:mt-0 @min-[16rem]:grid @min-[16rem]:grid-cols-subgrid @min-[16rem]:gap-x-4",
 };
 
 /* The price row (headline, struck figure, saving) when a deal is drawn. It
@@ -337,6 +426,7 @@ const DEAL_ROW: Record<ServiceCardLayout, string> = {
   vertical: "",
   horizontal: "@min-[40rem]:justify-end",
   adaptive: "",
+  menu: "",
 };
 
 /* With both a description and an included list, the photo of a 19 to 40rem
@@ -346,10 +436,25 @@ const MEDIA_SPAN_THREE: Record<ServiceCardLayout, string> = {
   vertical: "",
   horizontal: "@min-[19rem]:@max-[40rem]:row-span-3",
   adaptive: "max-sm:@min-[19rem]:row-span-3",
+  menu: "",
 };
 
-/* The name's type, on the element inside the heading (see the note there). */
+/* The name's type, on the element inside the heading (see the note there).
+ * The menu row sets it in Satoshi 500 (AUTM-1866); the price carries the
+ * row's weight. */
 const NAME_TEXT = "block text-base font-bold leading-snug tracking-normal [overflow-wrap:anywhere]";
+const NAME_TEXT_MENU = "block text-base font-medium leading-snug tracking-normal [overflow-wrap:anywhere]";
+
+/* AUTM-1866: the Book pill, Button's quiet pill at its 44px size. On the band
+ * card quiet's own fill (band) would vanish, so the pill takes the next step,
+ * band-press, and swaps to band while the card around it is hovered: always
+ * one tonal step off the card, never white, never ink, never lime (the page's
+ * one lime action lives outside the list). Its own hover keeps the fill and
+ * turns the label to the accent. `relative z-[2]` lifts a real control above
+ * the card's stretched hit area, as More is lifted. */
+const BOOK_PILL =
+  "min-h-11 bg-[var(--band-press)] text-[var(--text-strong)] group-hover/service:bg-[var(--band)] hover:bg-[var(--band-press)]! hover:text-[var(--accent)]";
+const BOOK_PILL_SELECTED = "min-h-11 bg-[var(--on-selected)] text-[var(--selected)]";
 
 /* The stretched hit area: the link or label's ::after covers the card. It
  * covers the card only while the card root is its containing block, so every
@@ -410,7 +515,9 @@ function forwardStrayClick(event: ReactMouseEvent<HTMLDivElement>) {
   if (owner && card.contains(owner)) return;
   const selection = card.ownerDocument.getSelection();
   if (selection && !selection.isCollapsed && card.contains(selection.anchorNode)) return;
-  if (hit.tagName === "LABEL") {
+  // A label selects its radio; a button (open mode) opens. Neither needs the
+  // pointer's coordinates or modifiers.
+  if (hit.tagName === "LABEL" || hit.tagName === "BUTTON") {
     hit.click();
     return;
   }
@@ -445,7 +552,9 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
       priceLabel,
       pricePrefix,
       priceLines,
+      priceNote,
       durationLabel,
+      locationLabel,
       workingDaysLabel,
       chips,
       addonsHint,
@@ -465,6 +574,9 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
       as,
       actionLabel,
       trailingLabel,
+      onOpen,
+      bookHref,
+      onBook,
       onSelect,
       selected = false,
       groupName,
@@ -476,8 +588,10 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
     },
     ref,
   ) {
-    const mode: Mode = onSelect ? "select" : href ? "link" : "static";
+    const mode: Mode = onSelect ? "select" : href ? "link" : onOpen ? "button" : "static";
     const interactive = mode !== "static";
+    const isMenu = layout === "menu";
+    const hasBook = Boolean(bookHref) || Boolean(onBook);
     const uid = useId();
     const nameId = `${uid}-name`;
     const metaId = `${uid}-meta`;
@@ -492,7 +606,10 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
     // load without an effect to reset anything.
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const imageFailed = Boolean(coverImageUrl) && failedUrl === coverImageUrl;
-    const showsNoPhoto = !media && !fallback && (!coverImageUrl || imageFailed);
+    const hasPhoto = Boolean(media) || (Boolean(coverImageUrl) && !imageFailed);
+    // The menu row draws no placeholder at all (AUTM-1866): no photo, no box.
+    const drawsMedia = !isMenu || hasPhoto;
+    const showsNoPhoto = !isMenu && !media && !fallback && (!coverImageUrl || imageFailed);
     const hasNoPhotoLabel = showsNoPhoto && Boolean(noPhotoLabel);
 
     const included = includes ? includes.filter((n) => n.trim().length > 0) : [];
@@ -510,6 +627,9 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
     if (durationLabel) {
       allChips.push({ label: durationLabel, icon: <ClockIcon />, testId: testIds?.duration });
     }
+    if (locationLabel) {
+      allChips.push({ label: locationLabel, icon: <PinIcon />, testId: testIds?.location });
+    }
     if (chips) allChips.push(...chips);
     if (addonsHint) allChips.push({ label: addonsHint, icon: <PlusIcon /> });
 
@@ -526,7 +646,35 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
     const Heading = nameAs as ElementType;
     const LinkComp = (as ?? "a") as ElementType;
     const action = actionLabel ?? trailingLabel;
+    const bookLabel = action ?? "Book";
     const nameInk = selected ? "text-[var(--on-selected)]" : "text-[var(--text-strong)]";
+    const nameText = cn(isMenu ? NAME_TEXT_MENU : NAME_TEXT, nameInk);
+    const muted = selected ? "text-[var(--on-selected)]" : "text-[var(--text-muted)]";
+    const hasPriceLines = !priceNote && Boolean(priceLines && priceLines.length > 0);
+    const hasUnderPrice = Boolean(priceNote) || hasPriceLines;
+
+    /* The status pill and the consumer badge sit on the photo's corner. A menu
+       row with no photo has no corner, so they lead the text instead. */
+    const corner =
+      status || badge ? (
+        <>
+          {status ? (
+            <Badge
+              id={statusId}
+              variant={STATUS_BADGE[status.tone]}
+              data-slot="status"
+              data-tone={status.tone}
+              data-testid={testIds?.status}
+            >
+              {status.label}
+              {/* A full stop the eye never sees, so the description
+                  reads "Draft. 45 min" rather than "Draft 45 min". */}
+              <span className="sr-only">.</span>
+            </Badge>
+          ) : null}
+          {badge ? <div className="flex">{badge}</div> : null}
+        </>
+      ) : null;
 
     let mediaContent: ReactNode;
     if (media) {
@@ -560,6 +708,102 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
         ? ({ "--service-card-index": Math.max(0, Math.floor(revealIndex)) } as CSSProperties)
         : undefined;
 
+    /* The foot's right-hand parts: the radio's state light, or the picture of
+       the card's own action, then Book when it is a control of its own. */
+    const actionParts: ReactNode[] = [];
+    if (mode === "select") {
+      actionParts.push(
+        <span
+          key="indicator"
+          aria-hidden="true"
+          className={cn(
+            "grid size-6 shrink-0 place-items-center rounded-full transition-colors duration-[var(--motion-panel-in)]",
+            selected
+              ? "bg-[var(--on-selected)] text-[var(--selected)]"
+              : "border-2 border-[var(--field-edge)] bg-[var(--paper)]",
+          )}
+        >
+          {selected ? <CheckIcon /> : null}
+        </span>,
+      );
+    } else if ((mode === "link" || mode === "button") && action && !hasBook) {
+      actionParts.push(
+        isMenu ? (
+          /* AUTM-1866: the same quiet pill as a real Book, drawn only. The
+             card is the target, so it changes with the card's hover. */
+          <span
+            key="pill"
+            aria-hidden="true"
+            data-slot="action-pill"
+            className={cn(
+              buttonVariants({ variant: "quiet", size: "sm", press: false }),
+              "cursor-pointer",
+              selected ? BOOK_PILL_SELECTED : BOOK_PILL,
+              hasPhoto && "@min-[16rem]:flex-1",
+            )}
+          >
+            {action}
+          </span>
+        ) : (
+          /* AUTM-1838 (Don, 2026-10-12: no black buttons, the rest are
+             quiet): a list repeats this pill on every card, so it is the
+             quiet secondary, raised on the band card. The page's one lime
+             action lives outside the list. */
+          <span
+            key="pill"
+            aria-hidden="true"
+            className="inline-flex min-h-9 shrink-0 items-center rounded-[1.125rem] bg-[var(--raised)] px-4 text-[0.9375rem] font-medium leading-tight text-[var(--text-strong)] transition-colors duration-[var(--motion-panel-in)]"
+          >
+            {action}
+          </span>
+        ),
+      );
+    }
+    if (hasBook) {
+      /* AUTM-1866: Book is its own control. A second focus stop with its own
+         ring, named "Book <service>" and described by the price; above the
+         stretched hit area, and an `a[href]` or a `button`, so the card's
+         stray-click forwarding leaves its click alone. */
+      const bookClass = cn(
+        buttonVariants({ variant: "quiet", size: "sm" }),
+        "relative z-[2]",
+        selected ? BOOK_PILL_SELECTED : BOOK_PILL,
+        isMenu && hasPhoto && "@min-[16rem]:flex-1",
+      );
+      const bookText = (
+        <>
+          {bookLabel}
+          <span className="sr-only"> {name}</span>
+        </>
+      );
+      actionParts.push(
+        bookHref ? (
+          <LinkComp
+            key="book"
+            href={bookHref}
+            aria-describedby={priceId}
+            data-slot="book"
+            data-testid={testIds?.book}
+            className={bookClass}
+          >
+            {bookText}
+          </LinkComp>
+        ) : (
+          <button
+            key="book"
+            type="button"
+            onClick={() => onBook?.()}
+            aria-describedby={priceId}
+            data-slot="book"
+            data-testid={testIds?.book}
+            className={bookClass}
+          >
+            {bookText}
+          </button>
+        ),
+      );
+    }
+
     return (
       <div
         ref={ref as Ref<HTMLDivElement>}
@@ -580,7 +824,13 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
           selected
             ? "bg-[var(--selected)] text-[var(--on-selected)]"
             : "bg-[var(--band)] text-[var(--text-strong)]",
-          interactive && !selected && "hover:bg-[var(--band-press)]",
+          // A pointer on Book is Book's (AUTM-1866): the card does not light
+          // up as if the press would open it.
+          interactive &&
+            !selected &&
+            (hasBook
+              ? "[&:hover:not(:has([data-slot=book]:hover))]:bg-[var(--band-press)]"
+              : "hover:bg-[var(--band-press)]"),
           interactive && "cursor-pointer motion-safe:has-[[data-hit]:active]:scale-[0.985]",
           revealIndex != null && 'service-card-reveal',
           className,
@@ -602,45 +852,36 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
         ) : null}
 
         <div className={ROW[layout]}>
-          <div
-            data-slot="media"
-            className={cn(
-              "relative aspect-[4/3] overflow-hidden rounded-2xl bg-[var(--paper)] @container/media",
-              MEDIA_BOX[layout],
-              description && included.length > 0 && MEDIA_SPAN_THREE[layout],
-            )}
-          >
+          {drawsMedia ? (
             <div
+              data-slot="media"
               className={cn(
-                "absolute inset-0",
-                interactive &&
-                  "transition-[scale] duration-[var(--motion-sheet-in)] ease-[var(--motion-ease-out)] motion-safe:group-hover/service:scale-[1.04]",
+                "relative overflow-hidden rounded-2xl bg-[var(--paper)] @container/media",
+                MEDIA_BOX[layout],
+                description && included.length > 0 && MEDIA_SPAN_THREE[layout],
               )}
             >
-              {mediaContent}
-            </div>
-            {status ? (
-              <div className="absolute left-2 right-2 top-2 flex flex-wrap items-start gap-1.5">
-                <Badge
-                  id={statusId}
-                  variant={STATUS_BADGE[status.tone]}
-                  data-slot="status"
-                  data-tone={status.tone}
-                  data-testid={testIds?.status}
-                >
-                  {status.label}
-                  {/* A full stop the eye never sees, so the description
-                      reads "Draft. 45 min" rather than "Draft 45 min". */}
-                  <span className="sr-only">.</span>
-                </Badge>
-                {badge ? <div className="flex">{badge}</div> : null}
+              <div
+                className={cn(
+                  "absolute inset-0",
+                  interactive &&
+                    "transition-[scale] duration-[var(--motion-sheet-in)] ease-[var(--motion-ease-out)] motion-safe:group-hover/service:scale-[1.04]",
+                )}
+              >
+                {mediaContent}
               </div>
-            ) : badge ? (
-              <div className="absolute left-2 top-2 flex">{badge}</div>
-            ) : null}
-          </div>
+              {status ? (
+                <div className="absolute left-2 right-2 top-2 flex flex-wrap items-start gap-1.5">{corner}</div>
+              ) : badge ? (
+                <div className="absolute left-2 top-2 flex">{badge}</div>
+              ) : null}
+            </div>
+          ) : null}
 
-          <div className={cn("flex min-w-0 flex-col gap-2", CONTENT[layout])}>
+          <div className={cn("flex min-w-0 flex-col gap-2", CONTENT[layout], isMenu && !hasPhoto && MENU_CONTENT_FULL)}>
+            {!drawsMedia && corner ? (
+              <div className="mb-1 flex flex-wrap items-start gap-1.5">{corner}</div>
+            ) : null}
             {/* The heading carries placement only. Its type and colour sit on
                 the element inside it, because merchant-mobile and customer-web
                 both style h1 to h6 with an UNLAYERED rule (colour
@@ -656,28 +897,73 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                   data-slot="action"
                   data-hit=""
                   data-testid={testIds?.action}
-                  className={cn(HIT, NAME_TEXT, nameInk)}
+                  className={cn(HIT, nameText)}
                 >
                   {name}
                 </LinkComp>
+              ) : mode === "button" ? (
+                <button
+                  type="button"
+                  onClick={() => onOpen?.()}
+                  aria-describedby={describedBy}
+                  data-slot="action"
+                  data-hit=""
+                  data-testid={testIds?.action}
+                  className={cn(HIT, nameText, "w-full text-start")}
+                >
+                  {name}
+                </button>
               ) : mode === "select" ? (
-                <label htmlFor={inputId} data-hit="" className={cn(HIT, NAME_TEXT, nameInk)}>
+                <label htmlFor={inputId} data-hit="" className={cn(HIT, nameText)}>
                   {name}
                 </label>
               ) : (
-                <span className={cn(NAME_TEXT, nameInk)}>{name}</span>
+                <span className={nameText}>{name}</span>
               )}
             </Heading>
 
+            {isMenu && allChips.length > 0 ? (
+              /* AUTM-1866: ONE meta line, as Wise writes a detail line:
+                 "15 min · At the workshop". Plain text and a visible middle
+                 dot, which a screen reader takes as a pause; each part keeps
+                 its own test id, so its text is exactly its label. No chip
+                 pills and no icons: a chip's `icon` is not drawn here. */
+              <p
+                id={metaId}
+                data-slot="meta"
+                className={cn("text-sm leading-snug [overflow-wrap:anywhere]", muted)}
+              >
+                {allChips.map((chip, i) => (
+                  <Fragment key={i}>
+                    {i > 0 ? " · " : null}
+                    <span data-testid={chip.testId}>{chip.label}</span>
+                  </Fragment>
+                ))}
+              </p>
+            ) : null}
+
             {description ? (
-              <Description
-                id={descId}
-                className={DESC[layout]}
-                text={description}
-                name={name}
-                selected={selected}
-                toggleTestId={testIds?.descriptionToggle}
-              />
+              isMenu ? (
+                /* Two lines, clamped, and no More (AUTM-1866): the card opens
+                   the service, where the rest is read. The full text stays in
+                   the DOM for a screen reader. */
+                <p
+                  id={descId}
+                  data-slot="description"
+                  className={cn("mt-0.5 line-clamp-2 text-sm leading-normal [overflow-wrap:anywhere]", muted)}
+                >
+                  {description}
+                </p>
+              ) : (
+                <Description
+                  id={descId}
+                  className={DESC[layout]}
+                  text={description}
+                  name={name}
+                  selected={selected}
+                  toggleTestId={testIds?.descriptionToggle}
+                />
+              )
             ) : null}
 
             {included.length > 0 ? (
@@ -724,7 +1010,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
               </div>
             ) : null}
 
-            {allChips.length > 0 ? (
+            {!isMenu && allChips.length > 0 ? (
               <div id={metaId} className={cn("flex flex-wrap content-start gap-1.5", CHIPS[layout])}>
                 {allChips.map((chip, i) => (
                   <Fragment key={i}>
@@ -785,9 +1071,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                     <s data-slot="compare-at" data-testid={testIds?.compareAtPrice}>
                       {compareAtPriceLabel}
                     </s>
-                    {showSaving || (priceLines && priceLines.length > 0) ? (
-                      <span className="sr-only">, </span>
-                    ) : null}
+                    {showSaving || hasUnderPrice ? <span className="sr-only">, </span> : null}
                   </p>
                   {showSaving ? (
                     <Badge variant="brand" data-slot="saving" data-testid={testIds?.saving}>
@@ -796,7 +1080,9 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                   ) : null}
                 </div>
               ) : (
-                <p className="text-lg font-bold leading-tight tabular-nums">
+                /* The menu row's total is the size of the name, in bold: it
+                   leads the foot without shouting over the service. */
+                <p className={isMenu ? "text-base font-bold leading-tight tabular-nums" : "text-lg font-bold leading-tight tabular-nums"}>
                   {pricePrefix ? (
                     <span
                       className={cn(
@@ -808,10 +1094,23 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                     </span>
                   ) : null}
                   <span data-testid={testIds?.price}>{priceLabel}</span>
-                  {priceLines && priceLines.length > 0 ? <span className="sr-only">, </span> : null}
+                  {hasUnderPrice ? <span className="sr-only">, </span> : null}
                 </p>
               )}
-              {priceLines && priceLines.length > 0 ? (
+              {priceNote ? (
+                /* AUTM-1866: ONE small line under the all-in total, e.g.
+                   "incl. $0.99 booking fee". The total stays the prominent
+                   figure (Australian Consumer Law s48, AUTM-1320). It takes
+                   the price-lines test id unless it has its own, so a locator
+                   that read the lines still finds what sits under the total. */
+                <p
+                  data-slot="price-note"
+                  data-testid={testIds?.priceNote ?? testIds?.priceLines}
+                  className={cn("mt-0.5 text-[0.8125rem] leading-snug tabular-nums", muted)}
+                >
+                  {priceNote}
+                </p>
+              ) : hasPriceLines && priceLines ? (
                 /* One line per part, stacked under the total. The spaces
                    are real text, so the block reads as one sentence to a
                    screen reader and to a test: "Service $80 + booking fee
@@ -835,30 +1134,17 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
               ) : null}
             </div>
 
-            {mode === "select" ? (
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "grid size-6 shrink-0 place-items-center rounded-full transition-colors duration-[var(--motion-panel-in)]",
-                  selected
-                    ? "bg-[var(--on-selected)] text-[var(--selected)]"
-                    : "border-2 border-[var(--field-edge)] bg-[var(--paper)]",
-                )}
-              >
-                {selected ? <CheckIcon /> : null}
-              </span>
-            ) : mode === "link" && action ? (
-              /* AUTM-1838 (Don, 2026-10-12: no black buttons, the rest are
-                 quiet): a list repeats this pill on every card, so it is the
-                 quiet secondary, raised on the band card. The page's one lime
-                 action lives outside the list. */
-              <span
-                aria-hidden="true"
-                className="inline-flex min-h-9 shrink-0 items-center rounded-[1.125rem] bg-[var(--raised)] px-4 text-[0.9375rem] font-medium leading-tight text-[var(--text-strong)] transition-colors duration-[var(--motion-panel-in)]"
-              >
-                {action}
-              </span>
-            ) : null}
+            {isMenu ? (
+              actionParts.length > 0 ? (
+                /* The photo's column of the foot's subgrid: Book sits under
+                   the photo, at its width. */
+                <div className="flex min-w-0 items-center justify-end gap-2 @min-[16rem]:col-start-2">
+                  {actionParts}
+                </div>
+              ) : null
+            ) : (
+              actionParts
+            )}
           </div>
         </div>
       </div>
@@ -1078,6 +1364,25 @@ function CalendarIcon({ large }: { large?: boolean }) {
   );
 }
 
+/* Solar's map-point, linear: where a service is done (`locationLabel`). */
+function PinIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 21c-.6 0-7-5.6-7-11a7 7 0 0 1 14 0c0 5.4-6.4 11-7 11Z" />
+      <circle cx="12" cy="10" r="2.5" />
+    </svg>
+  );
+}
+
 function SparkleIcon() {
   return (
     <svg
@@ -1158,8 +1463,29 @@ export function ServiceCardSkeleton({
       {...(label ? { role: "status", "aria-live": "polite" as const } : { "aria-hidden": true })}
       className={cn("flex h-full flex-col rounded-[1.5rem] bg-[var(--band)] p-2.5 @container", className)}
     >
+      {layout === "menu" ? (
+        /* AUTM-1866: the menu row's shape. The name, the meta line, two
+           lines of description; the photo's square on the right; the price
+           and the Book pill in the foot. */
+        <div className={ROW.menu}>
+          <div className={cn("rounded-2xl", BLOCK, MEDIA_BOX.menu)} />
+          <div className={cn("flex min-w-0 flex-col gap-2", CONTENT.menu)}>
+            <div className={cn("h-5 w-3/4 rounded-lg", BLOCK)} />
+            <div className={cn("h-4 w-1/2 rounded-lg", BLOCK)} />
+            <div className={cn("mt-1 h-4 w-full rounded-lg", BLOCK)} />
+            <div className={cn("h-4 w-2/3 rounded-lg", BLOCK)} />
+          </div>
+          <div className={cn("flex flex-wrap justify-between gap-x-3 gap-y-2", FOOT.menu)}>
+            <div className="flex flex-col gap-1.5">
+              <div className={cn("h-5 w-16 rounded-lg", BLOCK)} />
+              <div className={cn("h-3.5 w-28 rounded-lg", BLOCK)} />
+            </div>
+            <div className={cn("h-11 w-20 rounded-[1.375rem] @min-[16rem]:col-start-2 @min-[16rem]:w-full", BLOCK)} />
+          </div>
+        </div>
+      ) : (
       <div className={ROW[layout]}>
-        <div className={cn("aspect-[4/3] rounded-2xl", BLOCK, MEDIA_BOX[layout])} />
+        <div className={cn("rounded-2xl", BLOCK, MEDIA_BOX[layout])} />
         <div className={cn("flex min-w-0 flex-col gap-2", CONTENT[layout])}>
           <div className={cn("h-5 w-3/4 rounded-lg", BLOCK, NAME[layout])} />
           <div className={cn("flex flex-col gap-2", DESC[layout])}>
@@ -1175,6 +1501,7 @@ export function ServiceCardSkeleton({
           <div className={cn("h-6 w-20 rounded-lg", BLOCK)} />
         </div>
       </div>
+      )}
       {label ? <span className="sr-only">{label}</span> : null}
     </div>
   );

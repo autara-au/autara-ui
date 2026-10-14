@@ -273,6 +273,8 @@ export {
     isMultiDay,
     workingDaysLabel,
     DROP_OFF_TAG,
+    serviceLocationLabel,
+    type ListingBookingMode,
     type ListingPriceBreakdown,
     type ListingPrice,
     type ListingPriceParts,
