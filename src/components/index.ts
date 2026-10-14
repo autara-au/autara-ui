@@ -377,6 +377,7 @@ export {
     type VehiclePickerErrors,
 } from './VehiclePicker'
 export { VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps } from './VehicleSilhouette'
+export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps } from './VehicleMakeMark'
 export {
     VehicleCard,
     VehicleAddCard,

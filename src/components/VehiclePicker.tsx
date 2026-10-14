@@ -22,6 +22,7 @@ import { FormField } from './FormField'
 import { Input } from './Input'
 import { SearchInput } from './SearchInput'
 import { SwatchRadioGroup } from './SwatchRadioGroup'
+import { VehicleMakeMark } from './VehicleMakeMark'
 import { VehicleSilhouette } from './VehicleSilhouette'
 
 /**
@@ -166,9 +167,10 @@ const ChevronGlyph = () => (
 
 const FOCUS =
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]'
-/* A make tile: a 56px control on the shared control radius, band with ink. */
+/* A make tile: the make's mark over its name, an 80px control on the shared
+   control radius, band with ink (the mark takes the ink too). */
 const TILE = cn(
-    'flex min-h-14 min-w-0 items-center justify-center rounded-[var(--radius-autara-md)] px-3 py-2 text-center',
+    'flex min-h-20 min-w-0 flex-col items-center justify-center gap-1.5 rounded-[var(--radius-autara-md)] px-3 py-2.5 text-center',
     'bg-[var(--band)] text-[0.9375rem] font-medium text-[var(--text-strong)] hover:bg-[var(--band-press)]',
     'motion-press disabled:cursor-not-allowed',
     FOCUS
@@ -305,6 +307,10 @@ export function VehiclePicker({
     }
 
     const results = React.useMemo(() => searchVehicleCatalog(query, catalog), [query, catalog])
+    /* The listbox's active option (the one Enter takes): the best match
+       until the arrows move it, and back to it whenever the query changes. */
+    const [active, setActive] = React.useState(0)
+    const activeIndex = results.length ? Math.min(active, results.length - 1) : -1
     const popular = popularVehicleMakes(catalog)
     const others = otherVehicleMakes(catalog)
 
@@ -321,6 +327,8 @@ export function VehiclePicker({
     const titleId = `${uid}-title`
     const searchId = `${uid}-search`
     const statusId = `${uid}-status`
+    const listboxId = `${uid}-listbox`
+    const optionId = (i: number) => `${uid}-option-${i}`
     const makeErrorId = `${uid}-make-error`
     const modelErrorId = `${uid}-model-error`
     const typeErrorId = `${uid}-type-error`
@@ -336,9 +344,18 @@ export function VehiclePicker({
                     Find your car
                 </Heading>
                 <div className="flex flex-col gap-2">
+                    {/* One field that matches make or model as the customer types:
+                        an ARIA 1.2 combobox over a listbox of matches. Focus stays
+                        in the field; Up and Down move the active match, Enter takes
+                        it (the best one until the arrows move), Escape clears. */}
                     <SearchInput
                         id={searchId}
                         type="search"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-expanded={results.length > 0}
+                        aria-controls={listboxId}
+                        aria-activedescendant={activeIndex >= 0 ? optionId(activeIndex) : undefined}
                         value={query}
                         disabled={disabled}
                         autoFocus={autoFocusSearch}
@@ -350,12 +367,25 @@ export function VehiclePicker({
                         placeholder="Search make or model, like Hilux"
                         data-field="vehicleMake"
                         data-testid={`${p}-search`}
-                        onChange={(e) => setQuery(e.target.value)}
+                        onChange={(e) => {
+                            setQuery(e.target.value)
+                            setActive(0)
+                        }}
                         onKeyDown={(e) => {
-                            /* Enter takes the best match, as a search box should. */
-                            if (e.key === 'Enter' && results[0]) {
+                            if (!results.length) return
+                            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
                                 e.preventDefault()
-                                chooseResult(results[0])
+                                const step = e.key === 'ArrowDown' ? 1 : -1
+                                setActive((activeIndex + step + results.length) % results.length)
+                            } else if (e.key === 'Enter' && activeIndex >= 0) {
+                                e.preventDefault()
+                                chooseResult(results[activeIndex]!)
+                            } else if (e.key === 'Escape' && query) {
+                                /* Clear the search first; a second Escape is the dialog's. */
+                                e.preventDefault()
+                                e.stopPropagation()
+                                setQuery('')
+                                setActive(0)
                             }
                         }}
                     />
@@ -375,43 +405,53 @@ export function VehiclePicker({
                 {query.trim() ? (
                     <div className="flex flex-col gap-2">
                         {results.length ? (
-                            <ul className="m-0 flex list-none flex-col gap-1 p-0" aria-label="Matches" data-testid={`${p}-results`}>
-                                {results.map((r) => (
-                                    <li key={resultId(r)}>
-                                        <button
-                                            type="button"
-                                            disabled={disabled}
-                                            onClick={() => chooseResult(r)}
+                            <ul
+                                id={listboxId}
+                                role="listbox"
+                                aria-label="Matches"
+                                className="m-0 flex list-none flex-col gap-1 p-0"
+                                data-testid={`${p}-results`}
+                            >
+                                {results.map((r, i) => {
+                                    const on = i === activeIndex
+                                    const name = r.kind === 'model' ? `${r.make} ${r.model}` : r.make
+                                    return (
+                                        <li
+                                            key={resultId(r)}
+                                            id={optionId(i)}
+                                            role="option"
+                                            aria-selected={on}
+                                            aria-disabled={disabled || undefined}
                                             data-testid={resultId(r)}
+                                            /* Keep focus in the field: the field owns the keys. */
+                                            onMouseDown={(e) => e.preventDefault()}
+                                            onMouseMove={() => (on ? undefined : setActive(i))}
+                                            onClick={() => (disabled ? undefined : chooseResult(r))}
                                             className={cn(
-                                                'flex min-h-14 w-full min-w-0 items-center gap-3 rounded-[var(--radius-autara-md)] px-3 py-2 text-left',
-                                                'hover:bg-[var(--band)] motion-press-row disabled:cursor-not-allowed',
-                                                FOCUS
+                                                'flex min-h-14 w-full min-w-0 cursor-pointer items-center gap-3 rounded-[var(--radius-autara-md)] px-3 py-2 text-left motion-press-row',
+                                                on ? 'bg-[var(--band)]' : 'hover:bg-[var(--band)]',
+                                                disabled && 'cursor-not-allowed'
                                             )}
                                         >
-                                            {r.kind === 'model' ? (
-                                                <span className="w-16 shrink-0" aria-hidden="true">
-                                                    <VehicleSilhouette body={r.body} />
-                                                </span>
-                                            ) : (
-                                                /* A make has no one shape (and no logo, Don 2026-10-14): the
-                                                   space keeps its name in line with the models above. */
-                                                <span className="w-16 shrink-0" aria-hidden="true" />
-                                            )}
+                                            {/* The make's mark, then the name: "Toyota HiLux", with
+                                                what it is under it (Don, 2026-10-14). */}
+                                            <span className="grid size-10 shrink-0 place-items-center rounded-[var(--radius-autara-sm)] bg-[var(--band)] text-[var(--text-strong)]">
+                                                <VehicleMakeMark make={r.make} className="size-6" />
+                                            </span>
                                             <span className="flex min-w-0 flex-1 flex-col">
                                                 <span className="text-[0.9375rem] font-medium text-[var(--text-strong)] [overflow-wrap:anywhere]">
-                                                    {r.kind === 'model' ? `${r.make} ${r.model}` : r.make}
+                                                    {name}
                                                 </span>
                                                 <span className="text-[0.8125rem] text-[var(--text-muted)]">
                                                     {r.kind === 'model' ? vehicleBodyLabel(r.body) : 'All models'}
                                                 </span>
                                             </span>
-                                            <span className="shrink-0 text-[var(--text-subtle)]">
+                                            <span className="shrink-0 text-[var(--text-subtle)]" aria-hidden="true">
                                                 <ChevronGlyph />
                                             </span>
-                                        </button>
-                                    </li>
-                                ))}
+                                        </li>
+                                    )
+                                })}
                             </ul>
                         ) : (
                             <p className="m-0 text-[0.9375rem] text-[var(--text-muted)]" data-testid={`${p}-no-results`}>
@@ -449,6 +489,7 @@ export function VehiclePicker({
                                     onClick={() => chooseMake(m.name)}
                                     data-testid={`${p}-make-option-${vehicleSlug(m.name)}`}
                                 >
+                                    <VehicleMakeMark make={m.name} className="size-7" />
                                     <span className="[overflow-wrap:anywhere]">{m.name}</span>
                                 </button>
                             ))}
@@ -469,6 +510,7 @@ export function VehiclePicker({
                                         onClick={() => chooseMake(m.name)}
                                         data-testid={`${p}-make-option-${vehicleSlug(m.name)}`}
                                     >
+                                        <VehicleMakeMark make={m.name} className="size-7" />
                                         <span className="[overflow-wrap:anywhere]">{m.name}</span>
                                     </button>
                                 ))}
@@ -522,6 +564,7 @@ export function VehiclePicker({
                     >
                         <BackGlyph />
                     </button>
+                    <VehicleMakeMark make={make?.name ?? value.make} className="size-7 text-[var(--text-strong)]" />
                     <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
                         {make?.name ?? value.make}
                     </Heading>
@@ -630,9 +673,17 @@ export function VehiclePicker({
                     ) : (
                         <div className="flex min-w-0 flex-col" data-testid={`${p}-car`}>
                             <div className="flex flex-wrap items-center justify-between gap-x-3">
-                                <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
-                                    {carName}
-                                </Heading>
+                                {/* The chosen car: its make's mark beside its name. */}
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <VehicleMakeMark
+                                        make={value.make}
+                                        className="size-7 text-[var(--text-strong)]"
+                                        testId={`${p}-car-mark`}
+                                    />
+                                    <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
+                                        {carName}
+                                    </Heading>
+                                </div>
                                 <button
                                     type="button"
                                     disabled={disabled}
