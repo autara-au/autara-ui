@@ -1085,6 +1085,21 @@
         animation-delay: calc(var(--stagger-i, 0) * var(--motion-stagger));
     }
 }
+/* A step inside a component replacing the one before (AUTM-1870:
+ * VehiclePicker's Find, Model and Details). The screen's own move, at the
+ * scale of a step: 6% from the side it comes from and a fade, on the tab's
+ * slide and the house ease-out. Keyed on the element's own `data-step-dir`,
+ * never on `html`, so only the step that changed moves; the component
+ * remounts the step (by key) when it changes and leaves the attribute off
+ * on its first draw. Never an ancestor of a fixed bar, as .motion-screen. */
+@media (prefers-reduced-motion: no-preference) {
+    .motion-step[data-step-dir="forward"] {
+        animation: autara-screen-push var(--motion-tab) var(--motion-ease-out) both;
+    }
+    .motion-step[data-step-dir="back"] {
+        animation: autara-screen-back var(--motion-tab) var(--motion-ease-out) both;
+    }
+}
 /* Below lg only (64rem), where bars are fixed to the edge; from lg the same
  * bar sits in a side panel and does not travel. The sheet's own keyframes,
  * from the foot. Transform only: the bar is opaque. */

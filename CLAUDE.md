@@ -288,6 +288,18 @@ docs/
   parent's gap, so the foot must carry the row's `gap-x-4` (Book sat 2px off
   the photo until it did). The other layouts render byte-for-byte as before;
   the catalogue tile and PackageCard depend on that.
+- **The vehicle catalog is a copy of customer-api's, by name** (AUTM-1870).
+  `src/lib/vehicle-catalog.ts` holds customer-api's
+  `src/functions/vehicles/vehicleData.ts` makes and models spelled the same
+  ("HiLux", "Mercedes-Benz"), plus a body type per model and the popular
+  tiles. The server decides `is_custom_make` / `is_custom_model` from its own
+  list (case-insensitive), so a name changed here alone turns picked cars into
+  "custom" ones. Change both lists in the same week; `vehicle-catalog.test.ts`
+  pins the make names. VehiclePicker searches this copy because one box over
+  make AND model needs every model at once, which the API serves one make at
+  a time and without bodies. Its messages keep the old form's words
+  byte for byte ("Pick the type that's closest.", ASCII apostrophe): QA's
+  AUTM-TC-700 matches them.
 - **Never put type or colour classes on an `h1` to `h6`; put them on an
   element inside it.** merchant-mobile (`src/main.css`) and customer-web
   (`src/app/globals.css`) both style headings with an UNLAYERED rule (colour
