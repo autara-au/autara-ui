@@ -22,6 +22,9 @@ describe('ChoiceChips', () => {
         expect(screen.getByTestId('chip-b').tabIndex).toBe(0)
         expect(screen.getByTestId('chip-a').tabIndex).toBe(-1)
         expect(screen.getByTestId('chip-b').className).toContain('bg-[var(--selected)]')
+        // The chosen chip carries a mark that is not colour (WCAG 1.4.1).
+        expect(screen.getByTestId('chip-b').querySelector('[data-selected-mark]')).not.toBeNull()
+        expect(screen.getByTestId('chip-a').querySelector('[data-selected-mark]')).toBeNull()
     })
 
     it('chooses on tap, and a disabled chip says why and chooses nothing', () => {

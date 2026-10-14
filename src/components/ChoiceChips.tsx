@@ -78,7 +78,17 @@ const CHIP =
 
 function Tick() {
     return (
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="-ml-0.5 shrink-0">
+        <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            fill="currentColor"
+            className="-ml-0.5 shrink-0"
+            // The non-colour mark of the chosen option (WCAG 1.4.1), the same
+            // hook the merchant app's tiles carry, so one check reads both.
+            data-selected-mark=""
+        >
             <path
                 fillRule="evenodd"
                 clipRule="evenodd"
