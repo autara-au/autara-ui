@@ -75,6 +75,7 @@ export {
     ServiceCard, ServiceCardSkeleton, type ServiceCardProps, type ServiceCardSkeletonProps,
     type ServiceCardLayout, type ServiceCardChip, type ServiceCardPriceLine, type ServiceCardTestIds,
     type ServiceCardStatus, type ServiceCardStatusTone,
+    ServiceDetailSheet, type ServiceDetailSheetProps, type ServiceDetailSheetTestIds,
     PackageCard, type PackageCardProps,
     CardGrid, type CardGridProps, type CardGridColumns,
     TrustItem, type TrustItemProps,

@@ -771,18 +771,25 @@ describe('ServiceCard menu layout (AUTM-1866)', () => {
         expect(open.className.split(' ')).toContain('scale-none!')
     })
 
-    it('draws Book as a quiet pill, 44px, never ink, lime or white', () => {
+    it('draws Book as a solid brand purple pill with a trailing arrow, 44px, never lime (Don, revised)', () => {
         render(<ServiceCard {...menuProps} href="/x" bookHref="/b" testIds={{ book: 'book' }} />)
         const book = screen.getByTestId('book')
         const classes = book.className
         expect(classes).toContain('min-h-11')
-        expect(classes).toContain('bg-[var(--band-press)]')
+        // The fill-grade pair: 4.5:1 in both themes. `--accent` is text grade.
+        expect(classes).toContain('bg-[var(--accent-fill)]')
+        expect(classes).toContain('text-[var(--on-accent)]')
+        expect(classes).toContain('not-disabled:hover:bg-[var(--accent-fill-hover)]')
         expect(classes).toContain('font-medium')
-        expect(classes).not.toMatch(/var\(--(strong|lime|raised|cta-fill|paper)\)/)
+        expect(classes).not.toMatch(/var\(--(strong|lime|raised|cta-fill|paper|band|band-press)\)/)
         expect(classes).not.toMatch(/#[0-9a-f]{3,8}/i)
+        // The arrow is decoration: the name stays "Book <service>".
+        const arrow = book.querySelector('svg')
+        expect(arrow?.getAttribute('aria-hidden')).toBe('true')
+        expect(book).toHaveAccessibleName('Book Tyre shine')
         // A pointer on Book does not light the card up as the card's own press.
         const card = book.closest('[data-slot="service-card"]') as HTMLElement
-        expect(card.className).toContain('[&:hover:not(:has([data-slot=book]:hover))]:bg-[var(--band-press)]')
+        expect(card.className).toContain('[&:hover:not(:has([data-own]:hover))]:bg-[var(--band-press)]')
     })
 
     it('draws the action pill as a picture when the card itself is the target', () => {
@@ -791,6 +798,44 @@ describe('ServiceCard menu layout (AUTM-1866)', () => {
         const pill = screen.getByText('Book')
         expect(pill.getAttribute('aria-hidden')).toBe('true')
         expect(pill.className).toContain('min-h-11')
+        expect(pill.className).toContain('bg-[var(--accent-fill)]')
+        // It darkens with the card, because the card is its target.
+        expect(pill.className).toContain('group-hover/service:bg-[var(--accent-fill-hover)]')
+    })
+
+    it('in the picker with onOpen: the name opens, the state light chooses, the radio keeps its id and name', () => {
+        const onOpen = vi.fn()
+        const onSelect = vi.fn()
+        const { container } = render(
+            <ServiceCard
+                {...menuProps}
+                groupName="g"
+                value="tyre"
+                onSelect={onSelect}
+                onOpen={onOpen}
+                testIds={{ action: 'booking-service-radio', open: 'booking-service-open' }}
+            />,
+        )
+        const radio = screen.getByTestId('booking-service-radio') as HTMLInputElement
+        expect(radio.type).toBe('radio')
+        expect(radio).toHaveAccessibleName('Tyre shine')
+        // QA reads the name through the radio's label.
+        expect(radio.labels?.[0]?.textContent).toBe('Tyre shine')
+        const open = screen.getByTestId('booking-service-open')
+        expect(open.tagName).toBe('BUTTON')
+        expect(open).toHaveAccessibleName('Tyre shine')
+        // A press on the card opens and does not choose.
+        fireEvent.click(container.querySelector('[data-slot="description"]') as Element)
+        fireEvent.click(open)
+        expect(onOpen).toHaveBeenCalledTimes(2)
+        expect(onSelect).not.toHaveBeenCalled()
+        // The light chooses and does not open.
+        const target = container.querySelector('[data-slot="choice-target"]') as HTMLElement
+        expect(target.className).toContain('size-11')
+        expect(target.className).toContain('z-[2]')
+        fireEvent.click(target)
+        expect(onSelect).toHaveBeenCalledTimes(1)
+        expect(onOpen).toHaveBeenCalledTimes(2)
     })
 
     it('stays a radio in the picker, with its state light and no Book', () => {

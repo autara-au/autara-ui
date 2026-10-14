@@ -762,8 +762,10 @@ export const PricedFromAQuote: Story = {
  * detail line): text left, a square-ish photo right and no placeholder
  * without one; the name, then ONE meta line; two lines of description and no
  * More, because the card opens the service; the all-in total with the fee on
- * one small line; a quiet Book of its own, 44px. Check each at the phone and
- * desktop viewports, and in the Theme toolbar's dark.
+ * one small line; Book of its own, 44px, a solid brand purple pill with a
+ * trailing arrow (Don, revised: Book should stand out; never lime). The sheet
+ * the card opens is ServiceDetailSheet. Check each at the phone and desktop
+ * viewports, and in the Theme toolbar's dark.
  */
 
 /** The figures the page has: the server's quote through `listingPrice`. */
@@ -967,7 +969,9 @@ export const MenuProPageDark: Story = {
 /**
  * In context, the booking picker: the same row in select mode, one radio
  * group. A tap anywhere chooses; the state light sits under the photo where
- * Book sits on the page; Continue lives outside the list.
+ * Book sits on the page; Continue lives outside the list. With `onOpen` the
+ * tap opens the service instead and the light chooses on its own: see
+ * ServiceDetailSheet's "In the picker".
  */
 export const MenuPicker: Story = {
   parameters: { layout: "fullscreen" },

@@ -276,7 +276,13 @@ docs/
   its foot is a subgrid.** Text left, photo right (30% of the card in `cqi`,
   at most 8.5rem), no placeholder without a photo, one meta line, no More,
   `priceNote` for the fee, and Book as its own control (`bookHref` /
-  `onBook`, `data-slot="book"`, above the stretched hit area). The foot is
+  `onBook`, `data-slot="book"`, above the stretched hit area): a solid
+  `--accent-fill` pill under `--on-accent` with a trailing arrow (Don,
+  revised). Never `--accent` for that fill: it is text grade and lifts to
+  lavender in dark, under 2:1 with a white label. `onOpen` makes the card open
+  `ServiceDetailSheet`; with `onSelect` too (the picker) the name opens and the
+  radio's state light becomes its own 44px control, the radio keeping its
+  test id and its name. The foot is
   `grid-cols-subgrid` so Book takes exactly the photo's column; a subgrid
   with its own column gap shifts its items by half the difference from the
   parent's gap, so the foot must carry the row's `gap-x-4` (Book sat 2px off

@@ -177,6 +177,11 @@ export interface ServiceCardTestIds {
   descriptionToggle?: string;
   /** The Book control (`bookHref` or `onBook`). */
   book?: string;
+  /**
+   * Select mode with `onOpen`: the name's open control. `action` stays on the
+   * radio, so a locator that read the radio keeps finding it.
+   */
+  open?: string;
 }
 
 export interface ServiceCardProps {
@@ -275,7 +280,9 @@ export interface ServiceCardProps {
 
   /**
    * Open mode (AUTM-1866): the card is a button, e.g. to open the service's
-   * detail in a sheet. `href` wins when both are passed.
+   * detail in a sheet. `href` wins when both are passed. With `onSelect` (the
+   * booking picker) the card opens and the radio's state light becomes a
+   * control of its own, 44px, that chooses without opening.
    */
   onOpen?: () => void;
   /**
@@ -445,15 +452,19 @@ const MEDIA_SPAN_THREE: Record<ServiceCardLayout, string> = {
 const NAME_TEXT = "block text-base font-bold leading-snug tracking-normal [overflow-wrap:anywhere]";
 const NAME_TEXT_MENU = "block text-base font-medium leading-snug tracking-normal [overflow-wrap:anywhere]";
 
-/* AUTM-1866: the Book pill, Button's quiet pill at its 44px size. On the band
- * card quiet's own fill (band) would vanish, so the pill takes the next step,
- * band-press, and swaps to band while the card around it is hovered: always
- * one tonal step off the card, never white, never ink, never lime (the page's
- * one lime action lives outside the list). Its own hover keeps the fill and
- * turns the label to the accent. `relative z-[2]` lifts a real control above
- * the card's stretched hit area, as More is lifted. */
+/* AUTM-1866: the Book pill. Don, 2026-10-14, revised ("Book should stand
+ * out"): a SOLID brand purple pill with a white label and a small trailing
+ * arrow, at Button's 44px size. The fill is `--accent-fill` under
+ * `--on-accent`, the fill-grade pair that holds 4.5:1 in both themes (9.6:1);
+ * `--accent` is text grade and lifts to lavender in dark, where a white label
+ * would measure under 2:1. Never lime: lime stays the page's one primary.
+ * `relative z-[2]` lifts a real control above the card's stretched hit area,
+ * as More is lifted. The drawn-only pill (no `bookHref`/`onBook`) darkens with
+ * the card's hover, because the card is its target; a real Book darkens with
+ * its own. */
 const BOOK_PILL =
-  "min-h-11 bg-[var(--band-press)] text-[var(--text-strong)] group-hover/service:bg-[var(--band)] hover:bg-[var(--band-press)]! hover:text-[var(--accent)]";
+  "min-h-11 gap-1.5 bg-[var(--accent-fill)] text-[var(--on-accent)] not-disabled:hover:bg-[var(--accent-fill-hover)]";
+const BOOK_PILL_DRAWN = "group-hover/service:bg-[var(--accent-fill-hover)]";
 const BOOK_PILL_SELECTED = "min-h-11 bg-[var(--on-selected)] text-[var(--selected)]";
 
 /* The stretched hit area: the link or label's ::after covers the card. It
@@ -592,6 +603,10 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
     const interactive = mode !== "static";
     const isMenu = layout === "menu";
     const hasBook = Boolean(bookHref) || Boolean(onBook);
+    // The picker's card that opens the service: the name opens, the state
+    // light chooses (AUTM-1866).
+    const selectOpens = mode === "select" && Boolean(onOpen);
+    const hasOwnTarget = hasBook || selectOpens;
     const uid = useId();
     const nameId = `${uid}-name`;
     const metaId = `${uid}-meta`;
@@ -712,19 +727,41 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
        the card's own action, then Book when it is a control of its own. */
     const actionParts: ReactNode[] = [];
     if (mode === "select") {
-      actionParts.push(
+      const light = (
         <span
-          key="indicator"
           aria-hidden="true"
           className={cn(
             "grid size-6 shrink-0 place-items-center rounded-full transition-colors duration-[var(--motion-panel-in)]",
             selected
               ? "bg-[var(--on-selected)] text-[var(--selected)]"
               : "border-2 border-[var(--field-edge)] bg-[var(--paper)]",
+            // The radio's own ring, when the card opens and the light chooses.
+            selectOpens &&
+              "group-has-[[data-slot=choice]:focus-visible]/service:outline-2 group-has-[[data-slot=choice]:focus-visible]/service:outline-offset-2 group-has-[[data-slot=choice]:focus-visible]/service:outline-[var(--accent)]",
           )}
         >
           {selected ? <CheckIcon /> : null}
-        </span>,
+        </span>
+      );
+      actionParts.push(
+        selectOpens ? (
+          /* AUTM-1866: the card opens the service, so choosing needs a target
+             of its own: the radio's label, 44px around the 24px light, above
+             the stretched hit area. It names the radio (sr-only), so the
+             radio is still "Interior steam clean, radio". */
+          <label
+            key="indicator"
+            htmlFor={inputId}
+            data-own=""
+            data-slot="choice-target"
+            className="relative z-[2] -m-2.5 grid size-11 shrink-0 cursor-pointer place-items-center rounded-full"
+          >
+            <span className="sr-only">{name}</span>
+            {light}
+          </label>
+        ) : (
+          <Fragment key="indicator">{light}</Fragment>
+        ),
       );
     } else if ((mode === "link" || mode === "button") && action && !hasBook) {
       actionParts.push(
@@ -738,11 +775,12 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
             className={cn(
               buttonVariants({ variant: "quiet", size: "sm", press: false }),
               "cursor-pointer",
-              selected ? BOOK_PILL_SELECTED : BOOK_PILL,
+              selected ? BOOK_PILL_SELECTED : cn(BOOK_PILL, BOOK_PILL_DRAWN),
               hasPhoto && "@min-[16rem]:flex-1",
             )}
           >
             {action}
+            <ArrowRightIcon />
           </span>
         ) : (
           /* AUTM-1838 (Don, 2026-10-12: no black buttons, the rest are
@@ -773,6 +811,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
       const bookText = (
         <>
           {bookLabel}
+          <ArrowRightIcon />
           <span className="sr-only"> {name}</span>
         </>
       );
@@ -783,6 +822,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
             href={bookHref}
             aria-describedby={priceId}
             data-slot="book"
+            data-own=""
             data-testid={testIds?.book}
             className={bookClass}
           >
@@ -795,6 +835,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
             onClick={() => onBook?.()}
             aria-describedby={priceId}
             data-slot="book"
+            data-own=""
             data-testid={testIds?.book}
             className={bookClass}
           >
@@ -828,8 +869,8 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
           // up as if the press would open it.
           interactive &&
             !selected &&
-            (hasBook
-              ? "[&:hover:not(:has([data-slot=book]:hover))]:bg-[var(--band-press)]"
+            (hasOwnTarget
+              ? "[&:hover:not(:has([data-own]:hover))]:bg-[var(--band-press)]"
               : "hover:bg-[var(--band-press)]"),
           interactive && "cursor-pointer motion-safe:has-[[data-hit]:active]:scale-[0.985]",
           revealIndex != null && 'service-card-reveal',
@@ -845,7 +886,7 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
             checked={selected}
             onChange={() => onSelect?.()}
             aria-describedby={describedBy}
-            data-slot="action"
+            data-slot={selectOpens ? "choice" : "action"}
             data-testid={testIds?.action}
             className="sr-only"
           />
@@ -909,6 +950,18 @@ export const ServiceCard = forwardRef<HTMLElement, ServiceCardProps>(
                   data-slot="action"
                   data-hit=""
                   data-testid={testIds?.action}
+                  className={cn(HIT, nameText, "w-full text-start")}
+                >
+                  {name}
+                </button>
+              ) : mode === "select" && selectOpens ? (
+                <button
+                  type="button"
+                  onClick={() => onOpen?.()}
+                  aria-describedby={describedBy}
+                  data-slot="action"
+                  data-hit=""
+                  data-testid={testIds?.open}
                   className={cn(HIT, nameText, "w-full text-start")}
                 >
                   {name}
@@ -1360,6 +1413,24 @@ function CalendarIcon({ large }: { large?: boolean }) {
     >
       <rect x="3.5" y="5" width="17" height="15.5" rx="3.5" />
       <path d="M3.5 10h17M8 3v4M16 3v4" />
+    </svg>
+  );
+}
+
+/* Solar's arrow-right, linear: the Book pill's trailing arrow. Decorative. */
+export function ArrowRightIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="size-4 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M4 12h16m0 0-6-6m6 6-6 6" />
     </svg>
   );
 }
