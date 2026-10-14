@@ -6,6 +6,7 @@ import {
     isMultiDay,
     listingPrice,
     serviceDurationLabel,
+    serviceLocationLabel,
     workingDaysLabel,
 } from './service-listing'
 
@@ -37,6 +38,7 @@ describe('listingPrice', () => {
                 { label: '+ booking fee', value: '$3.92' },
             ],
             includesFee: true,
+            note: 'incl. $3.92 booking fee',
         })
     })
 
@@ -47,6 +49,20 @@ describe('listingPrice', () => {
         expect(JSON.stringify(price)).not.toMatch(/%/)
     })
 
+    it('says the fee inside the total on one line, in the server\'s figure and label (AUTM-1866)', () => {
+        expect(listingPrice({ priceCents: 1000, priceBreakdown: quote(1000, 99) }).note).toBe('incl. $0.99 booking fee')
+        const named = listingPrice({
+            priceCents: 8000,
+            priceBreakdown: { ...quote(8000, 392), bookingFeeLabel: 'Service fee' },
+        })
+        expect(named.note).toBe('incl. $3.92 service fee')
+        expect(named.headline).toBe('$83.92')
+        expect(listingPrice({ priceCents: 8000, priceBreakdown: null }, { feeExpected: true }).note).toBe(
+            'Plus a booking fee, shown before you pay',
+        )
+        expect(listingPrice({ priceCents: 8000, priceBreakdown: null }).note).toBeNull()
+    })
+
     it('is the pro\'s price alone with no fee in the quote', () => {
         expect(listingPrice({ priceCents: 8000, priceBreakdown: quote(8000, 0) })).toEqual({
             headlineCents: 8000,
@@ -54,6 +70,7 @@ describe('listingPrice', () => {
             parts: null,
             lines: null,
             includesFee: false,
+            note: null,
         })
     })
 
@@ -92,5 +109,16 @@ describe('serviceDurationLabel and the multi-day words', () => {
         expect(workingDaysLabel(1)).toBe('1 working day')
         expect(workingDaysLabel(3)).toBe('3 working days')
         expect(DROP_OFF_TAG).toBe('Drop off at the workshop')
+    })
+})
+
+describe('serviceLocationLabel (AUTM-1866)', () => {
+    it('says where a timed service is done, and claims nothing with no modes', () => {
+        expect(serviceLocationLabel(['MOBILE'])).toBe('Comes to you')
+        expect(serviceLocationLabel(['WORKSHOP'])).toBe('At the workshop')
+        expect(serviceLocationLabel(['WORKSHOP', 'MOBILE'])).toBe('Comes to you or at the workshop')
+        expect(serviceLocationLabel([])).toBeNull()
+        expect(serviceLocationLabel(null)).toBeNull()
+        expect(serviceLocationLabel(undefined)).toBeNull()
     })
 })

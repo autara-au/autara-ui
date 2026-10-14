@@ -185,6 +185,11 @@ export {
     type ServiceCardStatus,
     type ServiceCardStatusTone,
 } from './ServiceCard'
+export {
+    ServiceDetailSheet,
+    type ServiceDetailSheetProps,
+    type ServiceDetailSheetTestIds,
+} from './ServiceDetailSheet'
 export { PackageCard, type PackageCardProps } from './PackageCard'
 export { CardGrid, type CardGridProps, type CardGridColumns } from './CardGrid'
 export { TrustItem, type TrustItemProps } from './TrustItem'
