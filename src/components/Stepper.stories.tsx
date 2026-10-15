@@ -189,3 +189,25 @@ export const BookingWizard: Story = {
     </div>
   ),
 };
+
+/**
+ * AUTM-1867: Wise's desktop steps. A done step says what was chosen under it,
+ * the current one what it asks; the label alone stays each step's name.
+ */
+export const WithDetails: Story = {
+    args: {
+        ariaLabel: 'Booking progress',
+        currentStep: 1,
+        onStepClick: () => {},
+        steps: [
+            { id: 'what', label: 'What and when', detail: 'Express wash, Wed 14 Oct, 9:00 am' },
+            { id: 'who', label: 'Who', detail: 'Find them or add them' },
+            { id: 'send', label: 'Send' },
+        ],
+    },
+    render: (args) => (
+        <div className="max-w-[18rem]">
+            <Stepper {...args} />
+        </div>
+    ),
+}

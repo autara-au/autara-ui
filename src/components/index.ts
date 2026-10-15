@@ -208,6 +208,8 @@ export { MessageThread, type MessageThreadProps, type MessageItem, type MessageS
 // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
 export { MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState } from './MessageCard'
 export { QuickReplies, type QuickRepliesProps, type QuickReply } from './QuickReplies'
+// AUTM-1867 — pick one of a few in one tap (services, times), with one trailing action.
+export { ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction } from './ChoiceChips'
 export { ComposerAttachMenu, attachMenuGlyphs, type ComposerAttachMenuProps, type AttachMenuItem } from './ComposerAttachMenu'
 
 // v1.3.0 introduced a standalone TrendingPill component for marker

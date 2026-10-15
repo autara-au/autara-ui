@@ -124,6 +124,8 @@ export {
     // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
     MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState,
     QuickReplies, type QuickRepliesProps, type QuickReply,
+    // AUTM-1867 — pick one of a few in one tap.
+    ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction,
     ComposerAttachMenu, attachMenuGlyphs, type ComposerAttachMenuProps, type AttachMenuItem,
     // Media — pick-then-crop dialog (AUTM-163)
     ImageCropDialog, type ImageCropDialogProps,
