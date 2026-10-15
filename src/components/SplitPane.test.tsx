@@ -118,4 +118,52 @@ describe("SplitPane", () => {
     renderSplit();
     expect(screen.getByTestId("inbox-split-list").style.width).toContain("clamp(20rem");
   });
+
+  // AUTM-1878 follow-up: a side panel at the end, sized by the same splitter.
+  describe('side="end"', () => {
+    const panel = (props: Partial<Parameters<typeof SplitPane>[0]> = {}) =>
+      renderSplit({
+        side: "end",
+        label: "Resize the booking panel",
+        testId: "inbox-panel-split",
+        defaultFraction: 0,
+        defaultMinRem: 24,
+        defaultMaxRem: 24,
+        minRem: 20,
+        maxRem: 36,
+        secondaryMinRem: 30,
+        ...props,
+      });
+
+    it("sizes the end pane, which comes after the line, and names it", () => {
+      panel();
+      const handle = screen.getByRole("separator", { name: "Resize the booking panel" });
+      expect(handle).toHaveAttribute("aria-valuenow", "384");
+      expect(handle).toHaveAttribute("aria-valuemin", "320");
+      expect(handle).toHaveAttribute("aria-valuemax", "576");
+      const sized = screen.getByTestId("inbox-panel-split-panel");
+      expect(handle.getAttribute("aria-controls")).toBe(sized.id);
+      expect(sized).toHaveTextContent("Record");
+      expect(screen.getByTestId("inbox-panel-split-main")).toHaveTextContent("List");
+      // The panel is the last of the three, after the line.
+      expect(handle.compareDocumentPosition(sized) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it("follows the line: Left widens the panel, Right narrows it, Home and End are its bounds", () => {
+      panel();
+      const handle = screen.getByRole("separator");
+      fireEvent.keyDown(handle, { key: "ArrowLeft" });
+      expect(handle).toHaveAttribute("aria-valuenow", "400");
+      fireEvent.keyDown(handle, { key: "ArrowRight", shiftKey: true });
+      expect(handle).toHaveAttribute("aria-valuenow", "336");
+      fireEvent.keyDown(handle, { key: "End" });
+      expect(handle).toHaveAttribute("aria-valuenow", "576");
+      fireEvent.keyDown(handle, { key: "Home" });
+      expect(handle).toHaveAttribute("aria-valuenow", "320");
+      expect(window.localStorage.getItem(KEY)).toBe("20");
+      fireEvent.doubleClick(handle);
+      expect(handle).toHaveAttribute("aria-valuenow", "384");
+      expect(window.localStorage.getItem(KEY)).toBeNull();
+    });
+  });
 });
