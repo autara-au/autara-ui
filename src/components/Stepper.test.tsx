@@ -93,3 +93,23 @@ describe('Stepper — furthestStep', () => {
         expect(tab('Payment')).toBeNull() // current
     })
 })
+
+describe('AUTM-1867: a detail line under a step', () => {
+    it('draws it under the label, outside the step button, so the label stays its name', () => {
+        render(
+            <Stepper
+                currentStep={1}
+                onStepClick={() => {}}
+                steps={[
+                    { id: 'what', label: 'What and when', detail: 'Express wash, Wed 14 Oct' },
+                    { id: 'who', label: 'Who' },
+                ]}
+            />,
+        )
+        const button = screen.getByRole('button', { name: 'What and when' })
+        expect(button.textContent).not.toContain('Express wash')
+        const detail = screen.getByText('Express wash, Wed 14 Oct')
+        expect(detail.closest('[data-step-detail]')?.getAttribute('data-step-detail')).toBe('what')
+        expect(button.contains(detail)).toBe(false)
+    })
+})
