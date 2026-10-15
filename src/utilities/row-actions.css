@@ -34,13 +34,3 @@
         display: inline;
     }
 }
-/* AUTM-1756: while the label is hidden the action is an icon disc, so it takes
- * the icon disc's fill (band on paper measured 1.1:1 and read as a bare
- * glyph). With its label it stays the quiet band pill. Hover and press are the
- * `.icon-disc` layer in both states (utilities/icon-disc.css). */
-@container (min-width: 36em) and (max-width: 59.99em) {
-    .row-actions-inline .row-action {
-        background-color: var(--icon-disc);
-        color: var(--on-icon-disc);
-    }
-}
