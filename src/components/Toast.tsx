@@ -6,6 +6,7 @@ import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../lib/cn'
 import { AutaraLoader } from './AutaraLoader'
+import { CloseButton } from './IconButton'
 
 /**
  * Toast — Autara notification primitive, modelled on the Torph
@@ -429,32 +430,18 @@ function ToastItem({
                     {t.action.label}
                 </button>
             )}
-            <button
+            {/* AUTM-1756: the library's one close control, at `sm` (a 36px
+                disc with a 44px touch area) so the capsule keeps its height.
+                It was a 20px bare cross that drew a disc only on hover. On the
+                ink toast it is the inverse disc, which follows that surface
+                (ink in light, white in dark); on band it is the neutral one. */}
+            <CloseButton
+                label="Dismiss notification"
                 onClick={handleDismiss}
-                className={cn(
-                    /* AUTM-1221: on the ladder. Dismiss is an action, and
-                       round is reserved for people, state lights and status
-                       markers (see shape-language.test.ts). */
-                    'ml-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full transition-colors',
-                    isDark
-                        ? 'text-[var(--text-on-inverse)]/45 hover:bg-[var(--text-on-inverse)]/10 hover:text-[var(--text-on-inverse)]'
-                        : 'text-[var(--text-subtle)] hover:bg-[var(--raised)] hover:text-[var(--text-strong)]'
-                )}
-                aria-label="Dismiss notification"
-            >
-                <svg
-                    aria-hidden
-                    viewBox="0 0 24 24"
-                    width="12"
-                    height="12"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2.4}
-                    strokeLinecap="round"
-                >
-                    <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-            </button>
+                size="sm"
+                tone={isDark ? 'inverse' : 'neutral'}
+                className="-my-1 -mr-1.5 ml-0.5 shrink-0"
+            />
             <style>{`
                 .autara-toast-content { animation: autaraToastMorph 220ms ease-out; }
                 @keyframes autaraToastMorph {

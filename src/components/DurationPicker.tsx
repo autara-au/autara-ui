@@ -5,6 +5,7 @@ import * as React from 'react'
 import { cn } from '../lib/cn'
 import { useLabelFor } from '../lib/use-label-for'
 import { Button } from './Button'
+import { IconButton } from './IconButton'
 import {
     Dialog,
     DialogBody,
@@ -561,7 +562,7 @@ interface DaysStepperProps {
 /**
  * "− 3 working days +". The count is a display figure (Satoshi Black, as
  * autara-ui 7.x sets figures), announced politely as it changes. The minus
- * and plus are the library's icon disc (`Button size="icon"`, quiet), so the
+ * and plus are the library's icon disc (`IconButton`, AUTM-1756), so the
  * stepper spends no new round shape. A stored
  * count outside the bounds still reads as it is, and the first press brings
  * it back inside them rather than one step further out.
@@ -585,16 +586,13 @@ const DaysStepper = React.forwardRef<HTMLDivElement, DaysStepperProps>(function 
             data-value={days}
             className="flex flex-wrap items-center gap-x-5 gap-y-2"
         >
-            <Button
-                variant="quiet"
-                size="icon"
-                aria-label="Fewer working days"
+            <IconButton
+                icon={<StepGlyph plus={false} />}
+                label="Fewer working days"
                 disabled={disabled || days <= min}
                 onClick={() => onChange(fewer)}
                 data-testid={testId ? `${testId}-days-fewer` : undefined}
-            >
-                <StepGlyph plus={false} />
-            </Button>
+            />
             {/* The live region is the <output>; the NAME comes from the span
                 inside it. Chrome leaves an <output> (role status) out of an
                 aria-labelledby name, so pointing at it named the group
@@ -610,16 +608,13 @@ const DaysStepper = React.forwardRef<HTMLDivElement, DaysStepperProps>(function 
                     <span className="text-[1rem] font-medium">working {days === 1 ? 'day' : 'days'}</span>
                 </span>
             </output>
-            <Button
-                variant="quiet"
-                size="icon"
-                aria-label="More working days"
+            <IconButton
+                icon={<StepGlyph plus />}
+                label="More working days"
                 disabled={disabled || days >= max}
                 onClick={() => onChange(more)}
                 data-testid={testId ? `${testId}-days-more` : undefined}
-            >
-                <StepGlyph plus />
-            </Button>
+            />
         </div>
     )
 })

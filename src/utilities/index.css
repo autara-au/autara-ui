@@ -12,6 +12,10 @@
 /* AUTM-1739 — the page track, and scrollbars in the base layer. */
 @import "./layout.css";
 @import "./scrollbars.css";
+/* AUTM-1756 — scroll areas (overscroll, sticky offset, edge fades) and the
+   icon disc's hover and press. */
+@import "./scroll-area.css";
+@import "./icon-disc.css";
 @import "./scroll-story.css";
 @import "./disclosure.css";
 @import "./autohide.css";

@@ -1,6 +1,24 @@
 export { GradientBar } from './GradientBar'
 export { Button, buttonVariants, type ButtonProps } from './Button'
-export { IconButton, type IconButtonProps } from './IconButton'
+export {
+    IconButton,
+    CloseButton,
+    CloseGlyph,
+    iconDiscClasses,
+    resolveIconButtonTone,
+    type IconButtonProps,
+    type IconButtonTone,
+    type IconButtonSize,
+    type CloseButtonProps,
+} from './IconButton'
+// AUTM-1756: a region that scrolls on its own, and its edge reader.
+export {
+    ScrollArea,
+    useScrollEdges,
+    type ScrollAreaProps,
+    type ScrollAreaOrientation,
+    type ScrollEdges,
+} from './ScrollArea'
 export { Input, inputVariants, type InputProps } from './Input'
 export { OtpInput, type OtpInputProps } from './OtpInput'
 export {

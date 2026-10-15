@@ -1,24 +1,42 @@
-/* ─── Scrollbars (AUTM-1739) ────────────────────────────────────────────
+/* ─── Scrollbars (AUTM-1739, AUTM-1756) ─────────────────────────────────
  *
  * Don, 2026-10-05: "scroll bars in windows pretty much ugly default, need
- * visual perfection on scroll views as well." In the base layer, so every
- * consumer's page and every inner scroll area (dialogs, sheets, dropdown
- * lists, rails, tables) takes them with the version bump, and any consumer
- * rule still wins.
+ * visual perfection on scroll views as well." Then, 2026-10-15, of the
+ * Customers and Inbox lists: "it's bad when I see the scroll bar, make it
+ * brand native". In the base layer, so every consumer's page and every inner
+ * scroll area (dialogs, sheets, dropdown lists, rails, tables, list panes)
+ * takes them with the version bump, and any consumer rule still wins.
  *
- * The standard properties first: `scrollbar-width: thin` and
- * `scrollbar-color` from the tokens (tokens/scrollbar.css). Chromium 121+,
- * Firefox and Safari 26 read those and ignore the `::-webkit-scrollbar`
- * rules below, which are the fallback for older WebKit. The thumb firms on
- * hover: the standard properties cannot target the thumb itself, so an inner
- * scroll area's thumb firms while the pointer is over that area; the WebKit
- * fallback hovers the thumb itself.
+ * What a merchant sees with a mouse or a trackpad:
+ *   - a thin, rounded thumb in the brand purple (tokens/scrollbar.css),
+ *     6px drawn in a 12px lane, 8px while the pointer is on it;
+ *   - an inner scroll area shows its thumb while the pointer is over it, while
+ *     focus is inside it (keyboard scrolling), and while it is scrolling
+ *     (`data-scrolling`, which ScrollArea sets): you cannot wheel or swipe a
+ *     trackpad over an area without hovering it, so it shows while scrolling
+ *     either way. At rest it is out of the way; the lane stays, so nothing
+ *     moves when it shows;
+ *   - the page's own bar (on <html>) shows whenever the pointer is in the
+ *     window.
+ *
+ * Two engines, two mechanisms, never both on one element:
+ *   - Blink and WebKit draw `::-webkit-scrollbar`, the only way to get a
+ *     rounded, inset thumb. Chromium 121+ IGNORES those rules on any element
+ *     whose `scrollbar-color` or `scrollbar-width` is not `auto`, and
+ *     `scrollbar-color` inherits, so the standard properties are kept away
+ *     from these engines entirely (the `@supports` below);
+ *   - Firefox has no `::-webkit-scrollbar`, so it takes `scrollbar-width:
+ *     thin` and `scrollbar-color` from the same tokens.
+ *
+ * A finger (no hover, coarse pointer: phones, tablets, the native shells)
+ * keeps the platform's own overlay bar, which already shows only while
+ * scrolling and takes no room.
  *
  * On a brand-deep ground, `.scroll-on-deep` (or `data-ground="deep"`) takes
- * the lighter purple thumb on a transparent track. A page's own scrollbar
- * belongs to the root element: put the class on <html> for a page that is
- * deep end to end, and give <html> the deep background, or the transparent
- * track shows whatever is behind the canvas.
+ * the lighter purple thumb. A page's own scrollbar belongs to the root
+ * element: put the class on <html> for a page that is deep end to end, and
+ * give <html> the deep background, or the transparent track shows whatever
+ * is behind the canvas.
  *
  * Under forced colours (Windows High Contrast) none of this applies: the
  * system draws its own scrollbars. Nothing here hides a scrollbar; content
@@ -26,38 +44,68 @@
  */
 @layer base {
     @media (forced-colors: none) {
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-        }
-        /* Inner scroll areas only: the page's own (on <html>) would read as
-           hovered whenever the pointer is anywhere on the page. */
-        :where(body *):hover {
-            scrollbar-color: var(--scrollbar-thumb-hover) var(--scrollbar-track);
-        }
         .scroll-on-deep,
         [data-ground="deep"] {
             --scrollbar-thumb: var(--scrollbar-thumb-deep);
             --scrollbar-thumb-hover: var(--scrollbar-thumb-deep-hover);
         }
+    }
 
-        /* Older WebKit: the same colours, a 6px thumb in a 10px gutter. */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+    @media (forced-colors: none) and (hover: hover) and (pointer: fine) {
+        /* Blink and WebKit: the drawn thumb. */
+        @supports selector(::-webkit-scrollbar) {
+            ::-webkit-scrollbar {
+                width: var(--scrollbar-size);
+                height: var(--scrollbar-size);
+            }
+            ::-webkit-scrollbar-track,
+            ::-webkit-scrollbar-corner {
+                background: var(--scrollbar-track);
+            }
+            ::-webkit-scrollbar-thumb {
+                min-height: 2.5rem;
+                min-width: 2.5rem;
+                border: var(--scrollbar-inset) solid transparent;
+                border-radius: 9999px;
+                background-color: transparent;
+                background-clip: padding-box;
+            }
+            /* Shown: the page whenever the pointer is in the window, an inner
+               area while hovered, holding focus, or scrolling. */
+            :root::-webkit-scrollbar-thumb,
+            :hover::-webkit-scrollbar-thumb,
+            :focus-within::-webkit-scrollbar-thumb,
+            [data-scrolling]::-webkit-scrollbar-thumb {
+                background-color: var(--scrollbar-thumb);
+            }
+            ::-webkit-scrollbar-thumb:hover,
+            ::-webkit-scrollbar-thumb:active {
+                border-width: var(--scrollbar-inset-hover);
+                background-color: var(--scrollbar-thumb-hover);
+            }
+            /* Chromium repaints a thumb on scroll, not when only the
+               scroller's hover or focus changes. ScrollArea toggles this
+               attribute on pointer enter and leave, focus in and out, and when
+               scrolling stops; a hundredth of a rem on the thumb rebuilds the
+               scrollbar's parts without laying out the content. */
+            [data-scrollbar-tick]::-webkit-scrollbar-thumb {
+                min-height: 2.51rem;
+                min-width: 2.51rem;
+            }
         }
-        ::-webkit-scrollbar-track,
-        ::-webkit-scrollbar-corner {
-            background: var(--scrollbar-track);
-        }
-        ::-webkit-scrollbar-thumb {
-            border: 2px solid transparent;
-            border-radius: 9999px;
-            background-color: var(--scrollbar-thumb);
-            background-clip: padding-box;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: var(--scrollbar-thumb-hover);
+
+        /* Firefox: the standard properties, from the same tokens. */
+        @supports not selector(::-webkit-scrollbar) {
+            * {
+                scrollbar-width: thin;
+                scrollbar-color: transparent var(--scrollbar-track);
+            }
+            :root,
+            :hover,
+            :focus-within,
+            [data-scrolling] {
+                scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+            }
         }
     }
 }

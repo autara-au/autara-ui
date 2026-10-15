@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { cn } from '../lib/cn'
+import { IconButton } from './IconButton'
 import {
     AU_VEHICLE_CATALOG,
     VEHICLE_BODIES,
@@ -558,19 +559,16 @@ export function VehiclePicker({
         content = (
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
+                    {/* AUTM-1756: the library's back disc, which shows on
+                        band as well as paper (band on band vanished). */}
+                    <IconButton
                         disabled={disabled}
                         onClick={backToFind}
-                        aria-label="Back to makes"
+                        label="Back to makes"
                         data-testid={`${p}-back`}
-                        className={cn(
-                            'grid size-11 shrink-0 place-items-center rounded-full bg-[var(--band)] text-[var(--text-strong)] hover:bg-[var(--band-press)] motion-press',
-                            FOCUS
-                        )}
-                    >
-                        <BackGlyph />
-                    </button>
+                        icon={<BackGlyph />}
+                        className="shrink-0"
+                    />
                     <VehicleMakeMark make={make?.name ?? value.make} className="size-7 text-[var(--text-strong)]" />
                     <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
                         {make?.name ?? value.make}

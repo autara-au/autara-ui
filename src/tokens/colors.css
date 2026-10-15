@@ -219,6 +219,26 @@
     --hairline: rgba(17, 24, 39, 0.08);
     /* Inputs, the code boxes and the mobile social button: one legible edge. */
     --field-edge: rgba(14, 10, 26, 0.48);
+    /* AUTM-1756 (Don, 2026-10-05 and 2026-10-15): the icon disc. Every
+     * icon-only control (IconButton, CloseButton, BackButton and the close on
+     * every dialog, sheet and toast) is a FILLED circle, never a bare glyph or
+     * a faint ring. Light: the Wise pattern, a soft lavender grey disc with an
+     * ink glyph (14.3:1). Dark enough to show on band as well as on paper
+     * (1.22:1 on band, 1.37:1 on paper): #e7e3f0 vanished on band at 1.13:1.
+     * Don, of a mid grey disc with a white glyph: "too much dark on white
+     * screen". Hover and press are a currentColor layer over the fill
+     * (`.icon-disc`), so there are no hover tokens to drift.
+     * `-inverse` is the disc on `--surface-inverse` (the ink toast): the dark
+     * disc here, the light one in dark, where that surface is white.
+     * `-ondark` is static: a translucent white disc for brand, brand-deep,
+     * hero and ink grounds, as Wise draws its close on a dark screen.
+     * Pinned by IconButton.colour.test.ts. */
+    --icon-disc: #dfdaea;
+    --on-icon-disc: #0e0a1a;
+    --icon-disc-inverse: #3a3350;
+    --on-icon-disc-inverse: #ffffff;
+    --icon-disc-ondark: rgba(255, 255, 255, 0.16);
+    --on-icon-disc-ondark: #ffffff;
 
     /* ─── Conversation (AUTM-1806, canvas v53 AppChat) ─────────────────
      * The canvas board is the source of truth (Don, 2026-10-09): your own
@@ -403,6 +423,16 @@
     --scrim: rgba(0, 0, 0, 0.6);
     --hairline: rgba(255, 255, 255, 0.1);
     --field-edge: rgba(255, 255, 255, 0.48);
+    /* AUTM-1756: in dark the disc is a step LIGHTER than the surface, with
+     * a white glyph (12.1:1): 1.64:1 on paper, 1.49:1 on band, 1.32:1 on
+     * raised, so it reads as a filled circle and never as a faint ring. On
+     * the inverse surface (white in dark) it is the light disc. */
+    --icon-disc: #3a3350;
+    --on-icon-disc: #ffffff;
+    --icon-disc-inverse: #dfdaea;
+    --on-icon-disc-inverse: #0e0a1a;
+    --icon-disc-ondark: rgba(255, 255, 255, 0.16);
+    --on-icon-disc-ondark: #ffffff;
 
     /* Conversation, dark: brand holds (white on it is 9.5:1); the other
      * side's bubble is raised, because band (#1b1626) on dark paper is
