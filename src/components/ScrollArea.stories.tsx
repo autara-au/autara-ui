@@ -91,7 +91,7 @@ export const ReadOnlyText: Story = {
     ),
 }
 
-/** A horizontal row fades the edge that has more. */
+/** A horizontal row fades the edge that has more. For chips, prefer `ChipRow` (Layout/ChipRow): no bar, chevrons, a drag. */
 export const ChipRow: Story = {
     render: () => (
         <div className="w-[20rem]">

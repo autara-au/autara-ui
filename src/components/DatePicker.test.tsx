@@ -1,7 +1,9 @@
 import * as React from 'react'
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { act, render, screen, fireEvent } from '@testing-library/react'
 
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { DatePicker } from './DatePicker'
 
 const TODAY = '2026-09-09'
@@ -24,10 +26,15 @@ describe('DatePicker', () => {
         // measurement: the rail must be the containing block for the day
         // buttons' absolutely positioned sr-only labels. The measurement lives
         // in the InScrollingPanel story.
+        // AUTM-1756 follow-up: the rail is a ChipRow, whose row is that
+        // containing block (`position: relative` in utilities/chip-row.css).
         render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
         const rail = screen.getByRole('radiogroup')
-        expect(rail.className.split(/\s+/)).toContain('relative')
-        expect(rail.className).toContain('overflow-x-auto')
+        expect(rail.className.split(/\s+/)).toContain('chip-row__scroller')
+        const css = readFileSync(resolve(__dirname, '../utilities/chip-row.css'), 'utf8')
+        const rule = css.slice(css.indexOf('.chip-row__scroller {'), css.indexOf('}', css.indexOf('.chip-row__scroller {')))
+        expect(rule).toContain('position: relative')
+        expect(rule).toContain('overflow-x: auto')
     })
 
     it('starts at `min` when it is later than today', () => {
@@ -173,100 +180,88 @@ describe('DatePicker month sheet navigation (AUTM-1266)', () => {
 })
 
 /**
- * AUTM-1373 — the rail's mouse affordance.
+ * AUTM-1373, then the AUTM-1756 follow-up — the rail's mouse affordance.
  *
  * QA's measurement was 806px of days in a 400px box with the scrollbar
  * suppressed and no arrows, so 7 of 14 days could not be reached with a mouse
- * and nothing said they were there. jsdom has no layout, so the geometry is
- * STATED here rather than measured: that is enough to pin the behaviour, which
- * is that the arrows appear only when there is somewhere to go, disable
- * themselves at each end, and never take a tab stop from the radiogroup. The
- * measurement itself belongs to the InScrollingPanel story.
+ * and nothing said they were there. The rail is now a ChipRow: a named
+ * chevron on the fade at each end that has more, hidden at an end with
+ * nothing more, out of the tab order, keeping the `-earlier` / `-later` test
+ * ids QA reads. jsdom has no layout, so the geometry is STATED here; the drag
+ * and the glide are measured in ChipRow.browser.test.tsx.
  */
-describe('DatePicker rail arrows (AUTM-1373)', () => {
+describe('DatePicker rail chevrons (AUTM-1373, AUTM-1756)', () => {
     /** jsdom reports every box as 0x0; say what the browser would report. */
     function stateGeometry(
         rail: HTMLElement,
         geometry: { scrollWidth: number; clientWidth: number; scrollLeft: number },
     ) {
         for (const [key, value] of Object.entries(geometry)) {
-            Object.defineProperty(rail, key, { value, configurable: true })
+            Object.defineProperty(rail, key, { value, configurable: true, writable: true })
         }
         fireEvent.scroll(rail)
     }
 
-    it('offers no arrows at all while the whole rail fits', () => {
-        // The default in jsdom is a rail that measures 0 in a box of 0, which
-        // is the "nothing to scroll" case.
+    /** Run the rAF-batched edge read. */
+    async function settle() {
+        await act(async () => {
+            await new Promise((r) => requestAnimationFrame(() => r(null)))
+        })
+    }
+
+    const hidden = (testId: string) => screen.getByTestId(testId).closest('.chip-row__arrow')!.hasAttribute('data-hidden')
+
+    it('hides both chevrons while the whole rail fits', async () => {
         render(<DatePicker value="" today={TODAY} onChange={() => {}} stripDays={3} testId="d" />)
-        expect(screen.queryByTestId('d-earlier')).toBeNull()
-        expect(screen.queryByTestId('d-later')).toBeNull()
+        await settle()
+        expect(hidden('d-earlier')).toBe(true)
+        expect(hidden('d-later')).toBe(true)
     })
 
-    it('shows both arrows once the days overflow, with the one that can do nothing disabled', () => {
-        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
-        stateGeometry(screen.getByRole('radiogroup'), {
-            scrollWidth: 806,
-            clientWidth: 400,
-            scrollLeft: 0,
-        })
-        // At the near end: forward is live, back has nowhere to go and says so
-        // rather than looking pressable.
-        expect(screen.getByTestId('d-later')).not.toBeDisabled()
-        expect(screen.getByTestId('d-earlier')).toBeDisabled()
-    })
-
-    it('disables the forward arrow at the far end', () => {
-        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
-        stateGeometry(screen.getByRole('radiogroup'), {
-            scrollWidth: 806,
-            clientWidth: 400,
-            scrollLeft: 406,
-        })
-        expect(screen.getByTestId('d-later')).toBeDisabled()
-        expect(screen.getByTestId('d-earlier')).not.toBeDisabled()
-    })
-
-    it('scrolls the rail forward and back by whole days', () => {
-        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
-        const rail = screen.getByRole('radiogroup')
-        const scrollBy = vi.fn()
-        rail.scrollBy = scrollBy
-        stateGeometry(rail, { scrollWidth: 806, clientWidth: 400, scrollLeft: 200 })
-
-        fireEvent.click(screen.getByTestId('d-later'))
-        // A day pill measures 0 in jsdom, so this is the floor: a third of the
-        // box, three of them.
-        expect(scrollBy).toHaveBeenCalledWith({ left: 399, behavior: 'smooth' })
-        fireEvent.click(screen.getByTestId('d-earlier'))
-        expect(scrollBy).toHaveBeenLastCalledWith({ left: -399, behavior: 'smooth' })
-    })
-
-    it('keeps the radiogroup at one tab stop and stays out of the keyboard path', () => {
-        // The reason the arrows are aria-hidden and tabIndex -1: the rail
-        // already answers to arrow keys, and two more tab stops in a form is a
-        // worse trade than a mouse-only affordance that duplicates nothing.
+    it('shows the later chevron once the days overflow, and the earlier one only once it has moved', async () => {
         render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
         const rail = screen.getByRole('radiogroup')
         stateGeometry(rail, { scrollWidth: 806, clientWidth: 400, scrollLeft: 0 })
-        for (const id of ['d-earlier', 'd-later']) {
-            expect(screen.getByTestId(id).getAttribute('tabindex')).toBe('-1')
-            expect(screen.getByTestId(id).getAttribute('aria-hidden')).toBe('true')
-        }
-        expect(rail.querySelectorAll('[role="radio"][tabindex="0"]')).toHaveLength(1)
+        await settle()
+        expect(hidden('d-later')).toBe(false)
+        expect(hidden('d-earlier')).toBe(true)
+        stateGeometry(rail, { scrollWidth: 806, clientWidth: 400, scrollLeft: 406 })
+        await settle()
+        expect(hidden('d-later')).toBe(true)
+        expect(hidden('d-earlier')).toBe(false)
     })
 
-    it('never offers an arrow on a disabled picker', () => {
-        render(
-            <DatePicker value="" today={TODAY} onChange={() => {}} disabled testId="d" />,
-        )
-        stateGeometry(screen.getByRole('radiogroup'), {
-            scrollWidth: 806,
-            clientWidth: 400,
-            scrollLeft: 200,
-        })
-        expect(screen.getByTestId('d-earlier')).toBeDisabled()
-        expect(screen.getByTestId('d-later')).toBeDisabled()
+    it('moves the rail a view at a time, instantly under reduced motion', async () => {
+        const matchMedia = window.matchMedia
+        window.matchMedia = ((q: string) => ({ matches: q.includes('reduce'), media: q })) as typeof window.matchMedia
+        try {
+            render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
+            const rail = screen.getByRole('radiogroup')
+            stateGeometry(rail, { scrollWidth: 806, clientWidth: 400, scrollLeft: 0 })
+            await settle()
+            fireEvent.click(screen.getByTestId('d-later'))
+            // Day pills measure 0 in jsdom, so this is the fallback stride:
+            // a view, clamped to the far end.
+            expect(rail.scrollLeft).toBe(400)
+            fireEvent.click(screen.getByTestId('d-earlier'))
+            expect(rail.scrollLeft).toBe(0)
+        } finally {
+            window.matchMedia = matchMedia
+        }
+    })
+
+    it('keeps the radiogroup at one tab stop: the chevrons are named but never a tab stop', async () => {
+        render(<DatePicker value="" today={TODAY} onChange={() => {}} testId="d" />)
+        const rail = screen.getByRole('radiogroup')
+        stateGeometry(rail, { scrollWidth: 806, clientWidth: 400, scrollLeft: 0 })
+        await settle()
+        expect(screen.getByTestId('d-earlier').getAttribute('aria-label')).toBe('Earlier days')
+        expect(screen.getByTestId('d-later').getAttribute('aria-label')).toBe('Later days')
+        for (const id of ['d-earlier', 'd-later']) {
+            expect(screen.getByTestId(id).getAttribute('tabindex')).toBe('-1')
+            expect(screen.getByTestId(id).getAttribute('aria-controls')).toBe(rail.id)
+        }
+        expect(rail.querySelectorAll('[role="radio"][tabindex="0"]')).toHaveLength(1)
     })
 })
 

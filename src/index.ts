@@ -8,6 +8,8 @@ export {
     CloseButton, CloseGlyph, iconDiscClasses, resolveIconButtonTone,
     type IconButtonTone, type IconButtonSize, type CloseButtonProps,
     ScrollArea, useScrollEdges, useScrollbarReveal, type ScrollAreaProps, type ScrollAreaOrientation, type ScrollEdges,
+    // AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+    ChipRow, chipRowPageTarget, CHIP_ROW_DRAG_THRESHOLD, type ChipRowProps, type ChipRowRole, type ChipRowArrows,
     // AUTM-1787: a list row's everyday actions.
     RowActions, type RowAction, type RowActionsProps,
     // AUTM-1755: a list beside its record, with a splitter.

@@ -52,6 +52,42 @@ const pressAt: BrowserCommand<[selector: string, options?: PressOptions]> = asyn
     await ctx.page.mouse.up();
 };
 
+export interface DragOptions {
+    /** Where in the element's box to press, 0 to 1 across. Default 0.5. */
+    fx?: number;
+    /** Mouse moves between press and release. Default 8. */
+    steps?: number;
+}
+
+/**
+ * AUTM-1756 follow-up: a real mouse drag. Presses on the element, moves `dx`
+ * CSS px sideways in `steps`, releases; the browser decides what was clicked.
+ */
+const dragAcross: BrowserCommand<[selector: string, dx: number, options?: DragOptions]> = async (
+    ctx,
+    selector,
+    dx,
+    options = {},
+) => {
+    if (ctx.provider.name !== "playwright") throw new Error("dragAcross needs the playwright provider");
+    const { fx = 0.5, steps = 8 } = options;
+    const frame = await ctx.frame();
+    const box = await frame.locator(selector).first().boundingBox();
+    if (!box) throw new Error(`dragAcross: ${selector} is not rendered`);
+    const x = box.x + box.width * fx;
+    const y = box.y + box.height / 2;
+    await ctx.page.mouse.move(x, y);
+    await ctx.page.mouse.down();
+    await ctx.page.mouse.move(x + dx, y, { steps });
+    await ctx.page.mouse.up();
+};
+
+/** `prefers-reduced-motion` on or off for the page, as a user's setting would. */
+const reducedMotion: BrowserCommand<[on: boolean]> = async (ctx, on) => {
+    if (ctx.provider.name !== "playwright") throw new Error("reducedMotion needs the playwright provider");
+    await ctx.page.emulateMedia({ reducedMotion: on ? "reduce" : "no-preference" });
+};
+
 export default defineConfig({
     plugins: [react(), tailwindcss()],
     test: {
@@ -63,7 +99,7 @@ export default defineConfig({
             screenshotFailures: false,
             // hasTouch so a test can tap; the mouse still works.
             instances: [{ browser: "chromium", context: { hasTouch: true } }],
-            commands: { pressAt },
+            commands: { pressAt, dragAcross, reducedMotion },
         },
     },
 });

@@ -196,6 +196,20 @@ docs/
   On a brand-deep page put `.scroll-on-deep` on <html> AND give <html> the
   deep background: the page's scrollbar belongs to the root, and its
   transparent track shows the canvas behind it.
+- **A row of chips is a `ChipRow`, and it never draws a scrollbar** (AUTM-1756
+  follow-up, Don 2026-10-15: "instead of scrollbar can add an chevron arrow in
+  the ending ... also dragable"). FilterChipRow, QuickReplies `row`, ChoiceChips
+  `row` and DatePicker's day rail are all built on it; never a horizontal
+  ScrollArea or a bare `overflow-x-auto` row for chips. The chevrons follow
+  `arrows="auto"`: shown where `(any-pointer: fine)` matches, so a finger-only
+  phone gets the fade and the native swipe, and the Vitest browser context
+  (`hasTouch: true`) matches nothing fine: browser tests that press a chevron
+  pass `arrows="always"`. `--chip-row-edge` is both the scroll padding and the
+  end of the fade; the mask is clear under the disc (`--chip-row-solid`), so
+  change the two together. A mouse or pen drag swallows the click its release
+  would fire (capture phase on the row), so a chip's own `onClick` never sees a
+  drag. The chevrons are `tabIndex={-1}` (Tab walks the chips) and keep
+  DatePicker's QA test ids `-earlier` / `-later`.
 - **`PageContainer` / `.page-container` is the page track** (AUTM-1739):
   1440px of content (`--page-max`) between a fluid `--page-gutter` (16px to
   96px). Sections, grids and product visuals take the full track; running

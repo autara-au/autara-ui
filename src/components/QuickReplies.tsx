@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { cn } from "../lib/cn";
 import { Button } from "./Button";
-import { useScrollbarReveal } from "./ScrollArea";
+import { ChipRow, type ChipRowArrows } from "./ChipRow";
 
 /**
  * QuickReplies — one-tap messages for the moments that repeat (AUTM-1806, U4).
@@ -31,6 +30,14 @@ import { useScrollbarReveal } from "./ScrollArea";
  * so Tab walks them and the browser scrolls each one into view. Use `wrap`
  * (the default) where every chip must be visible at once, such as at 200%
  * text.
+ *
+ * AUTM-1756 follow-up: the row is a `ChipRow`. No scrollbar (Don,
+ * 2026-10-15: "instead of scrollbar can add an chevron arrow in the ending,
+ * to move it. also dragable"); a round chevron on the fade at the end that
+ * has more ("Show more replies"), one at the start once it has moved, a
+ * mouse or pen drag that never sends a chip's click, and a finger's own
+ * swipe. `className` still lands on the row of chips; `rootClassName` on the
+ * box around it.
  */
 export interface QuickReply {
   id: string;
@@ -50,18 +57,17 @@ export interface QuickRepliesProps {
   /** `data-testid` on every chip; each also carries `data-reply-id`. */
   chipTestId?: string;
   disabled?: boolean;
-  /** `wrap` (default): chips wrap onto more lines. `row`: one line that scrolls sideways, with edge fades. */
+  /** `wrap` (default): chips wrap onto more lines. `row`: one line that scrolls sideways, with edge fades and chevrons. */
   layout?: "wrap" | "row";
+  /** `row` only: the chevrons, as ChipRow takes them. Default `auto` (where a fine pointer exists). */
+  arrows?: ChipRowArrows;
+  /** `row` only: the end chevron's accessible name. Default "Show more replies". */
+  nextLabel?: string;
+  /** `row` only: the start chevron's accessible name. Default "Show earlier replies". */
+  previousLabel?: string;
+  /** `row` only: classes for the box around the row (margins, flex sizing). */
+  rootClassName?: string;
   className?: string;
-}
-
-/** The mask for whichever edges have chips past them. 2rem of fade. */
-function edgeMask(start: boolean, end: boolean): CSSProperties | undefined {
-  if (!start && !end) return undefined;
-  const from = start ? "transparent 0, #000 2rem" : "#000 0";
-  const to = end ? "#000 calc(100% - 2rem), transparent 100%" : "#000 100%";
-  const image = `linear-gradient(to right, ${from}, ${to})`;
-  return { maskImage: image, WebkitMaskImage: image };
 }
 
 export function QuickReplies({
@@ -71,50 +77,24 @@ export function QuickReplies({
   chipTestId,
   disabled,
   layout = "wrap",
+  arrows = "auto",
+  nextLabel = "Show more replies",
+  previousLabel = "Show earlier replies",
+  rootClassName,
   className,
 }: QuickRepliesProps) {
-  const scroller = useRef<HTMLDivElement>(null);
-  const [edges, setEdges] = useState({ start: false, end: false });
-  const row = layout === "row";
-  // AUTM-1756: the row's bar shows while it is used; the fade already says
-  // there is more (only the row layout attaches the ref).
-  useScrollbarReveal(scroller);
-
-  useEffect(() => {
-    if (!row) return;
-    const el = scroller.current;
-    if (!el) return;
-    const measure = () => {
-      // Logical edges: in a right-to-left page scrollLeft runs negative.
-      const left = Math.abs(el.scrollLeft);
-      const room = el.scrollWidth - el.clientWidth;
-      const next = { start: left > 2, end: room - left > 2 };
-      setEdges((prev) => (prev.start === next.start && prev.end === next.end ? prev : next));
-    };
-    measure();
-    el.addEventListener("scroll", measure, { passive: true });
-    if (typeof ResizeObserver === "undefined") return () => el.removeEventListener("scroll", measure);
-    const observer = new ResizeObserver(measure);
-    observer.observe(el);
-    return () => {
-      el.removeEventListener("scroll", measure);
-      observer.disconnect();
-    };
-  }, [row, replies.length]);
-
   if (replies.length === 0) return null;
 
-  if (row) {
+  if (layout === "row") {
     return (
-      <div
-        ref={scroller}
-        role="group"
-        aria-label={label}
+      <ChipRow
+        label={label}
         data-layout="row"
-        data-more-start={edges.start || undefined}
-        data-more-end={edges.end || undefined}
-        style={edgeMask(edges.start, edges.end)}
-        className={cn("flex flex-nowrap gap-2 overflow-x-auto overscroll-x-contain pb-1", className)}
+        arrows={arrows}
+        nextLabel={nextLabel}
+        previousLabel={previousLabel}
+        rootClassName={rootClassName}
+        className={cn("gap-2", className)}
       >
         {replies.map((reply) => (
           <Button
@@ -130,7 +110,7 @@ export function QuickReplies({
             {reply.label}
           </Button>
         ))}
-      </div>
+      </ChipRow>
     );
   }
 

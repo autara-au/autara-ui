@@ -20,6 +20,15 @@ export {
     type ScrollAreaOrientation,
     type ScrollEdges,
 } from './ScrollArea'
+// AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+export {
+    ChipRow,
+    chipRowPageTarget,
+    CHIP_ROW_DRAG_THRESHOLD,
+    type ChipRowProps,
+    type ChipRowRole,
+    type ChipRowArrows,
+} from './ChipRow'
 export { Input, inputVariants, type InputProps } from './Input'
 export { OtpInput, type OtpInputProps } from './OtpInput'
 export {

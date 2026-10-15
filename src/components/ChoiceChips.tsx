@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { cn } from '../lib/cn'
+import { ChipRow } from './ChipRow'
 
 /**
  * ChoiceChips: pick one of a few, in one tap (AUTM-1867).
@@ -24,6 +25,11 @@ import { cn } from '../lib/cn'
  * `action` is one trailing control that is NOT a choice ("More", "Pick
  * another day"): a link-grade button after the group, outside the
  * radiogroup, so a screen reader does not count it among the options.
+ *
+ * AUTM-1756 follow-up: `layout="row"` is a `ChipRow` (no scrollbar, a
+ * chevron on the fade at the end that has more, a mouse or pen drag), and the
+ * `action` sits AFTER the scrolling row rather than at its far end, so it is
+ * never past the edge.
  *
  * An option can be `disabled` with a `reason` (read to a screen reader, struck
  * through on screen), the TimePicker's rule: opacity alone is not a signal.
@@ -160,62 +166,75 @@ export function ChoiceChips<V extends string = string>({
 
     const row = layout === 'row'
 
-    return (
-        <div
-            className={cn(
-                'flex gap-2',
-                row ? 'flex-nowrap items-center overflow-x-auto pb-1' : 'flex-wrap items-center',
-                className,
-            )}
-        >
-            <div
-                ref={groupRef}
-                role="radiogroup"
-                aria-label={labelledBy ? undefined : label}
-                aria-labelledby={labelledBy}
-                aria-describedby={describedBy}
-                aria-invalid={invalid || undefined}
-                aria-disabled={disabled || undefined}
-                onKeyDown={onKeyDown}
-                data-testid={testId}
-                data-layout={layout}
-                className={cn('flex gap-2', row ? 'flex-nowrap' : 'flex-wrap')}
+    const chipButtons = options.map((o, i) => {
+        const checked = o.value === value
+        const off = disabled || !!o.disabled
+        return (
+            <button
+                key={o.value}
+                type="button"
+                role="radio"
+                aria-checked={checked}
+                aria-disabled={off || undefined}
+                aria-label={o.ariaLabel}
+                tabIndex={i === tabIndexAt ? 0 : -1}
+                data-testid={o.testId}
+                data-value={o.value}
+                onClick={() => {
+                    if (off) return
+                    setFocusIndex(i)
+                    onChange(o.value)
+                }}
+                className={cn(
+                    CHIP,
+                    'motion-press',
+                    checked
+                        ? 'bg-[var(--selected)] text-[var(--on-selected)]'
+                        : 'bg-[var(--band)] text-[var(--text-strong)] not-aria-disabled:hover:bg-[var(--band-press)]',
+                    off && 'cursor-not-allowed text-[var(--text-muted)] line-through opacity-50',
+                )}
             >
-                {options.map((o, i) => {
-                    const checked = o.value === value
-                    const off = disabled || !!o.disabled
-                    return (
-                        <button
-                            key={o.value}
-                            type="button"
-                            role="radio"
-                            aria-checked={checked}
-                            aria-disabled={off || undefined}
-                            aria-label={o.ariaLabel}
-                            tabIndex={i === tabIndexAt ? 0 : -1}
-                            data-testid={o.testId}
-                            data-value={o.value}
-                            onClick={() => {
-                                if (off) return
-                                setFocusIndex(i)
-                                onChange(o.value)
-                            }}
-                            className={cn(
-                                CHIP,
-                                'motion-press',
-                                checked
-                                    ? 'bg-[var(--selected)] text-[var(--on-selected)]'
-                                    : 'bg-[var(--band)] text-[var(--text-strong)] not-aria-disabled:hover:bg-[var(--band-press)]',
-                                off && 'cursor-not-allowed text-[var(--text-muted)] line-through opacity-50',
-                            )}
-                        >
-                            {checked ? <Tick /> : null}
-                            {o.label}
-                            {off && o.reason ? <span className="sr-only">, {o.reason}</span> : null}
-                        </button>
-                    )
-                })}
-            </div>
+                {checked ? <Tick /> : null}
+                {o.label}
+                {off && o.reason ? <span className="sr-only">, {o.reason}</span> : null}
+            </button>
+        )
+    })
+
+    const groupProps = {
+        'aria-labelledby': labelledBy,
+        'aria-describedby': describedBy,
+        'aria-invalid': invalid || undefined,
+        'aria-disabled': disabled || undefined,
+        onKeyDown,
+        'data-testid': testId,
+        'data-layout': layout,
+    }
+
+    return (
+        <div className={cn('flex items-center gap-2', row ? 'flex-nowrap' : 'flex-wrap', className)}>
+            {row ? (
+                <ChipRow
+                    ref={groupRef}
+                    role="radiogroup"
+                    label={labelledBy ? undefined : label}
+                    rootClassName="min-w-0 flex-1"
+                    className="gap-2"
+                    {...groupProps}
+                >
+                    {chipButtons}
+                </ChipRow>
+            ) : (
+                <div
+                    ref={groupRef}
+                    role="radiogroup"
+                    aria-label={labelledBy ? undefined : label}
+                    className="flex flex-wrap gap-2"
+                    {...groupProps}
+                >
+                    {chipButtons}
+                </div>
+            )}
             {action ? (
                 <button
                     type="button"
