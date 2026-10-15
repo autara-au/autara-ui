@@ -44,6 +44,15 @@ import { cn } from "../lib/cn";
  * list, 28px over the record), because the list's own scrollbar is at its
  * right edge and the record pane starts with a gutter. Give the list at least
  * 1rem of padding on its end side so a row is never under the handle.
+ *
+ * `side="end"` (AUTM-1878 follow-up, Don 2026-10-15: the Inbox's booking
+ * panel "too small, make it adjustable") sizes the END pane instead: a panel
+ * at the right of a conversation. Every size prop then describes the end
+ * pane, `secondaryMinRem` the start pane it leaves room for, and the value
+ * the splitter reports is the end pane's width. The keys still follow the
+ * line: Left moves it left (the panel wider), Right narrower, Home to the
+ * panel's narrowest and End to its widest. The hit area mirrors, mostly over
+ * the start pane, whose scrollbar is not at that edge.
  */
 export interface SplitPaneProps {
   /** The start pane: the list. */
@@ -71,10 +80,15 @@ export interface SplitPaneProps {
   className?: string;
   primaryClassName?: string;
   secondaryClassName?: string;
-  /** Test id root: the panes get `-list` and `-detail`, the splitter `-resize`. */
+  /** Test id root: the panes get `-list` and `-detail` (`-main` and `-panel` with `side="end"`), the splitter `-resize`. */
   testId?: string;
-  /** Called with the start pane's width in px whenever the user moves it. */
+  /** Called with the sized pane's width in px whenever the user moves it. */
   onResize?: (px: number) => void;
+  /**
+   * Which pane the splitter sizes: the start pane (a list, the default) or
+   * the end pane (a side panel). The other takes the rest.
+   */
+  side?: "start" | "end";
 }
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -135,8 +149,10 @@ export function SplitPane({
   secondaryClassName,
   testId,
   onResize,
+  side = "start",
 }: SplitPaneProps) {
-  const primaryId = useId();
+  const sizedId = useId();
+  const end = side === "end";
   const rootRef = useRef<HTMLDivElement | null>(null);
   // The user's width in rem, or null for the default.
   const [sizeRem, setSizeRem] = useState<number | null>(() => readStored(storageKey));
@@ -231,7 +247,8 @@ export function SplitPane({
     const dx = event.clientX - state.startX;
     if (!state.moved && Math.abs(dx) < 2) return;
     state.moved = true;
-    const next = clamp(state.startPx + dx, minPx, maxPx);
+    // The end pane grows as the line moves left.
+    const next = clamp(state.startPx + (end ? -dx : dx), minPx, maxPx);
     state.px = next;
     cancelAnimationFrame(state.frame);
     state.frame = requestAnimationFrame(() => setSizeRem(next / rem));
@@ -247,10 +264,10 @@ export function SplitPane({
     let next: number;
     switch (event.key) {
       case "ArrowLeft":
-        next = currentPx - by;
+        next = end ? currentPx + by : currentPx - by;
         break;
       case "ArrowRight":
-        next = currentPx + by;
+        next = end ? currentPx - by : currentPx + by;
         break;
       case "Home":
         next = minPx;
@@ -267,27 +284,40 @@ export function SplitPane({
 
   const pct = splitPx > 0 ? Math.round((currentPx / splitPx) * 100) : null;
 
+  const sized = (
+    <div
+      id={sizedId}
+      data-testid={testId ? `${testId}-${end ? "panel" : "list"}` : undefined}
+      className={cn("min-w-0 shrink-0", end ? secondaryClassName : primaryClassName)}
+      style={{ width }}
+    >
+      {end ? secondary : primary}
+    </div>
+  );
+  const rest = (
+    <div
+      data-testid={testId ? `${testId}-${end ? "main" : "detail"}` : undefined}
+      className={cn("min-w-0 flex-1", end ? primaryClassName : secondaryClassName)}
+    >
+      {end ? primary : secondary}
+    </div>
+  );
+
   return (
     <div
       ref={rootRef}
       data-testid={testId}
+      data-side={side}
       data-dragging={dragging ? "" : undefined}
       className={cn("relative flex h-full min-h-0", className)}
     >
-      <div
-        id={primaryId}
-        data-testid={testId ? `${testId}-list` : undefined}
-        className={cn("min-w-0 shrink-0", primaryClassName)}
-        style={{ width }}
-      >
-        {primary}
-      </div>
+      {end ? rest : sized}
       <div
         role="separator"
         tabIndex={0}
         aria-orientation="vertical"
         aria-label={label}
-        aria-controls={primaryId}
+        aria-controls={sizedId}
         aria-valuenow={Math.round(currentPx)}
         aria-valuemin={Math.round(minPx)}
         aria-valuemax={Math.round(maxPx)}
@@ -304,16 +334,21 @@ export function SplitPane({
         onKeyDown={onKeyDown}
         className={cn(
           // The visible line is this 1px flex item; the hit area is its
-          // ::before, 44px (2.75rem) wide and mostly over the end pane.
+          // ::before, 44px (2.75rem) wide and mostly over the pane that has
+          // no scrollbar at this edge: the end pane for a list, the start
+          // pane for a side panel.
           // `split-pane-handle` is a stable hook for a consumer whose global
           // focus outline would box the 1px line; the handle draws its own.
           "split-pane-handle group/split relative z-10 w-px shrink-0 cursor-col-resize touch-none select-none bg-[var(--hairline)] outline-none focus-visible:outline-none",
-          "before:absolute before:inset-y-0 before:left-[-1rem] before:w-[2.75rem] before:content-['']",
+          end
+            ? "before:absolute before:inset-y-0 before:left-[-1.75rem] before:w-[2.75rem] before:content-['']"
+            : "before:absolute before:inset-y-0 before:left-[-1rem] before:w-[2.75rem] before:content-['']",
           // Hover, focus and drag: the line takes the accent, 2px wide,
-          // drawn with ::after so the layout never moves, and on the START
-          // side of the line: a glass bar at the end pane's edge samples the
-          // pixels it touches, and an accent pixel there smears purple.
-          "after:pointer-events-none after:absolute after:inset-y-0 after:left-[-1px] after:w-[2px] after:bg-[var(--accent)] after:opacity-0 after:transition-opacity after:duration-150 after:content-[''] motion-reduce:after:transition-none",
+          // drawn with ::after so the layout never moves, and on the side
+          // away from a glass bar at the sized pane's edge, which samples the
+          // pixels it touches (an accent pixel there smears purple).
+          "after:pointer-events-none after:absolute after:inset-y-0 after:w-[2px] after:bg-[var(--accent)] after:opacity-0 after:transition-opacity after:duration-150 after:content-[''] motion-reduce:after:transition-none",
+          end ? "after:left-0" : "after:left-[-1px]",
           "hover:after:opacity-100 focus-visible:after:opacity-100 data-[dragging]:after:opacity-100",
         )}
       >
@@ -326,12 +361,7 @@ export function SplitPane({
           )}
         />
       </div>
-      <div
-        data-testid={testId ? `${testId}-detail` : undefined}
-        className={cn("min-w-0 flex-1", secondaryClassName)}
-      >
-        {secondary}
-      </div>
+      {end ? sized : rest}
     </div>
   );
 }

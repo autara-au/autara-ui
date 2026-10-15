@@ -135,3 +135,56 @@ export const Dark: Story = {
     </div>
   ),
 };
+
+function Conversation() {
+  return (
+    <div className="flex h-full flex-col justify-end gap-3 overflow-y-auto px-8 py-6">
+      <div className="mx-auto flex w-full max-w-[46rem] flex-col gap-3">
+        <p className="max-w-[80%] self-start rounded-2xl bg-[var(--band)] px-4 py-2.5 text-[var(--text-strong)]">
+          Hi Sam, is Saturday at 9:40 still OK?
+        </p>
+        <p className="max-w-[80%] self-end rounded-2xl bg-[var(--accent)] px-4 py-2.5 text-[var(--on-accent)]">
+          Yes, see you then.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function BookingPanel() {
+  return (
+    <div className="flex h-full flex-col gap-3 overflow-y-auto p-5">
+      <p className="text-[1.0625rem] font-bold text-[var(--text-strong)]">Booking</p>
+      <p className="break-words text-[var(--text-strong)]">Exterior Car Care &amp; Detailing, with a two-stage machine polish</p>
+      <p className="text-[0.875rem] text-[var(--text-muted)]">Sat, 17 Oct, 09:40 · 14 Australia St, Camperdown</p>
+    </div>
+  );
+}
+
+/**
+ * AUTM-1878 follow-up: `side="end"` sizes the END pane, a booking panel beside
+ * a conversation. Default 24rem, between 20rem and 36rem, and the
+ * conversation never under 30rem. Left widens the panel (the line moves
+ * left), Right narrows it, Home and End are its bounds, double-click resets.
+ */
+export const SidePanel: Story = {
+  args: {
+    ...base,
+    side: "end",
+    label: "Resize the booking panel",
+    primary: <Conversation />,
+    secondary: <BookingPanel />,
+    testId: "inbox-panel-split",
+    defaultFraction: 0,
+    defaultMinRem: 24,
+    defaultMaxRem: 24,
+    minRem: 20,
+    maxRem: 36,
+    secondaryMinRem: 30,
+  },
+  render: (args) => (
+    <Frame width={1200}>
+      <SplitPane {...args} />
+    </Frame>
+  ),
+};
