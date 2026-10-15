@@ -16,6 +16,8 @@
    icon disc's hover and press. */
 @import "./scroll-area.css";
 @import "./icon-disc.css";
+/* AUTM-1756 follow-up: chip rows scroll with chevrons and a drag, never a bar. */
+@import "./chip-row.css";
 @import "./scroll-story.css";
 @import "./disclosure.css";
 @import "./autohide.css";

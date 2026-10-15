@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { QuickReplies } from './QuickReplies'
 
 /** AUTM-1806 (U4). */
@@ -47,9 +47,12 @@ describe('QuickReplies layout="row"', () => {
         )
         const group = screen.getByRole('group', { name: 'Quick replies' })
         expect(group.getAttribute('data-layout')).toBe('row')
-        expect(group.className).toContain('flex-nowrap')
-        expect(group.className).toContain('overflow-x-auto')
-        for (const chip of screen.getAllByRole('button')) {
+        // AUTM-1756 follow-up: a ChipRow, one line with no scrollbar
+        // (utilities/chip-row.css), and its chevrons named for replies.
+        expect(group.className).toContain('chip-row__scroller')
+        expect(screen.getByRole('button', { name: 'Show more replies' }).getAttribute('aria-controls')).toBe(group.id)
+        expect(screen.getByRole('button', { name: 'Show earlier replies' })).toBeTruthy()
+        for (const chip of within(group).getAllByRole('button')) {
             expect(chip.className).toContain('shrink-0')
             expect(chip.className).toContain('min-h-11')
         }

@@ -1,6 +1,6 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
-import { useScrollEdges, useScrollbarReveal } from './ScrollArea'
+import { ChipRow, type ChipRowArrows } from './ChipRow'
 
 /**
  * FilterChipRow — single-select pill row used as the secondary
@@ -40,6 +40,15 @@ import { useScrollEdges, useScrollbarReveal } from './ScrollArea'
  *
  * Type parameter `V` lets the consumer keep their own value union
  * (string / null / enum) without casting at the callsite.
+ *
+ * ─── AUTM-1756 follow-up: a ChipRow, with no scrollbar ──────────────────
+ *
+ * The row is a `ChipRow` (Don, 2026-10-15: "instead of scrollbar can add an
+ * chevron arrow in the ending, to move it. also dragable"): no bar, a chevron
+ * on the fade at the end that has more, a mouse or pen drag, and the arrow
+ * keys between chips (it is a tablist; activation stays on Enter, Space or a
+ * click, so a filter that refetches does not fire per key). Every chip stays
+ * in the tab order, as before. `className` still lands on the tablist.
  */
 
 export interface FilterChipOption<V> {
@@ -69,6 +78,14 @@ export interface FilterChipRowProps<V> {
      * mid-word. Default true.
      */
     fade?: boolean
+    /** The chevrons, as ChipRow takes them. Default `auto` (where a fine pointer exists). */
+    arrows?: ChipRowArrows
+    /** The end chevron's accessible name. Default "More filters". */
+    nextLabel?: string
+    /** The start chevron's accessible name. Default "Earlier filters". */
+    previousLabel?: string
+    /** Classes for the box around the row (margins, `flex-1`, `min-w-0`). */
+    rootClassName?: string
 }
 
 export function FilterChipRow<V>({
@@ -80,44 +97,32 @@ export function FilterChipRow<V>({
     chipClassName,
     press = true,
     fade = true,
+    arrows = 'auto',
+    nextLabel = 'More filters',
+    previousLabel = 'Earlier filters',
+    rootClassName,
 }: FilterChipRowProps<V>) {
-    const edges = useScrollEdges('x')
-    // AUTM-1756: the row's bar shows while it is used; the fade says there
-    // is more at rest.
-    const rowRef = useRef<HTMLDivElement | null>(null)
-    useScrollbarReveal(rowRef)
-    const setRow = useCallback(
-        (node: HTMLDivElement | null) => {
-            rowRef.current = node
-            edges.ref(node)
-        },
-        // edges.ref is stable.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        [],
-    )
     /* AUTM-1792: the chip the merchant just chose pops (`.motion-pop`, 100 to
        104 to 99%, off under reduced motion). Only a CHOICE pops: the chip
        selected on first render stays still, because a pop on every screen
        arrival is noise. Choosing the chip that is already on does not pop. */
     const [popped, setPopped] = useState<number | null>(null)
     return (
-        <div
-            ref={setRow}
+        <ChipRow
             role="tablist"
-            aria-label={ariaLabel}
-            data-axis="x"
-            data-fade-start={fade && edges.start ? '' : undefined}
-            data-fade-end={fade && edges.end ? '' : undefined}
+            label={ariaLabel}
+            fade={fade}
+            arrows={arrows}
+            nextLabel={nextLabel}
+            previousLabel={previousLabel}
+            rootClassName={rootClassName}
             className={cn(
                 // 10px between chips, as the sheet spaces them.
                 // -mt-1 cancels the top padding's offset, so the chips sit
                 // where the row starts; the padding is only there to hold
-                // the hit area.
-                '-mx-1 -mt-1 flex gap-2.5 overflow-x-auto px-1 py-1',
-                // AUTM-1756: the end of the row never swipes the page back,
-                // and a chip reached by Tab lands clear of the fade.
-                'overscroll-x-contain scroll-px-10',
-                fade && 'scroll-fade',
+                // the hit area. ChipRow keeps the row contained, without a
+                // bar, and a chip reached by Tab clear of the fade.
+                '-mx-1 -mt-1 mb-0 gap-2.5 px-1 py-1',
                 className,
             )}
         >
@@ -163,6 +168,6 @@ export function FilterChipRow<V>({
                     </button>
                 )
             })}
-        </div>
+        </ChipRow>
     )
 }

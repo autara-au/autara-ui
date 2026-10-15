@@ -44,7 +44,10 @@ import { cn } from '../lib/cn'
  * page already scrolls needs no inner scroller at all.
  *
  *   <ScrollArea label="Customers" className="min-h-0 flex-1">{rows}</ScrollArea>
- *   <ScrollArea orientation="horizontal" label="Filter">{chips}</ScrollArea>
+ *
+ * A row of CHIPS is a `ChipRow` (AUTM-1756 follow-up), not a horizontal
+ * ScrollArea: no scrollbar, a chevron on the fade, a mouse or pen drag. Keep
+ * `orientation="horizontal"` for wide content that is not chips (a table).
  */
 
 export type ScrollAreaOrientation = 'vertical' | 'horizontal' | 'both'

@@ -84,9 +84,9 @@ describe('ChoiceChips', () => {
         expect(screen.getByRole('radiogroup').getAttribute('aria-describedby')).toBe('why')
     })
 
-    it('row layout keeps one line that scrolls; wrap wraps', () => {
+    it('row layout keeps one line that scrolls (a ChipRow, AUTM-1756); wrap wraps', () => {
         const { rerender } = render(<ChoiceChips label="T" options={options} value="" onChange={() => {}} layout="row" />)
-        expect(screen.getByRole('radiogroup').className).toContain('flex-nowrap')
+        expect(screen.getByRole('radiogroup').className).toContain('chip-row__scroller')
         rerender(<ChoiceChips label="T" options={options} value="" onChange={() => {}} layout="wrap" />)
         expect(screen.getByRole('radiogroup').className).toContain('flex-wrap')
     })
