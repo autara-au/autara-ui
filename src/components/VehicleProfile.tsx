@@ -98,9 +98,11 @@ export function VehicleProfile({
             ) : null}
 
             <section aria-labelledby={jobsId} className="flex flex-col gap-2">
-                <h4 id={jobsId} className={SECTION_TITLE}>
+                {/* A labelled section, its label a <p>: a consumer's global
+                    heading rule (the portal's) must not restyle it. */}
+                <p id={jobsId} className={SECTION_TITLE}>
                     {jobsTitle}
-                </h4>
+                </p>
                 {jobsLoading ? (
                     jobsLoading
                 ) : jobs == null ? (
@@ -168,9 +170,9 @@ export function VehicleProfile({
 
             {notes && notes.length > 0 ? (
                 <section aria-labelledby={notesId} className="flex flex-col gap-2">
-                    <h4 id={notesId} className={SECTION_TITLE}>
+                    <p id={notesId} className={SECTION_TITLE}>
                         {notesTitle}
-                    </h4>
+                    </p>
                     <ul className="flex flex-col gap-2">
                         {notes.map((n) => (
                             <li
