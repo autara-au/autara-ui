@@ -695,11 +695,13 @@ export function VehiclePicker({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex min-w-0 items-center gap-4" data-testid={`${p}-car`}>
+                        /* Wraps: at 200% text the rem-sized slot leaves the words no
+                           room beside it, so they drop under it instead of clipping. */
+                        <div className="flex min-w-0 flex-wrap items-center gap-4" data-testid={`${p}-car`}>
                             {/* The chosen car: its make's mark, large, with a dot of its paint
                                 (Don, 2026-10-15: no car illustrations). */}
                             {carSlot}
-                            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                            <div className="flex min-w-[min(100%,12rem)] flex-1 flex-col gap-0.5">
                                 <div className="flex flex-wrap items-center justify-between gap-x-3">
                                     <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
                                         {carName}
