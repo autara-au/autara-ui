@@ -72,6 +72,26 @@ export const ClosedDays: Story = {
 }
 
 /**
+ * AUTM-1867 — "Book a customer in" leads with this rail. An open day with no
+ * free time left for the job is `full`: dimmed, no hatch (that stays the sign
+ * of a closed day), still focusable and selectable, and named "no free
+ * times" for a screen reader. Here Thursday the 10th and Saturday the 12th are
+ * booked out and Sunday is closed.
+ */
+export const FullDays: Story = {
+    render: () => (
+        <Controlled
+            value="2026-09-11"
+            dayState={(date): DayState => {
+                if (date === '2026-09-10' || date === '2026-09-12') return 'full'
+                const weekday = new Date(`${date}T00:00:00Z`).getUTCDay()
+                return weekday === 0 ? 'closed' : 'available'
+            }}
+        />
+    ),
+}
+
+/**
  * AUTM-1633 — a day chosen beyond the fortnight. The rail has moved to hold
  * it (three days before it, then the rest) and it is selected, with the year
  * written out beside the button because it is not this year.

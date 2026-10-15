@@ -30,13 +30,20 @@ import { Button } from './Button'
  * purpose ("Times outside your hours are still yours to take"), and a picker
  * that refused the day would contradict the time grid one tap later.
  * `unavailable` is the only state that cannot be chosen.
+ *
+ * `full` (AUTM-1867) is an open day with no free time left for the job in
+ * hand. Dimmed (muted ink, no hatch, which stays the sign of closed) and
+ * STILL SELECTABLE, for the same AUTM-707 reason as `closed`: the merchant may
+ * squeeze a job in, and the time picker one tap later says what it overlaps.
+ * Its word, "no free times", is what a screen reader hears in place of the dim.
  */
-export type DayState = 'available' | 'limited' | 'closed' | 'unavailable'
+export type DayState = 'available' | 'limited' | 'full' | 'closed' | 'unavailable'
 
 /** Availability in words, for screen readers. Never colour alone (WCAG 1.4.1). */
 export const DAY_STATE_WORD: Record<DayState, string> = {
     available: '',
     limited: ', nearly full',
+    full: ', no free times',
     closed: ', closed',
     unavailable: ', unavailable',
 }
@@ -45,6 +52,7 @@ export const DAY_STATE_WORD: Record<DayState, string> = {
 export const DAY_STATE_DOT: Record<DayState, string | null> = {
     available: null,
     limited: 'var(--intent-warning-text)',
+    full: null,
     closed: null,
     unavailable: 'var(--intent-error-text)',
 }
@@ -348,7 +356,7 @@ export function MonthCalendar({
                                             isSelected
                                                 ? // A solid fill, never a tint.
                                                   'bg-[var(--accent-fill)] font-bold text-[var(--on-accent)]'
-                                                : state === 'closed'
+                                                : state === 'closed' || state === 'full'
                                                   ? 'font-medium text-[var(--text-muted)]'
                                                   : 'font-medium text-[var(--text-strong)]',
                                             !isSelected && !isDisabled && 'hover:bg-[var(--band)]',

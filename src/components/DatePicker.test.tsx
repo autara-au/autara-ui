@@ -278,7 +278,7 @@ describe('DatePicker rail arrows (AUTM-1373)', () => {
  * rail does not hold moves the rail to hold it, selected.
  */
 describe('DatePicker any date (AUTM-1633)', () => {
-    function Controlled(props: { initial?: string; dayState?: (d: string) => 'available' | 'closed' }) {
+    function Controlled(props: { initial?: string; dayState?: (d: string) => 'available' | 'closed' | 'full' }) {
         const [value, setValue] = React.useState(props.initial ?? '')
         return (
             <DatePicker
@@ -347,6 +347,22 @@ describe('DatePicker any date (AUTM-1633)', () => {
         expect(sunday.textContent).toContain('closed')
         fireEvent.click(sunday)
         expect(sunday.getAttribute('aria-checked')).toBe('true')
+    })
+
+    it('dims a day with no free times, names it, and still lets it be taken (AUTM-1867)', () => {
+        render(<Controlled dayState={(d) => (d === '2026-09-10' ? 'full' : d === '2026-09-13' ? 'closed' : 'available')} />)
+        const full = screen.getByTestId('d-day-2026-09-10')
+        expect(full.getAttribute('aria-disabled')).toBeNull()
+        expect(full.textContent).toContain('no free times')
+        // Dimmed ink, and no hatch: the hatch is the closed day's sign alone.
+        expect(full.className).toContain('text-[var(--text-muted)]')
+        expect(full.getAttribute('style')).toBeNull()
+        expect(screen.getByTestId('d-day-2026-09-13').getAttribute('style')).toContain('repeating-linear-gradient')
+        // Arrow keys still land on it: it is one of the rail's radios.
+        expect(screen.getAllByRole('radio').map((r) => r.getAttribute('data-day'))).toContain('2026-09-10')
+        fireEvent.click(full)
+        expect(full.getAttribute('aria-checked')).toBe('true')
+        expect(full.className).not.toContain('text-[var(--text-muted)]')
     })
 
     it('says the year beside a chosen day only when it is not this year', () => {
