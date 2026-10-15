@@ -48,3 +48,29 @@ describe('MoneyBreakdown chips', () => {
         expect(screen.getByTestId('k').querySelector('[data-money-state]')).toBeNull()
     })
 })
+
+/** AUTM-1878: a chip's own action, in its own <dd> so the list stays valid. */
+describe('MoneyBreakdown chip action', () => {
+    it('draws the action inside its chip, after the amount, as a dd', () => {
+        render(
+            <MoneyBreakdown
+                variant="chips"
+                label="Deposit and balance"
+                rows={[
+                    {
+                        label: 'After the job',
+                        value: '$132.30',
+                        state: 'Balance due',
+                        testId: 'balance',
+                        action: <button type="button">Send payment link</button>,
+                    },
+                ]}
+            />,
+        )
+        const chip = screen.getByTestId('balance')
+        const button = screen.getByRole('button', { name: 'Send payment link' })
+        expect(chip.contains(button)).toBe(true)
+        expect(button.parentElement?.tagName).toBe('DD')
+        expect(chip.querySelectorAll('dd')).toHaveLength(2)
+    })
+})

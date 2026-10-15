@@ -276,3 +276,46 @@ export const LargeText: Story = {
     );
   },
 };
+
+/**
+ * AUTM-1878 — a bounded box: `anchor="end"` opens on the newest message,
+ * `fadeTop` softens the top edge while there is more above (scroll down to
+ * the top and it goes), and `before` holds a "Load earlier" control. Tab to
+ * the thread to scroll it with the keyboard.
+ */
+export const AnchoredInABox: Story = {
+  render: function AnchoredStory() {
+    const [all, setAll] = useState(false);
+    const many: MessageItem[] = [
+      ...SAMPLE,
+      { id: "5", side: "incoming", text: "Is there power near the driveway?", createdAt: BASE - 15 * MIN },
+      { id: "6", side: "own", text: "Yes, the outlet by the garage works.", createdAt: BASE - 14 * MIN },
+      { id: "7", side: "incoming", text: "Great. Gate code is 4412.", createdAt: BASE - 5 * MIN },
+      { id: "8", side: "own", text: "Got it, see you at 9.", createdAt: BASE - 4 * MIN },
+    ];
+    const shown = all ? many : many.slice(-4);
+    return (
+      <div className="mx-auto flex h-[360px] max-w-[420px] flex-col overflow-hidden rounded-[1.5rem] bg-[var(--surface-warm)]">
+        <MessageThread
+          items={shown}
+          anchor="end"
+          fadeTop
+          measureClassName="max-w-none"
+          label="Messages with Sam"
+          before={
+            all ? null : (
+              <button
+                type="button"
+                onClick={() => setAll(true)}
+                className="min-h-11 rounded-full bg-[var(--paper)] px-4 text-[0.875rem] font-medium text-[var(--text-strong)]"
+              >
+                Show {many.length - 4} earlier messages
+              </button>
+            )
+          }
+        />
+      </div>
+    );
+  },
+};
+

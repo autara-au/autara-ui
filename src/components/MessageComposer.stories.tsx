@@ -72,3 +72,61 @@ export const WithLeading: Story = {
     />
   ),
 };
+
+/**
+ * AUTM-1878 — `layout="inset"`: one field across the panel, the plus inside
+ * its leading edge and Send (the lime disc) inside its trailing edge. Type
+ * past a line: the field grows to about four lines, then scrolls. Enter
+ * sends, Shift+Enter adds a line.
+ */
+const PLUS = (
+  <button
+    type="button"
+    aria-label="Add an extra"
+    className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--band)] text-[var(--text-strong)]"
+  >
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" aria-hidden>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  </button>
+);
+
+export const Inset: Story = {
+  render: () => <Demo layout="inset" measureClassName="max-w-none" leading={PLUS} />,
+};
+
+export const InsetLongText: Story = {
+  render: () => (
+    <Demo
+      layout="inset"
+      measureClassName="max-w-none"
+      leading={PLUS}
+      value={
+        "Running about 15 minutes over on the paint correction.\nThe clay bar is taking longer on the bonnet.\nI'll message when I'm packing up.\nThe car is in the shade by the garage.\nNo need to move it."
+      }
+    />
+  ),
+};
+
+export const InsetSending: Story = {
+  render: () => <Demo layout="inset" measureClassName="max-w-none" leading={PLUS} value="On my way." sending />,
+};
+
+export const InsetWithError: Story = {
+  render: () => (
+    <Demo
+      layout="inset"
+      measureClassName="max-w-none"
+      value="On my way."
+      error="We couldn't send your message. Check your connection and try again."
+    />
+  ),
+};
+
+export const InsetDark: Story = {
+  render: () => (
+    <div data-theme="dark" className="bg-[var(--background)]">
+      <Demo layout="inset" measureClassName="max-w-none" leading={PLUS} value="All done, ready to collect." />
+    </div>
+  ),
+};

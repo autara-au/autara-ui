@@ -98,3 +98,25 @@ export const LargeText: Story = {
     return <QuickReplies {...args} />;
   },
 };
+
+/**
+ * AUTM-1878 — `layout="row"`: one line that scrolls sideways, in a narrow
+ * panel. The edge with more chips past it fades; scroll and the other edge
+ * fades in.
+ */
+export const Row: Story = {
+  args: {
+    layout: "row",
+    replies: [
+      ...MERCHANT,
+      { id: "running-over", label: "Running about 15 minutes over" },
+      { id: "gate", label: "What's the gate code?" },
+    ],
+  },
+  render: (args) => (
+    <div className="max-w-[360px] rounded-3xl bg-[var(--surface-warm)] p-4">
+      <QuickReplies {...args} />
+    </div>
+  ),
+};
+
