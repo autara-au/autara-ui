@@ -181,3 +181,36 @@ export const ChipsLargeText: Story = {
         </LargeText>
     ),
 }
+
+/**
+ * AUTM-1878 — the chip's own action: Send payment link sits in the "After
+ * the job" chip it collects, on the raised fill so it reads on the band card.
+ */
+export const ChipWithAction: Story = {
+    args: {
+        variant: 'chips',
+        label: 'Deposit and balance',
+        rows: [
+            { label: 'Deposit', value: '$56.70', tone: 'money', state: 'Captured' },
+            {
+                label: 'After the job',
+                value: '$132.30',
+                state: 'Balance due',
+                action: (
+                    <button
+                        type="button"
+                        className="min-h-11 w-full rounded-full bg-[var(--raised)] px-4 text-[0.9375rem] font-medium text-[var(--text-strong)]"
+                    >
+                        Send payment link
+                    </button>
+                ),
+            },
+        ],
+    },
+    render: (args) => (
+        <div className="max-w-[34rem]">
+            <MoneyBreakdown {...args} />
+        </div>
+    ),
+}
+

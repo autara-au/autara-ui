@@ -88,3 +88,41 @@ describe('MessageThread rows and roles', () => {
         expect(screen.getByRole('status').textContent).toBe('Loading messages')
     })
 })
+
+/** AUTM-1878: keyboard scrolling, the fade and the slot above the rows. */
+describe('MessageThread in a box', () => {
+    const rows: MessageItem[] = [
+        { id: 'a', side: 'incoming', text: 'Is there power?', createdAt: T },
+        { id: 'b', side: 'own', text: 'Yes, by the garage.', createdAt: T + 1000 },
+    ]
+
+    it('the scroll area takes focus and is a named region when it is not a log', () => {
+        render(<MessageThread items={rows} label="Messages with Sam" />)
+        const region = screen.getByRole('region', { name: 'Messages with Sam' })
+        expect(region.getAttribute('tabindex')).toBe('0')
+        expect(screen.queryByRole('log')).toBeNull()
+    })
+
+    it('draws `before` above the first row, inside the scroll area', () => {
+        render(<MessageThread items={rows} before={<button type="button">Load earlier</button>} />)
+        const region = screen.getByRole('region', { name: 'Messages' })
+        const load = screen.getByRole('button', { name: 'Load earlier' })
+        expect(region.contains(load)).toBe(true)
+        expect(load.compareDocumentPosition(screen.getByText('Is there power?')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    })
+
+    it('fades the top edge only once there is history above', () => {
+        render(<MessageThread items={rows} fadeTop />)
+        const region = screen.getByRole('region', { name: 'Messages' })
+        expect(region.getAttribute('data-fade')).toBeNull()
+        region.scrollTop = 40
+        fireEvent.scroll(region)
+        expect(region.getAttribute('data-fade')).toBe('top')
+    })
+
+    it('timestamps are at the body-small step', () => {
+        render(<MessageThread items={rows} />)
+        const stamp = document.querySelector('li p')!
+        expect(stamp.className).toContain('text-[0.8125rem]')
+    })
+})

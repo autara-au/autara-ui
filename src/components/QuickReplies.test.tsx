@@ -31,3 +31,46 @@ describe('QuickReplies', () => {
         expect(container.firstChild).toBeNull()
     })
 })
+
+/** AUTM-1878: one line that scrolls sideways. */
+describe('QuickReplies layout="row"', () => {
+    it('is still the named group, on one line, chips that never wrap their words', () => {
+        render(
+            <QuickReplies
+                layout="row"
+                replies={[
+                    { id: 'a', label: 'On my way' },
+                    { id: 'b', label: '15 minutes away' },
+                ]}
+                onSelect={() => {}}
+            />,
+        )
+        const group = screen.getByRole('group', { name: 'Quick replies' })
+        expect(group.getAttribute('data-layout')).toBe('row')
+        expect(group.className).toContain('flex-nowrap')
+        expect(group.className).toContain('overflow-x-auto')
+        for (const chip of screen.getAllByRole('button')) {
+            expect(chip.className).toContain('shrink-0')
+            expect(chip.className).toContain('min-h-11')
+        }
+    })
+})
+
+describe('QuickReplies per-chip test id', () => {
+    it("a chip's own testId wins over chipTestId", () => {
+        render(
+            <QuickReplies
+                replies={[
+                    { id: 'a', label: 'Pet hair removal · $40' },
+                    { id: 'custom', label: 'Custom extra', testId: 'booking-addon-add-open' },
+                ]}
+                chipTestId="booking-addon-suggestion"
+                onSelect={() => {}}
+            />,
+        )
+        expect(screen.getByRole('button', { name: 'Custom extra' }).getAttribute('data-testid')).toBe('booking-addon-add-open')
+        expect(screen.getByRole('button', { name: 'Pet hair removal · $40' }).getAttribute('data-testid')).toBe(
+            'booking-addon-suggestion',
+        )
+    })
+})
