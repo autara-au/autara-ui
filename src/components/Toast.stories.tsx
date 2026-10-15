@@ -431,7 +431,8 @@ function FiresOnMount({ message }: { message: string }) {
  * truncated line. On a phone the reminder's second sentence (when the next
  * one may go) used to be cut at "email…". Fires on mount and stays, so the
  * wrap is visible at the phone width; a third line would be clamped, so
- * toasts are written to fit in two.
+ * toasts are written to fit in two. At large text on a phone (under 20em of
+ * text across) nothing is clamped and the toast keeps every word.
  */
 export const TwoLines: Story = {
     name: 'Two lines at most (phone)',

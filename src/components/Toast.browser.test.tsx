@@ -41,14 +41,16 @@ function lines(el: HTMLElement) {
 // two, and a third is clamped. That the reminder fits two lines in Satoshi at
 // 375 is proven where Satoshi is loaded, in the portal's own spec.
 describe("Toast wraps to two lines at most (AUTM-1883)", () => {
+    // 375 and 390 have 20em of text or more across: two lines at most. 320 has
+    // 18em (288px inside the viewport's padding): every word, like large text.
     for (const width of [320, 375, 390]) {
-        it(`at ${width}: the reminder wraps instead of truncating, and shows every line up to two`, async () => {
+        it(`at ${width}: the reminder wraps instead of truncating, and shows every line it may`, async () => {
             await page.viewport(width, 800);
             const el = await show(() => toast.success(REMINDER));
             const { shown, needed } = lines(el);
             // It needs more than one line here, so one truncated line would lose words.
             expect(needed).toBeGreaterThanOrEqual(2);
-            expect(shown).toBe(Math.min(needed, 2));
+            expect(shown).toBe(width < 340 ? needed : Math.min(needed, 2));
             // Nothing is cut sideways.
             expect(el.scrollWidth).toBeLessThanOrEqual(el.clientWidth + 1);
             // The capsule stays inside the screen.
@@ -70,6 +72,32 @@ describe("Toast wraps to two lines at most (AUTM-1883)", () => {
         const { shown, needed } = lines(el);
         expect(shown).toBe(2);
         expect(needed).toBeGreaterThan(2);
+    });
+
+    it("at 390 with 200% text: the reminder keeps every word rather than clamping (WCAG 1.4.4)", async () => {
+        await page.viewport(390, 800);
+        document.documentElement.style.fontSize = "32px";
+        try {
+            const el = await show(() => toast.success(REMINDER));
+            const { shown, needed } = lines(el);
+            expect(needed).toBeGreaterThan(2);
+            expect(shown).toBe(needed);
+            expect(el.scrollWidth).toBeLessThanOrEqual(el.clientWidth + 1);
+        } finally {
+            document.documentElement.style.fontSize = "";
+        }
+    });
+
+    it("a corner toast still sits in its corner", async () => {
+        await page.viewport(1280, 800);
+        render(<ToastProvider position="bottom-right">{null}</ToastProvider>);
+        await act(async () => {});
+        await act(async () => {
+            toast.success("Link copied");
+        });
+        const capsule = document.querySelector('[role="status"]')!.getBoundingClientRect();
+        expect(1280 - capsule.right).toBeLessThanOrEqual(17);
+        expect(800 - capsule.bottom).toBeLessThanOrEqual(17);
     });
 
     it("at 390: an action and the dismiss stay inside the capsule beside two lines of words", async () => {
