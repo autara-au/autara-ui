@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { cn } from "../lib/cn";
 import { Button } from "./Button";
+import { useScrollbarReveal } from "./ScrollArea";
 
 /**
  * QuickReplies — one-tap messages for the moments that repeat (AUTM-1806, U4).
@@ -75,6 +76,9 @@ export function QuickReplies({
   const scroller = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({ start: false, end: false });
   const row = layout === "row";
+  // AUTM-1756: the row's bar shows while it is used; the fade already says
+  // there is more (only the row layout attaches the ref).
+  useScrollbarReveal(scroller);
 
   useEffect(() => {
     if (!row) return;

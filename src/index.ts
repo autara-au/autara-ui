@@ -3,6 +3,11 @@ export {
     GradientBar,
     Button, buttonVariants, type ButtonProps,
     IconButton, type IconButtonProps,
+    // AUTM-1756: the icon disc's tones and sizes, the one close control, and
+    // a region that scrolls on its own.
+    CloseButton, CloseGlyph, iconDiscClasses, resolveIconButtonTone,
+    type IconButtonTone, type IconButtonSize, type CloseButtonProps,
+    ScrollArea, useScrollEdges, useScrollbarReveal, type ScrollAreaProps, type ScrollAreaOrientation, type ScrollEdges,
     // AUTM-1787: a list row's everyday actions.
     RowActions, type RowAction, type RowActionsProps,
     // AUTM-1755: a list beside its record, with a splitter.

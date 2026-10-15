@@ -83,7 +83,7 @@ export function RowActions({ actions, menuLabel, menuTestId, className }: RowAct
               // link and a button side by side are one control family.
               className={cn(
                 buttonVariants({ variant: "quiet", size: "sm" }),
-                "row-action motion-press min-h-11 min-w-11 gap-1.5 px-3",
+                "row-action icon-disc relative isolate motion-press min-h-11 min-w-11 gap-1.5 px-3",
               )}
             >
               <span aria-hidden="true" className="inline-flex">{a.icon}</span>
@@ -99,7 +99,7 @@ export function RowActions({ actions, menuLabel, menuTestId, className }: RowAct
               data-testid={a.testId}
               busy={a.busy}
               onClick={a.onSelect}
-              className="row-action motion-press min-h-11 min-w-11 gap-1.5 px-3"
+              className="row-action icon-disc relative isolate motion-press min-h-11 min-w-11 gap-1.5 px-3"
             >
               <span aria-hidden="true" className="inline-flex">{a.icon}</span>
               <span className="row-action-label">{a.label}</span>

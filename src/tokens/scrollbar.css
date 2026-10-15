@@ -1,20 +1,38 @@
-/* ─── Autara Scrollbar Tokens (AUTM-1739) ───────────────────────────────
+/* ─── Autara Scrollbar Tokens (AUTM-1739, AUTM-1756) ────────────────────
  *
- * Don, 2026-10-05: "scroll bars in windows pretty much ugly default, need
- * visual perfection on scroll views as well." The rules that use these are
- * in utilities/scrollbars.css, in the base layer, so every consumer's page
- * and inner scroll areas take them with the version bump.
+ * Don, 2026-10-05: "scroll bars in windows pretty much ugly default". Then,
+ * 2026-10-15, of the Customers and Inbox lists: "it's bad when I see the
+ * scroll bar, make it brand native". So the thumb is the brand, not grey:
+ * `--accent` (the text grade purple, which lifts to lavender in dark) mixed
+ * toward transparent, so it sits on paper, band and raised alike and follows
+ * the theme on its own. The rules that use these are in
+ * utilities/scrollbars.css, in the base layer.
  *
- * Neutral on the light ground: the theme's strong text colour, mixed toward
- * transparent, so it follows dark mode on its own. On a brand-deep ground
- * (`.scroll-on-deep`, or `data-ground="deep"`): a lighter purple, the brand
- * mixed into white, on a transparent track. Subtle at rest, firmer on hover.
+ * Measured over the grounds it scrolls on (scrollbars.test.ts holds them):
+ *   thumb (shown)   light 3.6:1 on paper, 3.4:1 on band;
+ *                   dark  4.3:1 on paper, 4.2:1 on band, 3.9:1 on raised
+ *   thumb (hovered) darker in light, lighter in dark, about 5:1 and up
+ * The thumb is 3:1 or better wherever it shows, so it can be found
+ * (WCAG 1.4.11's bar for a control's boundary).
+ *
+ * On a brand-deep ground (`.scroll-on-deep`, or `data-ground="deep"`): a
+ * lighter purple, the brand mixed into white, on a transparent track.
+ *
+ * `[data-theme]` re-declares them on a themed island, because a custom
+ * property resolves its var() where it is declared: declared on :root only,
+ * a dark island inside a light page would keep the light thumb.
  */
 :root,
-:host {
-    --scrollbar-thumb: color-mix(in srgb, var(--text-strong) 30%, transparent);
-    --scrollbar-thumb-hover: color-mix(in srgb, var(--text-strong) 50%, transparent);
+:host,
+[data-theme] {
+    --scrollbar-thumb: color-mix(in srgb, var(--accent) 60%, transparent);
+    --scrollbar-thumb-hover: color-mix(in srgb, var(--accent) 80%, transparent);
     --scrollbar-track: transparent;
+    /* The bar's box: 12px wide, the thumb inset 3px each side (6px drawn),
+     * 2px when the pointer is on it (8px). */
+    --scrollbar-size: 12px;
+    --scrollbar-inset: 3px;
+    --scrollbar-inset-hover: 2px;
     /* On a brand-deep ground. */
     --scrollbar-thumb-deep: color-mix(in srgb, var(--brand) 42%, var(--on-deep));
     --scrollbar-thumb-deep-hover: color-mix(in srgb, var(--brand) 22%, var(--on-deep));

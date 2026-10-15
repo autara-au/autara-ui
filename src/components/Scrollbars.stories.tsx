@@ -4,16 +4,20 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
  * # Scrollbars
  *
  * AUTM-1739 (Don, 2026-10-05: "scroll bars in windows pretty much ugly
- * default, need visual perfection on scroll views as well"). Every scroll
- * area takes these from utilities/scrollbars.css, in the base layer: thin,
- * coloured from tokens, firmer while the pointer is over the area, nothing
- * hidden. On a brand-deep ground, `.scroll-on-deep` (or `data-ground="deep"`)
- * takes the lighter purple thumb on a transparent track. Under forced colours
- * the system draws its own.
+ * default, need visual perfection on scroll views as well"), then AUTM-1756
+ * (Don, 2026-10-15: "it's bad when I see the scroll bar, make it brand
+ * native"). Every scroll area takes these from utilities/scrollbars.css, in
+ * the base layer: a thin, rounded thumb in the brand purple, 3:1 or better
+ * on every ground. A ScrollArea (or a scroller given `useScrollbarReveal`)
+ * shows it only while the pointer is over it, while focus is inside it and
+ * while it scrolls; any other scroller shows it at rest, so it can always be
+ * found. Nothing is hidden. On a brand-deep ground, `.scroll-on-deep`
+ * (or `data-ground="deep"`) takes the lighter purple thumb. Under forced
+ * colours the system draws its own; a finger keeps the platform's overlay bar.
  *
  * Overlay scrollbars (macOS by default, phones) only show while scrolling;
- * to see the classic bars, set the OS to always show scroll bars or view this
- * on Windows.
+ * Chrome and Safari draw the brand thumb in place of them when a mouse or a
+ * trackpad is the pointer.
  */
 const meta = {
     title: 'Foundations/Scrollbars',

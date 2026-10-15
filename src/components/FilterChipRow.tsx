@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
+import { useScrollEdges, useScrollbarReveal } from './ScrollArea'
 
 /**
  * FilterChipRow — single-select pill row used as the secondary
@@ -62,6 +63,12 @@ export interface FilterChipRowProps<V> {
     chipClassName?: string
     /** Each chip presses to 97% (`motion-press`, AUTM-1708). Default true. */
     press?: boolean
+    /**
+     * AUTM-1756: fade the edge that has more chips to show when the row
+     * scrolls (a phone, large text, a narrow pane), instead of cutting a chip
+     * mid-word. Default true.
+     */
+    fade?: boolean
 }
 
 export function FilterChipRow<V>({
@@ -72,7 +79,22 @@ export function FilterChipRow<V>({
     className,
     chipClassName,
     press = true,
+    fade = true,
 }: FilterChipRowProps<V>) {
+    const edges = useScrollEdges('x')
+    // AUTM-1756: the row's bar shows while it is used; the fade says there
+    // is more at rest.
+    const rowRef = useRef<HTMLDivElement | null>(null)
+    useScrollbarReveal(rowRef)
+    const setRow = useCallback(
+        (node: HTMLDivElement | null) => {
+            rowRef.current = node
+            edges.ref(node)
+        },
+        // edges.ref is stable.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    )
     /* AUTM-1792: the chip the merchant just chose pops (`.motion-pop`, 100 to
        104 to 99%, off under reduced motion). Only a CHOICE pops: the chip
        selected on first render stays still, because a pop on every screen
@@ -80,14 +102,22 @@ export function FilterChipRow<V>({
     const [popped, setPopped] = useState<number | null>(null)
     return (
         <div
+            ref={setRow}
             role="tablist"
             aria-label={ariaLabel}
+            data-axis="x"
+            data-fade-start={fade && edges.start ? '' : undefined}
+            data-fade-end={fade && edges.end ? '' : undefined}
             className={cn(
                 // 10px between chips, as the sheet spaces them.
                 // -mt-1 cancels the top padding's offset, so the chips sit
                 // where the row starts; the padding is only there to hold
                 // the hit area.
                 '-mx-1 -mt-1 flex gap-2.5 overflow-x-auto px-1 py-1',
+                // AUTM-1756: the end of the row never swipes the page back,
+                // and a chip reached by Tab lands clear of the fade.
+                'overscroll-x-contain scroll-px-10',
+                fade && 'scroll-fade',
                 className,
             )}
         >

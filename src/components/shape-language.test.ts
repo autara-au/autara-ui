@@ -81,6 +81,8 @@ const KEEPS: Record<string, string> = {
     'FactRows.tsx': 'the 40px icon disc beside each value, a glyph in a circle like ChoiceCard and ListSection (AUTM-1799)',
     'VehiclePicker.tsx': 'the model and type chips are pills, as FilterChipRow\'s on canvas v44: a choice, not an action; the back control is the 44px icon disc (AUTM-1870)',
     'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s; the paint dot, a colour swatch like SwatchRadioGroup\'s (AUTM-1870)',
+    'IconButton.tsx': 'the icon disc itself, canvas v44 "Icon disc" (AUTM-1594); filled on every tone, never a bare glyph (AUTM-1756)',
+    'BackButton.tsx': 'the icon disc without a label, a pill with one: the chevron and the destination, as the merchant dock draws "< Invoice" (AUTM-1756)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
 
@@ -101,8 +103,6 @@ const KEEPS: Record<string, string> = {
  * AUTM-1221 (the close control, the icon tile, the progress track).
  */
 const PENDING: Record<string, string> = {
-    'BackButton.tsx': 'circular icon button, an action, should move',
-    'CarouselHeader.tsx': 'prev/next icon buttons, actions, should move',
     'ImageCropDialog.tsx': 'range-slider track, a state bar, likely a keep',
     'MultiSelect.tsx': 'value chips + clear button, chips go to 8px',
     'StepCard.tsx': 'step numeral medallion, a numeral in a circle, likely a keep',

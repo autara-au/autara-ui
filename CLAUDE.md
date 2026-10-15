@@ -179,16 +179,23 @@ docs/
   Prefer it for new marketing work; `ScrollReveal` stays for consumers that
   already use it.
 - **Scrollbars are styled in the base layer for every consumer** (AUTM-1739,
-  utilities/scrollbars.css). A consumer rule wins, so a stray
-  `scrollbar-width: none` in an app still hides one; do not add one where
-  content can scroll. On a brand-deep page put `.scroll-on-deep` on <html>
-  AND give <html> the deep background: the page's scrollbar belongs to the
-  root, and its transparent track shows the canvas behind it. The standard
-  properties cannot hover the thumb itself, so the thumb firms while the
-  pointer is over an inner scroll area (never the page's). Headless Chromium
-  on macOS draws overlay scrollbars whatever the flags; to see classic ones,
-  start the binary with the Cocoa argument `-AppleShowScrollBars Always` and
-  connect over CDP.
+  AUTM-1756, utilities/scrollbars.css): a thin rounded `--accent` thumb, drawn
+  with `::-webkit-scrollbar` in Blink and WebKit and with the standard
+  properties in Firefox ONLY (`@supports not selector(::-webkit-scrollbar)`):
+  Chromium 121+ ignores the drawn thumb on any element whose `scrollbar-color`
+  or `scrollbar-width` is not `auto`, and `scrollbar-color` inherits. Mouse and
+  trackpad only; a finger keeps the platform's overlay bar. A consumer rule
+  wins, so a stray `scrollbar-width: none` still hides one. Chromium does NOT
+  repaint a thumb when only its scroller's `:hover`/`:focus-within` changes,
+  nor on scroll for a composited scroller (a page's `<main>`): so the thumb
+  shows at rest everywhere, and only regions marked by ScrollArea or
+  `useScrollbarReveal` hide it at rest; they repaint it by toggling
+  `data-scrollbar-tick`. Never make a thumb transparent at rest without that
+  hook. Playwright's headless shell starts with `--hide-scrollbars`: to shoot
+  a bar, use `channel: "chromium"` and `ignoreDefaultArgs: ["--hide-scrollbars"]`.
+  On a brand-deep page put `.scroll-on-deep` on <html> AND give <html> the
+  deep background: the page's scrollbar belongs to the root, and its
+  transparent track shows the canvas behind it.
 - **`PageContainer` / `.page-container` is the page track** (AUTM-1739):
   1440px of content (`--page-max`) between a fluid `--page-gutter` (16px to
   96px). Sections, grids and product visuals take the full track; running

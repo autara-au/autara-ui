@@ -230,7 +230,7 @@ export function MessageThread({
 
   if (loading) {
     return (
-      <div className={cn("flex-1 overflow-y-auto px-4 pt-4", className)}>
+      <div className={cn("flex-1 overflow-y-auto overscroll-contain px-4 pt-4", className)}>
         <div className={cn("mx-auto w-full", measureClassName)}>
           <p role="status" className="sr-only">
             {loadingLabel}
@@ -290,7 +290,9 @@ export function MessageThread({
       onScroll={handleScroll}
       data-fade={fadeTop && above ? "top" : undefined}
       className={cn(
-        "flex-1 overflow-y-auto px-4 pb-4 pt-4",
+        // AUTM-1756: contained, so reaching the oldest message never scrolls
+        // the page or the drawer behind the thread.
+        "flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-4",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]",
         // A soft edge while there is history above: 3rem of fade, so a
         // bubble half out of view dissolves instead of being sliced.

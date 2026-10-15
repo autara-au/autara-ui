@@ -3,6 +3,7 @@
 import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
+import { CloseButton } from './IconButton'
 import { useReturnFocus } from '../lib/use-return-focus'
 
 /**
@@ -14,7 +15,7 @@ import { useReturnFocus } from '../lib/use-return-focus'
  *   - Hairline `--border-subtle` ring instead of any drop shadow
  *   - Ink overlay at 50% opacity (no backdrop blur — flat
  *     editorial scrim)
- *   - Solar Bold close icon at the top-right
+ *   - CloseButton (AUTM-1756) at the top-right: a filled disc, not a bare cross
  *
  * The `theme` prop on `DialogContent` is preserved for source-level
  * compatibility but is currently a **no-op**.
@@ -287,30 +288,16 @@ const DialogContent = React.forwardRef<
                     <DialogLayoutContext.Provider value={state}>
                         {children}
                     </DialogLayoutContext.Provider>
-                    <DialogPrimitive.Close
-                        aria-label={closeLabel}
-                        className={cn(
-                            /* AUTM-1221: 44px on the ladder. It was 28px, which is
-                               under the floor on the one control that dismisses a
-                               modal, and a pill besides. */
-                            'absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full',
-                            'text-[var(--text-subtle)] transition-colors',
-                            'hover:bg-[var(--band)] hover:text-[var(--text-strong)]',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper)]'
-                        )}
-                    >
-                        <svg
-                            aria-hidden
-                            viewBox="0 0 24 24"
-                            width="14"
-                            height="14"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2.4}
-                            strokeLinecap="round"
-                        >
-                            <path d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                    {/* AUTM-1756: the library's one close control, a filled
+                        44px disc (48px to a finger) with a 20px cross. It was a
+                        14px cross on a bare 44px target that drew a band
+                        circle only on hover: Don, of the Share your booking
+                        link dialog, "Icon buttons are less accessible". */}
+                    <DialogPrimitive.Close asChild>
+                        <CloseButton
+                            label={closeLabel}
+                            className="absolute right-3 top-3 z-10"
+                        />
                     </DialogPrimitive.Close>
                 </DialogPrimitive.Content>
             </DialogPortal>
@@ -350,7 +337,10 @@ const DialogHeader = ({
     return (
         <div
             className={cn(
-                'flex flex-col space-y-1.5 text-left',
+                // AUTM-1756: the title and the line under it keep clear of the
+                // drawn close disc (12px from the corner, 44px wide; the
+                // panel's own 24px padding plus this 32px clears it).
+                'flex flex-col space-y-1.5 pr-8 text-left',
                 className
             )}
             {...props}
