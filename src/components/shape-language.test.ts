@@ -81,6 +81,7 @@ const KEEPS: Record<string, string> = {
     'FactRows.tsx': 'the 40px icon disc beside each value, a glyph in a circle like ChoiceCard and ListSection (AUTM-1799)',
     'VehiclePicker.tsx': 'the model and type chips are pills, as FilterChipRow\'s on canvas v44: a choice, not an action; the back control is the 44px icon disc (AUTM-1870)',
     'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s (AUTM-1870)',
+    'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
 

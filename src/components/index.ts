@@ -207,6 +207,7 @@ export { MessageComposer, type MessageComposerProps } from './MessageComposer'
 export { MessageThread, type MessageThreadProps, type MessageItem, type MessageSendStatus } from './MessageThread'
 // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
 export { MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState } from './MessageCard'
+export { ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone } from './ChatEventCard'
 export { QuickReplies, type QuickRepliesProps, type QuickReply } from './QuickReplies'
 // AUTM-1867 — pick one of a few in one tap (services, times), with one trailing action.
 export { ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction } from './ChoiceChips'

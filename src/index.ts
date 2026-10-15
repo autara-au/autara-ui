@@ -123,6 +123,8 @@ export {
     MessageThread, type MessageThreadProps, type MessageItem, type MessageSendStatus,
     // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
     MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState,
+    // AUTM-1881 — a booking event from Autara in the booking thread
+    ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone,
     QuickReplies, type QuickRepliesProps, type QuickReply,
     // AUTM-1867 — pick one of a few in one tap.
     ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction,
