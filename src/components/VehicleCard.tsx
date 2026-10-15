@@ -166,9 +166,10 @@ export function VehicleCard({
     const Title = (selectable ? 'span' : `h${headingLevel}`) as 'span' | 'h2' | 'h3' | 'h4'
 
     const inner = (
-        <div className="flex min-w-0 items-start gap-3">
+        /* Wraps for 200% text, as the picker's chosen car does. */
+        <div className="flex min-w-0 flex-wrap items-start gap-3">
             <CarSlot make={make} color={color} photoUrl={photoUrl} />
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <div className="flex min-w-[min(100%,10rem)] flex-1 flex-col gap-1.5">
                 <div className="flex min-w-0 items-start justify-between gap-2">
                     <Title className="m-0 min-w-0">
                         <span className="block text-[1.0625rem] font-bold leading-snug [overflow-wrap:anywhere]">{name}</span>
