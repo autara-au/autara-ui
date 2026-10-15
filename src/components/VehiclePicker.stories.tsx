@@ -12,9 +12,10 @@ import {
 
 /**
  * VehiclePicker (AUTM-1870, Don 2026-10-14, after Mobbin: Lloyds, BlaBlaCar,
- * PayPal). Find (search make or model, popular makes as name tiles), Model
- * (chips), Details (the inferred type with Change, the silhouette in the
- * tapped colour, rego and year). The consumer owns the button and validates
+ * PayPal). Find (search make or model, popular makes as logo tiles), Model
+ * (chips), Details (the make's mark with a dot of the tapped paint, the
+ * inferred type with Change, large colour swatches, rego and year; no car
+ * illustrations, Don 2026-10-15). The consumer owns the button and validates
  * on press. "Hilux", the result, White, then Add car: three taps.
  */
 const meta = {
