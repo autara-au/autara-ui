@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { IconButton } from "./IconButton";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "./DropdownMenu";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "./Sheet";
 import { cn } from "../lib/cn";
 
@@ -27,6 +28,13 @@ import { cn } from "../lib/cn";
  *
  * Glyphs for the usual rows are exported as `attachMenuGlyphs` (Solar Bold
  * style, inlined: autara-ui has no icon dependency).
+ *
+ * AUTM-1878 follow-up (Don, 2026-10-15): from 48rem (768px) up it is not a
+ * bottom sheet but a small menu anchored just above the +, the way WhatsApp
+ * Web and Slack's attach menu open: `role="menu"`, arrow keys between the
+ * rows, Escape and a click outside close it, focus back on the +, one soft
+ * rise from the anchor (`.floating-panel--pop`, still under reduced motion).
+ * Below that it stays the sheet. `layout` forces either.
  */
 export interface AttachMenuItem {
   id: string;
@@ -54,6 +62,11 @@ export interface ComposerAttachMenuProps {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   className?: string;
+  /**
+   * `auto` (default): the menu from 48rem up, the sheet below. `menu` and
+   * `sheet` force one.
+   */
+  layout?: "auto" | "menu" | "sheet";
 }
 
 function PlusGlyph() {
@@ -115,7 +128,10 @@ export function ComposerAttachMenu({
   open: openProp,
   onOpenChange,
   className,
+  layout = "auto",
 }: ComposerAttachMenuProps) {
+  const wide = useWide(layout === "auto");
+  const asMenu = layout === "menu" || (layout === "auto" && wide);
   const [openState, setOpenState] = useState(false);
   const open = openProp ?? openState;
   const setOpen = (next: boolean) => {
@@ -134,6 +150,64 @@ export function ComposerAttachMenu({
     const run = pending.current;
     pending.current = null;
     run?.();
+  }
+
+  if (asMenu) {
+    return (
+      <DropdownMenu open={open} onOpenChange={setOpen}>
+        <DropdownMenuTrigger asChild disabled={disabled}>
+          <IconButton
+            icon={<PlusGlyph />}
+            label={label}
+            disabled={disabled}
+            data-testid={triggerTestId}
+            className={className}
+          />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side="top"
+          align="start"
+          sideOffset={8}
+          collisionPadding={16}
+          className="w-[min(22rem,calc(100vw-2rem))] p-1.5"
+          onCloseAutoFocus={() => {
+            // Radix has put focus back on the +; the row runs after that.
+            queueMicrotask(runPending);
+          }}
+        >
+          <DropdownMenuLabel>{title}</DropdownMenuLabel>
+          {items.map((item) => (
+            <DropdownMenuItem
+              key={item.id}
+              disabled={item.disabled}
+              data-testid={item.testId}
+              onSelect={() => {
+                pending.current = item.onSelect;
+              }}
+              className="min-h-14 items-center gap-3 rounded-[0.75rem] px-2"
+            >
+              {item.icon ? (
+                <span
+                  aria-hidden="true"
+                  className="grid size-10 shrink-0 place-items-center rounded-[0.75rem] bg-[var(--band)] text-[var(--text-strong)]"
+                >
+                  {item.icon}
+                </span>
+              ) : null}
+              <span className="flex min-w-0 flex-col">
+                <span className="text-[0.9375rem] font-medium leading-snug text-[var(--text-strong)]">{item.label}</span>
+                {item.description ? (
+                  <span className="text-[0.8125rem] leading-snug text-[var(--text-muted)]">{item.description}</span>
+                ) : null}
+              </span>
+            </DropdownMenuItem>
+          ))}
+          {footnote ? (
+            <p className="px-2 pb-1 pt-2 text-[0.75rem] leading-snug text-[var(--text-subtle)]">{footnote}</p>
+          ) : null}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
   }
 
   return (
@@ -200,4 +274,21 @@ export function ComposerAttachMenu({
       </SheetContent>
     </Sheet>
   );
+}
+
+/** True from 48rem (768px at a 16px root) up, read live; false on the server. */
+function useWide(active: boolean): boolean {
+  const query = "(min-width: 48rem)";
+  const [wide, setWide] = useState(
+    () => active && typeof window !== "undefined" && !!window.matchMedia?.(query).matches,
+  );
+  useEffect(() => {
+    if (!active || typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia(query);
+    const read = () => setWide(mq.matches);
+    read();
+    mq.addEventListener("change", read);
+    return () => mq.removeEventListener("change", read);
+  }, [active]);
+  return wide;
 }
