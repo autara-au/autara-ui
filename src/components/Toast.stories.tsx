@@ -9,8 +9,8 @@ import {
 } from './Toast'
 
 /**
- * Toast — Torph-style ink capsule. Single-line, leading Solar-Bold
- * status icon, lime/aqua accents, no shadow.
+ * Toast — Torph-style ink capsule with a status dot. The words wrap to
+ * two lines at most (AUTM-1883), never one truncated line.
  *
  * Stories trigger toasts via the singleton `toast()` API. The
  * "Processing transaction" morph demo updates a single toast in
@@ -408,6 +408,64 @@ export const WithAction: Story = {
                 }
             >
                 Toast with action
+            </Button>
+        </Panel>
+    ),
+}
+
+// ─── Two lines at most (AUTM-1883) ─────────────────────────────────
+const REMINDER = 'Reminder sent to Priya by text and email. Next one possible at 15:35.'
+
+function FiresOnMount({ message }: { message: string }) {
+    const fired = useRef(false)
+    useEffect(() => {
+        if (fired.current) return
+        fired.current = true
+        toast.success({ description: message, duration: 0 })
+    }, [message])
+    return null
+}
+
+/**
+ * AUTM-1883 (Don, 2026-10-15): a toast wraps to two lines, never one
+ * truncated line. On a phone the reminder's second sentence (when the next
+ * one may go) used to be cut at "email…". Fires on mount and stays, so the
+ * wrap is visible at the phone width; a third line would be clamped, so
+ * toasts are written to fit in two.
+ */
+export const TwoLines: Story = {
+    name: 'Two lines at most (phone)',
+    parameters: { viewport: { defaultViewport: 'phone' } },
+    render: () => (
+        <Panel>
+            <FiresOnMount message={REMINDER} />
+            <Button variant="outline" size="sm" onClick={() => toast.success(REMINDER)}>
+                Reminder sent
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                    toast.error(
+                        'Priya was reminded at 15:15. Next one possible at 15:30.'
+                    )
+                }
+            >
+                Too soon
+            </Button>
+            <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                    toast({
+                        type: 'success',
+                        description: 'INV-2026-0102 is ready. Your browser blocked the download.',
+                        duration: 8000,
+                        action: { label: 'Open PDF', onClick: () => undefined },
+                    })
+                }
+            >
+                Two lines with an action
             </Button>
         </Panel>
     ),

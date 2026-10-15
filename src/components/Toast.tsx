@@ -9,11 +9,15 @@ import { AutaraLoader } from './AutaraLoader'
 
 /**
  * Toast — Autara notification primitive, modelled on the Torph
- * "Processing Transaction" pill (https://torph.lochie.me): a single-
- * line ink capsule with a leading Solar-Bold status icon and white
- * text. No drop shadow, no backdrop blur — depth comes from the ink
- * contrast against the cream canvas, in line with the Autara house
- * rule.
+ * "Processing Transaction" pill (https://torph.lochie.me): an ink
+ * capsule with a leading status dot and white text. No backdrop blur.
+ *
+ * AUTM-1883 (Don, 2026-10-15): the words wrap to at most two lines. They
+ * were one truncated line, so on a phone "Reminder sent to Priya by text
+ * and email. Next one possible at 15:35" lost everything after "email",
+ * and the half that said when to try again was the half that went. Two
+ * lines hold a sentence and its follow-up at 320; a third is clamped, so
+ * write toasts that fit in two.
  *
  * The provider exposes a singleton `toast()` plus `toast.success /
  * .error / .warning / .info / .loading` shortcuts. A new
@@ -57,7 +61,7 @@ type ToastVariant = 'dark' | 'light'
 
 interface Toast {
     id: string
-    /** Legacy field — combined with `description` on the single-line capsule. */
+    /** Legacy field — combined with `description` into one message (two lines at most). */
     title?: string
     description?: string
     type?: ToastType
@@ -338,7 +342,7 @@ function ToastItem({
         setTimeout(onDismiss, 180)
     }
 
-    /* Single-line message — combine legacy title + description.
+    /* One message — combine legacy title + description.
        AUTM-1221: joined with a full stop, not an em dash. The em dash is a
        machine-written tell and it is out across Autara's copy; it also read
        as a range ("Saved — 3 items") rather than two sentences. */
@@ -391,9 +395,13 @@ function ToastItem({
                     className={cn('size-2 shrink-0 rounded-full', TOAST_DOT[t.type])}
                 />
             ) : null}
+            {/* AUTM-1883: two lines at most, never one truncated line. The
+                capsule stays centred on its dot and actions; `text-pretty`
+                keeps a lone word off the second line. */}
             <span
                 key={contentKey}
-                className="autara-toast-content min-w-0 truncate"
+                data-toast-message=""
+                className="autara-toast-content min-w-0 line-clamp-2 break-words text-pretty"
             >
                 {message}
             </span>
