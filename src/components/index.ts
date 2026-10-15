@@ -15,6 +15,7 @@ export {
 export {
     ScrollArea,
     useScrollEdges,
+    useScrollbarReveal,
     type ScrollAreaProps,
     type ScrollAreaOrientation,
     type ScrollEdges,

@@ -8,9 +8,10 @@ import type { Meta, StoryObj } from '@storybook/react-vite'
  * (Don, 2026-10-15: "it's bad when I see the scroll bar, make it brand
  * native"). Every scroll area takes these from utilities/scrollbars.css, in
  * the base layer: a thin, rounded thumb in the brand purple, 3:1 or better
- * on every ground, shown while the pointer is over the area, while focus is
- * inside it and while it scrolls; the page's own bar whenever the pointer is
- * in the window. Nothing is hidden. On a brand-deep ground, `.scroll-on-deep`
+ * on every ground. A ScrollArea (or a scroller given `useScrollbarReveal`)
+ * shows it only while the pointer is over it, while focus is inside it and
+ * while it scrolls; any other scroller shows it at rest, so it can always be
+ * found. Nothing is hidden. On a brand-deep ground, `.scroll-on-deep`
  * (or `data-ground="deep"`) takes the lighter purple thumb. Under forced
  * colours the system draws its own; a finger keeps the platform's overlay bar.
  *

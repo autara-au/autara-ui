@@ -1,6 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { cn } from '../lib/cn'
-import { useScrollEdges } from './ScrollArea'
+import { useScrollEdges, useScrollbarReveal } from './ScrollArea'
 
 /**
  * FilterChipRow — single-select pill row used as the secondary
@@ -82,6 +82,19 @@ export function FilterChipRow<V>({
     fade = true,
 }: FilterChipRowProps<V>) {
     const edges = useScrollEdges('x')
+    // AUTM-1756: the row's bar shows while it is used; the fade says there
+    // is more at rest.
+    const rowRef = useRef<HTMLDivElement | null>(null)
+    useScrollbarReveal(rowRef)
+    const setRow = useCallback(
+        (node: HTMLDivElement | null) => {
+            rowRef.current = node
+            edges.ref(node)
+        },
+        // edges.ref is stable.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        [],
+    )
     /* AUTM-1792: the chip the merchant just chose pops (`.motion-pop`, 100 to
        104 to 99%, off under reduced motion). Only a CHOICE pops: the chip
        selected on first render stays still, because a pop on every screen
@@ -89,7 +102,7 @@ export function FilterChipRow<V>({
     const [popped, setPopped] = useState<number | null>(null)
     return (
         <div
-            ref={edges.ref}
+            ref={setRow}
             role="tablist"
             aria-label={ariaLabel}
             data-axis="x"

@@ -61,11 +61,24 @@ describe('scrollbars', () => {
         expect(outside).not.toMatch(/scrollbar-(width|color)\s*:/)
     })
 
-    it('show on hover, on focus inside, while scrolling, and always for the page', () => {
-        for (const sel of [':root', ':hover', ':focus-within', '\\[data-scrolling\\]']) {
-            expect(webkit).toMatch(new RegExp(`${sel}::-webkit-scrollbar-thumb[^{]*\\{[^}]*var\\(--scrollbar-thumb\\)|${sel}::-webkit-scrollbar-thumb,`))
-        }
-        expect(standard).toMatch(/:root,\s*:hover,\s*:focus-within,\s*\[data-scrolling\]\s*\{\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/)
+    it('show the thumb at rest on any scroller, so a bar can always be found', () => {
+        expect(webkit).toMatch(/(^|\n)\s*::-webkit-scrollbar-thumb\s*\{[^}]*background-color:\s*var\(--scrollbar-thumb\)/)
+        expect(standard).toMatch(/\*\s*\{\s*scrollbar-width:\s*thin;\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/)
+    })
+
+    it('a revealing region hides it at rest and shows it on hover, on focus inside and while scrolling', () => {
+        expect(webkit).toMatch(/\[data-scrollbar-reveal\]::-webkit-scrollbar-thumb\s*\{\s*background-color:\s*transparent;/)
+        expect(webkit).toMatch(
+            /\[data-scrollbar-reveal\]:hover::-webkit-scrollbar-thumb,\s*\[data-scrollbar-reveal\]:focus-within::-webkit-scrollbar-thumb,\s*\[data-scrollbar-reveal\]\[data-scrolling\]::-webkit-scrollbar-thumb\s*\{\s*background-color:\s*var\(--scrollbar-thumb\);/
+        )
+        expect(standard).toMatch(/\[data-scrollbar-reveal\]\s*\{\s*scrollbar-color:\s*transparent var\(--scrollbar-track\);/)
+        expect(standard).toMatch(
+            /\[data-scrollbar-reveal\]:hover,\s*\[data-scrollbar-reveal\]:focus-within,\s*\[data-scrollbar-reveal\]\[data-scrolling\]\s*\{\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/
+        )
+    })
+
+    it('the reveal repaints the thumb through a geometry tick (Chromium repaints nothing else)', () => {
+        expect(webkit).toMatch(/\[data-scrollbar-tick\]::-webkit-scrollbar-thumb\s*\{\s*min-height:\s*2\.51rem;/)
     })
 
     it('Firefox takes the standard properties from the same tokens', () => {

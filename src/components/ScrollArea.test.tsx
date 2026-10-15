@@ -79,9 +79,10 @@ describe('ScrollArea (AUTM-1756)', () => {
         expect(area).not.toHaveAttribute('data-scrolling')
     })
 
-    it('rebuilds the thumb on pointer enter and leave (Chromium repaints a thumb only on scroll)', () => {
+    it('reveals its bar, and rebuilds the thumb on pointer enter and leave', () => {
         render(<ScrollArea data-testid="area">rows</ScrollArea>)
         const area = screen.getByTestId('area')
+        expect(area).toHaveAttribute('data-scrollbar-reveal')
         expect(area).not.toHaveAttribute('data-scrollbar-tick')
         fireEvent.pointerEnter(area)
         expect(area).toHaveAttribute('data-scrollbar-tick')
@@ -142,5 +143,24 @@ describe('ScrollArea (AUTM-1756)', () => {
         )
         await flush()
         expect(screen.getByTestId('area')).toHaveAttribute('tabindex', '-1')
+    })
+})
+
+describe('useScrollbarReveal (AUTM-1756)', () => {
+    it('marks a consumer-owned scroller and clears the mark on unmount', async () => {
+        const { useRef } = await import('react')
+        const { useScrollbarReveal } = await import('./ScrollArea')
+        function Page() {
+            const ref = useRef<HTMLDivElement>(null)
+            useScrollbarReveal(ref)
+            return <div ref={ref} data-testid="main" />
+        }
+        const { unmount } = render(<Page />)
+        const main = screen.getByTestId('main')
+        expect(main).toHaveAttribute('data-scrollbar-reveal')
+        fireEvent.scroll(main)
+        expect(main).toHaveAttribute('data-scrolling')
+        unmount()
+        expect(main).not.toHaveAttribute('data-scrollbar-reveal')
     })
 })

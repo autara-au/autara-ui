@@ -30,8 +30,8 @@ import { cn } from '../lib/cn'
  *   - `fade` (default on for `orientation="horizontal"`): the edge that has
  *     more to show fades out, so a chip row says "there is more" instead of
  *     cutting a chip mid-word. A mask, so it works on any ground.
- *   - `data-scrolling` while it scrolls, which shows the thumb even when the
- *     pointer is elsewhere (keyboard, a programmatic scroll).
+ *   - the brand thumb only while it is used: hovered, holding focus, or
+ *     scrolling (`useScrollbarReveal`, below), out of the way at rest.
  *   - Keyboard: a region that overflows and holds nothing focusable takes
  *     `tabIndex={0}` (and `role="region"` with `label`) so arrow keys and
  *     Page Down scroll it; one that holds a link or a button does not, since
@@ -140,6 +140,61 @@ export function useScrollEdges(
     return { ref, ...edges }
 }
 
+/**
+ * Reveal a scroller's bar only while it is used (AUTM-1756): hidden at rest,
+ * shown while the pointer is over it, while focus is inside it and while it
+ * scrolls (`data-scrolling`, cleared 900ms after the last scroll event). For a
+ * scroller a consumer owns that is not a ScrollArea, such as a page's <main>:
+ *
+ *   const main = useRef<HTMLElement>(null)
+ *   useScrollbarReveal(main)
+ *
+ * It marks the node `data-scrollbar-reveal` (utilities/scrollbars.css hides
+ * the thumb at rest only on marked nodes) and repaints the thumb when the
+ * state changes. Chromium does not repaint a `::-webkit-scrollbar-thumb` when
+ * only the scroller's :hover or :focus-within changes (measured: the computed
+ * colour changes, the painted thumb does not), nor on scroll for a composited
+ * scroller. Toggling `data-scrollbar-tick` changes the thumb's min-height by a
+ * hundredth of a rem, which rebuilds the scrollbar's parts without laying out
+ * anything inside. Attributes are set on the node, so nothing re-renders.
+ */
+export function useScrollbarReveal(ref: { current: HTMLElement | null }): void {
+    useEffect(() => {
+        const el = ref.current
+        if (!el) return
+        el.setAttribute('data-scrollbar-reveal', '')
+        let timer: ReturnType<typeof setTimeout> | undefined
+        const tick = () => el.toggleAttribute('data-scrollbar-tick')
+        const onScroll = () => {
+            if (!el.hasAttribute('data-scrolling')) {
+                el.setAttribute('data-scrolling', '')
+                tick()
+            }
+            clearTimeout(timer)
+            timer = setTimeout(() => {
+                el.removeAttribute('data-scrolling')
+                tick()
+            }, SCROLL_IDLE_MS)
+        }
+        el.addEventListener('scroll', onScroll, { passive: true })
+        el.addEventListener('pointerenter', tick)
+        el.addEventListener('pointerleave', tick)
+        el.addEventListener('focusin', tick)
+        el.addEventListener('focusout', tick)
+        return () => {
+            clearTimeout(timer)
+            el.removeEventListener('scroll', onScroll)
+            el.removeEventListener('pointerenter', tick)
+            el.removeEventListener('pointerleave', tick)
+            el.removeEventListener('focusin', tick)
+            el.removeEventListener('focusout', tick)
+            el.removeAttribute('data-scrolling')
+            el.removeAttribute('data-scrollbar-reveal')
+            el.removeAttribute('data-scrollbar-tick')
+        }
+    }, [ref])
+}
+
 function assignRef<T>(ref: Ref<T> | undefined, value: T) {
     if (typeof ref === 'function') ref(value)
     else if (ref) (ref as { current: T }).current = value
@@ -214,42 +269,7 @@ export const ScrollArea = forwardRef<HTMLElement, ScrollAreaProps>(function Scro
         }
     }, [tabIndex])
 
-    // `data-scrolling` while it moves, set on the node so a scroll never
-    // re-renders the list inside. And the thumb's repaint: Chromium does not
-    // repaint a `::-webkit-scrollbar-thumb` when only the scroller's :hover
-    // or :focus-within changes (measured: the computed colour changes, the
-    // painted thumb does not until the next scroll). Toggling
-    // `data-scrollbar-tick` changes the thumb's min-height by a hundredth of
-    // a rem (utilities/scrollbars.css), which rebuilds the scrollbar's parts
-    // without laying out anything inside the area.
-    useEffect(() => {
-        const el = nodeRef.current
-        if (!el) return
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const tick = () => el.toggleAttribute('data-scrollbar-tick')
-        const onScroll = () => {
-            if (!el.hasAttribute('data-scrolling')) el.setAttribute('data-scrolling', '')
-            clearTimeout(timer)
-            timer = setTimeout(() => {
-                el.removeAttribute('data-scrolling')
-                tick()
-            }, SCROLL_IDLE_MS)
-        }
-        el.addEventListener('scroll', onScroll, { passive: true })
-        el.addEventListener('pointerenter', tick)
-        el.addEventListener('pointerleave', tick)
-        el.addEventListener('focusin', tick)
-        el.addEventListener('focusout', tick)
-        return () => {
-            clearTimeout(timer)
-            el.removeEventListener('scroll', onScroll)
-            el.removeEventListener('pointerenter', tick)
-            el.removeEventListener('pointerleave', tick)
-            el.removeEventListener('focusin', tick)
-            el.removeEventListener('focusout', tick)
-            el.removeAttribute('data-scrolling')
-        }
-    }, [])
+    useScrollbarReveal(nodeRef)
 
     const focusable = tabIndex !== undefined ? tabIndex >= 0 : needsFocus
     const resolvedRole = role ?? (label && focusable && (as === 'div' || as === 'section') ? 'region' : undefined)

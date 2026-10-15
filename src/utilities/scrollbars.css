@@ -9,15 +9,15 @@
  *
  * What a merchant sees with a mouse or a trackpad:
  *   - a thin, rounded thumb in the brand purple (tokens/scrollbar.css),
- *     6px drawn in a 12px lane, 8px while the pointer is on it;
- *   - an inner scroll area shows its thumb while the pointer is over it, while
- *     focus is inside it (keyboard scrolling), and while it is scrolling
- *     (`data-scrolling`, which ScrollArea sets): you cannot wheel or swipe a
- *     trackpad over an area without hovering it, so it shows while scrolling
- *     either way. At rest it is out of the way; the lane stays, so nothing
- *     moves when it shows;
- *   - the page's own bar (on <html>) shows whenever the pointer is in the
- *     window.
+ *     6px drawn in a 12px lane, 8px and firmer while the pointer is on it;
+ *   - a region that reveals its bar (ScrollArea, or `useScrollbarReveal` on a
+ *     page's scroller, marked `data-scrollbar-reveal`) shows the thumb only
+ *     while the pointer is over it, while focus is inside it (keyboard
+ *     scrolling) and while it scrolls; at rest it is out of the way, and the
+ *     lane stays, so nothing moves when it shows;
+ *   - any other scroller shows the thumb at rest, so it can always be found:
+ *     with nothing to repaint it, a hidden thumb in Chromium would stay
+ *     hidden.
  *
  * Two engines, two mechanisms, never both on one element:
  *   - Blink and WebKit draw `::-webkit-scrollbar`, the only way to get a
@@ -67,27 +67,35 @@
                 min-width: 2.5rem;
                 border: var(--scrollbar-inset) solid transparent;
                 border-radius: 9999px;
-                background-color: transparent;
-                background-clip: padding-box;
-            }
-            /* Shown: the page whenever the pointer is in the window, an inner
-               area while hovered, holding focus, or scrolling. */
-            :root::-webkit-scrollbar-thumb,
-            :hover::-webkit-scrollbar-thumb,
-            :focus-within::-webkit-scrollbar-thumb,
-            [data-scrolling]::-webkit-scrollbar-thumb {
                 background-color: var(--scrollbar-thumb);
+                background-clip: padding-box;
             }
             ::-webkit-scrollbar-thumb:hover,
             ::-webkit-scrollbar-thumb:active {
                 border-width: var(--scrollbar-inset-hover);
                 background-color: var(--scrollbar-thumb-hover);
             }
-            /* Chromium repaints a thumb on scroll, not when only the
-               scroller's hover or focus changes. ScrollArea toggles this
-               attribute on pointer enter and leave, focus in and out, and when
-               scrolling stops; a hundredth of a rem on the thumb rebuilds the
+            /* A region that reveals its bar (ScrollArea, `useScrollbarReveal`)
+               hides the thumb at rest and shows it while hovered, holding
+               focus or scrolling. Only those: Chromium does not repaint a
+               thumb when only the scroller's hover or focus changes, and a
+               composited scroller (a page's <main>) does not repaint it on
+               scroll either, so a hidden-at-rest thumb with nothing to repaint
+               it would never show. The reveal toggles `data-scrollbar-tick`,
+               a hundredth of a rem on the thumb, which rebuilds the
                scrollbar's parts without laying out the content. */
+            [data-scrollbar-reveal]::-webkit-scrollbar-thumb {
+                background-color: transparent;
+            }
+            [data-scrollbar-reveal]:hover::-webkit-scrollbar-thumb,
+            [data-scrollbar-reveal]:focus-within::-webkit-scrollbar-thumb,
+            [data-scrollbar-reveal][data-scrolling]::-webkit-scrollbar-thumb {
+                background-color: var(--scrollbar-thumb);
+            }
+            [data-scrollbar-reveal]::-webkit-scrollbar-thumb:hover,
+            [data-scrollbar-reveal]::-webkit-scrollbar-thumb:active {
+                background-color: var(--scrollbar-thumb-hover);
+            }
             [data-scrollbar-tick]::-webkit-scrollbar-thumb {
                 min-height: 2.51rem;
                 min-width: 2.51rem;
@@ -98,12 +106,14 @@
         @supports not selector(::-webkit-scrollbar) {
             * {
                 scrollbar-width: thin;
+                scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+            }
+            [data-scrollbar-reveal] {
                 scrollbar-color: transparent var(--scrollbar-track);
             }
-            :root,
-            :hover,
-            :focus-within,
-            [data-scrolling] {
+            [data-scrollbar-reveal]:hover,
+            [data-scrollbar-reveal]:focus-within,
+            [data-scrollbar-reveal][data-scrolling] {
                 scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
             }
         }
