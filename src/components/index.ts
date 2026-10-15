@@ -407,6 +407,8 @@ export {
     type VehicleAddCardProps,
     type VehicleCardSelectable,
 } from './VehicleCard'
+// AUTM-1878 follow-up: a car as a pro sees it, with the jobs done on it.
+export { VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote } from './VehicleProfile'
 // ─── AUTM-1221 — graduated from customer-web (plan item U5) ──────────────
 // Countdown: a deadline the server enforces, counted down and announced
 // once a minute; PolicyTimeline: the tiers of a policy with the live one lit.

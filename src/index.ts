@@ -176,6 +176,7 @@ export {
     type VehiclePickerProps, type VehiclePickerValue, type VehiclePickerStep, type VehiclePickerField, type VehiclePickerErrors,
     VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps,
     VehicleCard, VehicleAddCard, VehiclePaintDot, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
+    VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote,
     // AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
     CategoryArt, categoryArtKind, type CategoryArtKind,
     MerchantProfileCover, MerchantProfileCoverArt, MerchantProfileHeader,

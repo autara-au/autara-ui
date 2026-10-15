@@ -121,3 +121,12 @@ describe('vehiclePaint', () => {
         expect(vehicleSlug('e:Ny1')).toBe('e-ny1')
     })
 })
+
+// AUTM-1878 follow-up: a finish word never outranks the paint's own name.
+describe('vehiclePaint with a finish in the name', () => {
+    it('reads "Deep Black Pearl" as black and "Pearl White" as white', () => {
+        expect(vehiclePaint('Deep Black Pearl')?.value).toBe('black')
+        expect(vehiclePaint('Pearl White')?.value).toBe('white')
+        expect(vehiclePaint('pearl')?.value).toBe('white')
+    })
+})

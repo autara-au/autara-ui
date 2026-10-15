@@ -77,4 +77,16 @@ describe('MessageCard', () => {
         render(<MessageCard title="x" error="We couldn't save your answer. Nothing has changed. Try again." />)
         expect(screen.getByRole('alert').textContent).toContain("We couldn't save your answer")
     })
+
+    it('draws a destructive answer as danger, red words on the quiet pill (AUTM-1878 follow-up)', () => {
+        render(
+            <MessageCard
+                title="Roof box"
+                state="waiting"
+                secondaryAction={{ label: 'Remove', onClick: () => {}, destructive: true, testId: 'remove' }}
+                primaryAction={{ label: 'Remind Sam', onClick: () => {} }}
+            />,
+        )
+        expect(screen.getByTestId('remove').className).toContain('text-[var(--danger)]')
+    })
 })

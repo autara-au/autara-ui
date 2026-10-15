@@ -86,11 +86,12 @@ describe("Button — variant + size styling", () => {
         "quiet",
         "danger",
         "ondeep",
+        "ondeep-danger",
         "link",
         "ghost",
     ] as const;
 
-    const FILLED = ["primary", "quiet", "danger", "ondeep"] as const;
+    const FILLED = ["primary", "quiet", "danger", "ondeep", "ondeep-danger"] as const;
 
     it.each(FILLED)("variant=%s paints from a theme token", (variant) => {
         render(<Button variant={variant}>X</Button>);
@@ -156,7 +157,7 @@ describe("Button — variant + size styling", () => {
     });
 
     const EVERY_NAME = [
-        "primary", "strong", "quiet", "danger", "ondeep", "link", "ghost",
+        "primary", "strong", "quiet", "danger", "ondeep", "ondeep-danger", "link", "ghost",
         "dark", "outline", "secondary", "destructive", "acid", "glass", "light",
         "light-primary", "light-outline", "light-ghost", "light-secondary",
         "light-destructive", "light-link",

@@ -54,7 +54,17 @@ function useLargeText() {
   }, []);
 }
 
-function Dock({ items, open, footnote }: { items: AttachMenuItem[]; open?: boolean; footnote?: string }) {
+function Dock({
+  items,
+  open,
+  footnote,
+  layout,
+}: {
+  items: AttachMenuItem[];
+  open?: boolean;
+  footnote?: string;
+  layout?: "auto" | "menu" | "sheet";
+}) {
   const [value, setValue] = useState("");
   const [isOpen, setOpen] = useState(open ?? false);
   return (
@@ -64,7 +74,7 @@ function Dock({ items, open, footnote }: { items: AttachMenuItem[]; open?: boole
         onChange={setValue}
         onSend={() => setValue("")}
         placeholder="Message Sam"
-        leading={<ComposerAttachMenu items={items} open={isOpen} onOpenChange={setOpen} footnote={footnote} />}
+        leading={<ComposerAttachMenu items={items} open={isOpen} onOpenChange={setOpen} footnote={footnote} layout={layout} />}
       />
     </div>
   );
@@ -73,6 +83,24 @@ function Dock({ items, open, footnote }: { items: AttachMenuItem[]; open?: boole
 /** Closed: the plus sits in the composer's leading slot. */
 export const InTheComposer: Story = {
   render: () => <Dock items={MERCHANT_1A} />,
+};
+
+/**
+ * AUTM-1878 follow-up (Don, 2026-10-15): from 768px up the + opens a small
+ * menu anchored just above it (WhatsApp Web, Slack), arrow keys between the
+ * rows, Escape or a click outside to close. Below that, the sheet.
+ */
+export const AnchoredMenu: Story = {
+  render: () => (
+    <Dock
+      layout="menu"
+      open
+      items={[
+        { id: "extra", label: "Add an extra", description: "Confirm the booking first", icon: attachMenuGlyphs.extra, onSelect: () => {}, disabled: true },
+        { id: "confirm", label: "Confirm the booking", description: "Accept Sam's request, then add extras here", icon: attachMenuGlyphs.question, onSelect: () => {} },
+      ]}
+    />
+  ),
 };
 
 /** The pro's sheet in Phase 1A: Add an extra. */
