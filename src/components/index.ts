@@ -145,7 +145,7 @@ export {
 export { ScrollReveal, type ScrollRevealProps } from './ScrollReveal'
 export { FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem } from './MotionDiv'
 
-export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant } from './Toast'
+export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant } from './Toast'
 
 export {
     Select,

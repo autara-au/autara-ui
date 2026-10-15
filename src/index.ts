@@ -51,7 +51,7 @@ export {
     ScrollReveal, type ScrollRevealProps,
     FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem,
     // New components
-    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant,
+    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant,
     Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator,
     Switch,
     Checkbox,

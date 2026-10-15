@@ -1,5 +1,3 @@
-"use client";
-
 'use client'
 
 import * as React from 'react'
@@ -9,74 +7,95 @@ import { AutaraLoader } from './AutaraLoader'
 import { CloseButton } from './IconButton'
 
 /**
- * Toast — Autara notification primitive, modelled on the Torph
- * "Processing Transaction" pill (https://torph.lochie.me): an ink
- * capsule with a leading status dot and white text. No backdrop blur.
+ * Toast — one line (two at most) that says what happened, with the obvious
+ * next step beside it.
  *
- * AUTM-1883 (Don, 2026-10-15): the words wrap to at most two lines. They
- * were one truncated line, so on a phone "Reminder sent to Priya by text
- * and email. Next one possible at 15:35" lost everything after "email",
- * and the half that said when to try again was the half that went. Two
- * lines hold a sentence and its follow-up at 375; a third is clamped, so
- * write toasts that fit in two. Where the screen is narrower than 20em of
- * text (320 at 100%, any phone at large text) nothing is clamped: the toast
- * grows and keeps every word.
+ * AUTM-1871 (Don, 2026-10-14): toasts follow the new UI. The ink capsule with
+ * a status dot is gone: a toast is the raised token surface (white in light,
+ * the raised violet in dark) with a hairline and the float lift, in Satoshi,
+ * with
+ *  - a TYPE ICON on a filled disc in the brand's meaning colours: purple to
+ *    act, lime for money in (and done), red for a problem, neutral otherwise;
+ *  - an inline ACTION as a quiet accent text button ("View", "Answer"), never
+ *    a black or filled button;
+ *  - the large round Close from AUTM-1756 (44px, 48 to a finger).
+ * It stays 6 s and pauses while the pointer is on it, while anything in it
+ * has focus, and while the page is hidden. At most three show at once; a
+ * fourth pushes the oldest out. Toasts with the same `groupKey` (one booking)
+ * collapse into one that updates in place. Swipe it sideways, or towards its
+ * edge, to dismiss. Under reduced motion it fades instead of sliding.
+ * `position="auto"` (the default) puts the stack at the top on a phone and
+ * bottom right from 40rem.
  *
- * The provider exposes a singleton `toast()` plus `toast.success /
- * .error / .warning / .info / .loading` shortcuts. A new
- * `toast.update(id, opts)` lets a single capsule morph in place
- * (e.g. "Submitting booking…" → "Booking confirmed"), the canonical
- * Torph status-pill pattern.
+ * AUTM-1813: ONE polite live region (`role="status"`) lives for the
+ * provider's whole life, with one assertive region (`role="alert"`) for
+ * errors, inside the "Notifications" region, and each toast is rendered INTO
+ * its region when it appears: a live region inserted together with its words
+ * is not reliably read out, a node added to one that exists is. The capsule
+ * carries no live role of its own, so nothing is announced twice, and its
+ * words exist once in the page (a hidden copy beside the capsule made every
+ * `getByText` on a toast find two elements). QA's helpers keep working:
+ * `getByRole('status').filter({ hasText })` and `getByRole('alert')`.
  *
- * The `theme` prop on `<ToastProvider>` is preserved for source-
- * level compat with existing consumers (autara-merchant-web) but is
- * currently a **no-op** — there is only one ink treatment. A
- * light-fill companion is deferred to a future PR.
+ * AUTM-1883: the words wrap to two lines and a third is clamped, except where
+ * the screen is narrower than 20em of text (large text on a phone), where the
+ * toast keeps every word.
+ *
+ * The singleton `toast()` plus `toast.success / .error / .warning / .info /
+ * .loading`, `toast.update(id, patch)` (morph in place) and
+ * `toast.dismiss(id)` are unchanged.
  */
 
-type ToastType =
-    | 'default'
-    | 'success'
-    | 'error'
-    | 'warning'
-    | 'info'
-    | 'loading'
-
-/**
- * Six anchor positions, matching Sonner / react-hot-toast conventions.
- * Default is `bottom-center` (the historical Autara position).
- */
-type ToastPosition =
-    | 'top-left'
-    | 'top-center'
-    | 'top-right'
-    | 'bottom-left'
-    | 'bottom-center'
-    | 'bottom-right'
+type ToastType = 'default' | 'success' | 'error' | 'warning' | 'info' | 'loading'
 
 /**
- * Capsule variant. `dark` is the canonical Torph ink aesthetic;
- * `light` is the cream-canvas companion (white surface, ink text,
- * hairline border). Set once on the Provider, override per toast if
- * needed.
+ * The icon disc's colour, by what the toast means (AUTM-1871):
+ * `act` purple (the merchant has something to do), `money` lime (money in,
+ * or done), `problem` red, `info` neutral.
  */
+type ToastTone = 'act' | 'money' | 'problem' | 'info'
+
+/**
+ * `auto` (the default since AUTM-1871): top centre on a phone, bottom right
+ * from 40rem. The fixed positions are kept for consumers that pass one.
+ */
+type ToastPosition = 'auto' | 'top-left' | 'top-center' | 'top-right' | 'bottom-left' | 'bottom-center' | 'bottom-right'
+
+/** @deprecated AUTM-1871: one surface now (the raised token surface); kept so existing props still compile. */
 type ToastVariant = 'dark' | 'light'
 
 interface Toast {
     id: string
-    /** Legacy field — combined with `description` into one message (two lines at most). */
+    /** The lead words, at medium weight. Joined to `description` with a full stop. */
     title?: string
     description?: string
     type?: ToastType
-    /** Milliseconds before auto-dismiss. `0` keeps the toast open (use with `loading`). */
+    /** Milliseconds before it leaves. `0` keeps it open (use with `loading`). Default 6000. */
     duration?: number
-    /** Override the provider's variant for this single capsule. */
+    /** @deprecated AUTM-1871: no-op. */
     variant?: ToastVariant
+    /** The one next step, as a text button: "View", "Answer", "Undo". */
     action?: {
         label: string
         onClick: () => void
     }
+    /** A type icon for the disc (an svg; drawn at 18px). Replaces the type's own glyph. */
+    icon?: React.ReactNode
+    /** The disc's colour. Defaults from `type`. */
+    tone?: ToastTone
+    /**
+     * Toasts with the same key collapse into one: while one is on screen, a
+     * new one with its key replaces its words in place and restarts its time.
+     * Merchant notifications pass the booking, so a burst about one booking
+     * is one toast.
+     */
+    groupKey?: string
+    /** `data-testid` on the capsule. */
+    testId?: string
 }
+
+/** Internal: bumped when a toast's words change in place, to restart its time. */
+type ToastState = Toast & { rev: number }
 
 interface ToastContextValue {
     toasts: Toast[]
@@ -97,44 +116,31 @@ function useToast() {
 
 // Standalone toast function (works with the singleton provider)
 let globalAddToast: ((toast: Omit<Toast, 'id'>) => string) | null = null
-let globalUpdateToast:
-    | ((id: string, patch: Partial<Omit<Toast, 'id'>>) => void)
-    | null = null
+let globalUpdateToast: ((id: string, patch: Partial<Omit<Toast, 'id'>>) => void) | null = null
 let globalRemoveToast: ((id: string) => void) | null = null
 
+type ToastOptions = Omit<Toast, 'id'>
+type TypedOptions = Omit<Toast, 'id' | 'type'> | string
+
+function asOptions(opts: TypedOptions): Omit<Toast, 'id' | 'type'> {
+    return typeof opts === 'string' ? { description: opts } : opts
+}
+
 const toast = Object.assign(
-    (opts: Omit<Toast, 'id'> | string) => {
+    (opts: ToastOptions | string) => {
         if (!globalAddToast) {
             console.warn('ToastProvider not mounted')
             return ''
         }
-        if (typeof opts === 'string') {
-            return globalAddToast({ description: opts })
-        }
-        return globalAddToast(opts)
+        return globalAddToast(typeof opts === 'string' ? { description: opts } : opts)
     },
     {
-        success: (opts: Omit<Toast, 'id' | 'type'> | string) => {
-            const o = typeof opts === 'string' ? { description: opts } : opts
-            return toast({ ...o, type: 'success' })
-        },
-        error: (opts: Omit<Toast, 'id' | 'type'> | string) => {
-            const o = typeof opts === 'string' ? { description: opts } : opts
-            return toast({ ...o, type: 'error' })
-        },
-        warning: (opts: Omit<Toast, 'id' | 'type'> | string) => {
-            const o = typeof opts === 'string' ? { description: opts } : opts
-            return toast({ ...o, type: 'warning' })
-        },
-        info: (opts: Omit<Toast, 'id' | 'type'> | string) => {
-            const o = typeof opts === 'string' ? { description: opts } : opts
-            return toast({ ...o, type: 'info' })
-        },
-        loading: (opts: Omit<Toast, 'id' | 'type'> | string) => {
-            const o = typeof opts === 'string' ? { description: opts } : opts
-            // Loading toasts persist until `update` or `dismiss` is called.
-            return toast({ duration: 0, ...o, type: 'loading' })
-        },
+        success: (opts: TypedOptions) => toast({ ...asOptions(opts), type: 'success' }),
+        error: (opts: TypedOptions) => toast({ ...asOptions(opts), type: 'error' }),
+        warning: (opts: TypedOptions) => toast({ ...asOptions(opts), type: 'warning' }),
+        info: (opts: TypedOptions) => toast({ ...asOptions(opts), type: 'info' }),
+        // Loading toasts persist until `update` or `dismiss` is called.
+        loading: (opts: TypedOptions) => toast({ duration: 0, ...asOptions(opts), type: 'loading' }),
         /** Morph an existing toast in place (e.g. loading → success). */
         update: (id: string, patch: Partial<Omit<Toast, 'id'>>) => {
             globalUpdateToast?.(id, patch)
@@ -148,45 +154,84 @@ const toast = Object.assign(
 
 let toastCounter = 0
 
+/** AUTM-1871: Don, 6 s. Pauses on hover, focus and a hidden page. */
+const DEFAULT_DURATION = 6000
+/** AUTM-1871: at most three on screen. */
+const DEFAULT_MAX = 3
+
+/**
+ * One message from a title and a description. AUTM-1221: joined with a full
+ * stop, not an em dash, and without the closing full stop.
+ */
+function messageOf(t: Pick<Toast, 'title' | 'description'>): string {
+    return [t.title, t.description]
+        .filter(Boolean)
+        .map((part) => String(part).trim().replace(/[.\s]+$/, ''))
+        .join('. ')
+}
+
 function ToastProvider({
     children,
-    position = 'bottom-center',
-    variant = 'dark',
+    position = 'auto',
+    max = DEFAULT_MAX,
+    variant: _variant,
     theme: _theme,
 }: {
     children: React.ReactNode
-    /** Anchor edge / corner for the toast stack. Defaults to `bottom-center`. */
+    /** Where the stack sits. `auto`: top centre on a phone, bottom right from 40rem. */
     position?: ToastPosition
-    /** Default capsule variant. `dark` is the canonical Torph ink; `light`
-     *  uses a white surface + ink text for the cream canvas. Per-toast
-     *  `variant` overrides this default. Defaults to `'dark'`. */
+    /** Most toasts on screen at once; a new one pushes the oldest out. Default 3. */
+    max?: number
+    /** @deprecated AUTM-1871: one surface now; no-op. */
     variant?: ToastVariant
-    /** @deprecated superseded by `variant` — currently a no-op */
+    /** @deprecated superseded by `variant`, no-op */
     theme?: 'dark' | 'light'
 }) {
-    const [toasts, setToasts] = React.useState<Toast[]>([])
-
-    const addToast = React.useCallback((t: Omit<Toast, 'id'>) => {
-        const id = `toast-${++toastCounter}`
-        setToasts((prev) => [
-            ...prev,
-            { id, duration: 4000, type: 'default', ...t },
-        ])
-        return id
+    const [toasts, setToasts] = React.useState<ToastState[]>([])
+    // The list as last committed, read synchronously: `toast()` returns the id
+    // it made (or the one a burst collapsed into) before React renders.
+    const current = React.useRef<ToastState[]>([])
+    const commit = React.useCallback((next: ToastState[]) => {
+        current.current = next
+        setToasts(next)
     }, [])
+
+    const addToast = React.useCallback(
+        (t: Omit<Toast, 'id'>) => {
+            const prev = current.current
+            // A burst about one subject is one toast: replace its words in place.
+            const same = t.groupKey ? prev.find((p) => p.groupKey === t.groupKey) : undefined
+            if (same) {
+                commit(prev.map((p) => (p.id === same.id ? { ...p, ...t, id: same.id, rev: p.rev + 1 } : p)))
+                return same.id
+            }
+            const id = `toast-${++toastCounter}`
+            const next: ToastState[] = [...prev, { id, duration: DEFAULT_DURATION, type: 'default', ...t, rev: 0 }]
+            // At most `max`: the oldest goes first, but a loading toast a
+            // caller will still update is kept over a finished one.
+            while (next.length > Math.max(1, max)) {
+                const drop = next.findIndex((p) => p.type !== 'loading')
+                next.splice(drop === -1 ? 0 : drop, 1)
+            }
+            commit(next)
+            return id
+        },
+        [commit, max]
+    )
 
     const updateToast = React.useCallback(
         (id: string, patch: Partial<Omit<Toast, 'id'>>) => {
-            setToasts((prev) =>
-                prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
-            )
+            commit(current.current.map((t) => (t.id === id ? { ...t, ...patch, rev: t.rev + 1 } : t)))
         },
-        []
+        [commit]
     )
 
-    const removeToast = React.useCallback((id: string) => {
-        setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, [])
+    const removeToast = React.useCallback(
+        (id: string) => {
+            commit(current.current.filter((t) => t.id !== id))
+        },
+        [commit]
+    )
 
     React.useEffect(() => {
         globalAddToast = addToast
@@ -200,40 +245,73 @@ function ToastProvider({
     }, [addToast, updateToast, removeToast])
 
     return (
-        <ToastContext.Provider
-            value={{ toasts, addToast, updateToast, removeToast }}
-        >
+        <ToastContext.Provider value={{ toasts, addToast, updateToast, removeToast }}>
             {children}
-            <ToastViewport
-                toasts={toasts}
-                removeToast={removeToast}
-                position={position}
-                providerVariant={variant}
-            />
+            <ToastViewport toasts={toasts} removeToast={removeToast} position={position} />
         </ToastContext.Provider>
     )
 }
 
-// ─── Status dots ──────────────────────────────────────────────────
-// AUTM-1594 (canvas v44 "Toasts") replaced the type icons with a status dot.
-// The words carry the meaning; the dot only marks the kind.
-const TOAST_DOT: Record<Exclude<ToastType, 'default' | 'loading'>, string> = {
-    success: 'bg-[var(--lime)]',
-    info: 'bg-[var(--aqua)]',
-    warning: 'bg-[var(--caution)]',
-    error: 'bg-[var(--danger-fill)]',
+// ─── Icons and tones ──────────────────────────────────────────────
+
+const TONE: Record<ToastTone | 'caution', string> = {
+    act: 'bg-[var(--accent-fill)] text-[var(--on-accent)]',
+    money: 'bg-[var(--lime)] text-[var(--on-lime)]',
+    problem: 'bg-[var(--danger-fill)] text-[var(--on-danger-fill)]',
+    info: 'bg-[var(--band)] text-[var(--text-strong)]',
+    caution: 'bg-[var(--caution)] text-white',
 }
 
-// ─── Viewport + Item ──────────────────────────────────────────────
+const TYPE_TONE: Record<Exclude<ToastType, 'default'>, ToastTone | 'caution'> = {
+    success: 'money',
+    error: 'problem',
+    warning: 'caution',
+    info: 'info',
+    loading: 'info',
+}
 
-// Maps the 6 anchor positions to viewport-layout classes. Every position
-// spans the full width (pointer-events stay off it) and aligns its capsules
-// to its corner, edge or centre. AUTM-1883: full width so the viewport can be
-// the size container the large-text rule below measures; a corner viewport
-// sized to its content cannot be one. `top-*` positions
-// use `flex-col-reverse` so the newest toast renders at the corner /
-// edge and older ones recede further into the page — matching Sonner.
+const glyph = {
+    fill: 'none',
+    stroke: 'currentColor',
+    strokeWidth: 2,
+    strokeLinecap: 'round' as const,
+    strokeLinejoin: 'round' as const,
+}
+
+/** Solar-weight glyphs for the four kinds, inlined (autara-ui has no icon dependency). */
+const TYPE_GLYPH: Record<'success' | 'error' | 'warning' | 'info', React.ReactNode> = {
+    success: (
+        <svg viewBox="0 0 24 24" aria-hidden>
+            <path {...glyph} d="m5 12.5 4.5 4.5L19 7.5" />
+        </svg>
+    ),
+    error: (
+        <svg viewBox="0 0 24 24" aria-hidden>
+            <path {...glyph} d="M12 7v6M12 16.5v.5" />
+        </svg>
+    ),
+    warning: (
+        <svg viewBox="0 0 24 24" aria-hidden>
+            <path {...glyph} d="M12 7v6M12 16.5v.5" />
+        </svg>
+    ),
+    info: (
+        <svg viewBox="0 0 24 24" aria-hidden>
+            <path {...glyph} d="M12 11v6M12 7.5v.5" />
+        </svg>
+    ),
+}
+
+// ─── Viewport ─────────────────────────────────────────────────────
+
+/*
+ * Every position spans the full width (pointer events stay off it) so the
+ * viewport is the size container the large-text rule measures (AUTM-1883).
+ * Top positions use `flex-col-reverse` so the newest toast is at the edge.
+ * `auto` is top centre below 40rem and bottom right from it.
+ */
 const VIEWPORT_POS: Record<ToastPosition, string> = {
+    auto: 'top-0 inset-x-0 items-center flex-col-reverse sm:top-auto sm:bottom-0 sm:items-end sm:flex-col',
     'top-left': 'top-0 inset-x-0 items-start flex-col-reverse',
     'top-center': 'top-0 inset-x-0 items-center flex-col-reverse',
     'top-right': 'top-0 inset-x-0 items-end flex-col-reverse',
@@ -242,212 +320,346 @@ const VIEWPORT_POS: Record<ToastPosition, string> = {
     'bottom-right': 'bottom-0 inset-x-0 items-end flex-col',
 }
 
+/** How each inner column aligns its toasts, matching the viewport's corner. */
+const ALIGN: Record<ToastPosition, string> = {
+    auto: 'items-center sm:items-end',
+    'top-left': 'items-start',
+    'top-center': 'items-center',
+    'top-right': 'items-end',
+    'bottom-left': 'items-start',
+    'bottom-center': 'items-center',
+    'bottom-right': 'items-end',
+}
+
+function useIsTop(position: ToastPosition): boolean {
+    const query = '(min-width: 40rem)'
+    const read = () => (typeof window !== 'undefined' && window.matchMedia ? !window.matchMedia(query).matches : true)
+    const [narrow, setNarrow] = React.useState(read)
+    React.useEffect(() => {
+        if (position !== 'auto' || typeof window === 'undefined' || !window.matchMedia) return
+        const mql = window.matchMedia(query)
+        const on = () => setNarrow(!mql.matches)
+        on()
+        mql.addEventListener?.('change', on)
+        return () => mql.removeEventListener?.('change', on)
+    }, [position])
+    return position === 'auto' ? narrow : position.startsWith('top')
+}
+
 function ToastViewport({
     toasts,
     removeToast,
     position,
-    providerVariant,
 }: {
-    toasts: Toast[]
+    toasts: ToastState[]
     removeToast: (id: string) => void
     position: ToastPosition
-    providerVariant: ToastVariant
 }) {
-    // Portal to document.body so transformed / contained ancestors
-    // (Storybook Docs sections, modal containers with `transform`,
-    // CSS `contain`, etc.) don't capture the `position: fixed`
-    // anchor. SSR-safe via the mounted guard.
+    // Portal to document.body so transformed or contained ancestors cannot
+    // capture the `position: fixed`. SSR-safe via the mounted guard.
     const [mounted, setMounted] = React.useState(false)
     React.useEffect(() => setMounted(true), [])
+    const isTop = useIsTop(position)
 
-    if (!mounted || toasts.length === 0) return null
+    if (!mounted) return null
 
-    const isTop = position.startsWith('top')
+    const polite = toasts.filter((t) => t.type !== 'error')
+    const assertive = toasts.filter((t) => t.type === 'error')
 
+    // AUTM-1813: the region and its two live regions are here before the
+    // first toast and stay; the toasts are rendered INSIDE them, so a toast's
+    // words are added to a live region that already exists (read out
+    // reliably) and exist once in the page (a `getByText` finds one element).
+    // Not `aria-atomic`: a new toast is read, not the whole stack again.
+    // Errors sit in the assertive region at the stack's edge.
+    const column = cn('flex w-full flex-col gap-2', isTop ? 'flex-col-reverse' : 'flex-col', ALIGN[position])
     const viewport = (
-        <div
+        <section
+            aria-label="Notifications"
             className={cn(
-                'fixed z-[100] flex gap-2 p-4 pointer-events-none @container',
+                'fixed z-[100] flex pointer-events-none @container',
+                'px-3 sm:px-4 pt-[calc(env(safe-area-inset-top,0px)+var(--toast-offset-top,0px)+0.75rem)] pb-[calc(env(safe-area-inset-bottom,0px)+var(--toast-offset-bottom,0px)+0.75rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+var(--toast-offset-bottom,0px)+1rem)]',
                 VIEWPORT_POS[position]
             )}
-            role="region"
-            aria-label="Notifications"
+            data-toast-viewport={isTop ? 'top' : 'bottom'}
         >
-            {toasts.map((t) => (
-                <ToastItem
-                    key={t.id}
-                    toast={t}
-                    onDismiss={() => removeToast(t.id)}
-                    isTop={isTop}
-                    variant={t.variant ?? providerVariant}
-                />
-            ))}
-        </div>
+            <div role="status" aria-live="polite" aria-atomic="false" className={column} data-toast-live="polite">
+                {polite.map((t) => (
+                    <ToastItem key={t.id} toast={t} onDismiss={() => removeToast(t.id)} isTop={isTop} />
+                ))}
+            </div>
+            <div
+                role="alert"
+                aria-atomic="false"
+                className={cn(column, isTop ? 'not-empty:mb-2' : 'not-empty:mt-2')}
+                data-toast-live="assertive"
+            >
+                {assertive.map((t) => (
+                    <ToastItem key={t.id} toast={t} onDismiss={() => removeToast(t.id)} isTop={isTop} />
+                ))}
+            </div>
+        </section>
     )
 
     return createPortal(viewport, document.body)
+}
+
+// ─── One toast ────────────────────────────────────────────────────
+
+function prefersReducedMotion(): boolean {
+    return typeof window !== 'undefined' && !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+}
+
+/** How far a swipe must travel, or how fast, to dismiss. */
+const SWIPE_DISTANCE = 64
+const SWIPE_VELOCITY = 0.6 // px per ms
+const LEAVE_MS = 200
+
+/** Pointer capture, which throws for a pointer the browser no longer tracks. */
+function capture(el: HTMLElement | null, pointerId: number, on: boolean) {
+    try {
+        if (on) el?.setPointerCapture?.(pointerId)
+        else el?.releasePointerCapture?.(pointerId)
+    } catch {
+        // The drag still works without capture while the pointer stays on the toast.
+    }
+}
+
+interface Drag {
+    id: number
+    x0: number
+    y0: number
+    t0: number
+    axis: 'x' | 'y' | null
+    dx: number
+    dy: number
 }
 
 function ToastItem({
     toast: t,
     onDismiss,
     isTop,
-    variant,
 }: {
-    toast: Toast
+    toast: ToastState
     onDismiss: () => void
-    /** Mirror enter/exit slide direction so top toasts come down from above. */
+    /** Slide in from above for a top stack, from below for a bottom one. */
     isTop: boolean
-    /** Resolved variant — provider default, optionally overridden per toast. */
-    variant: ToastVariant
 }) {
+    const ref = React.useRef<HTMLDivElement>(null)
     const [isVisible, setIsVisible] = React.useState(false)
-    const [isLeaving, setIsLeaving] = React.useState(false)
-    const [contentKey, setContentKey] = React.useState(0)
-    const prevContent = React.useRef<{
-        title?: string
-        description?: string
-        type?: ToastType
-    }>({ title: t.title, description: t.description, type: t.type })
+    const [leaving, setLeaving] = React.useState<null | { x: number; y: number }>(null)
 
-    // Bump contentKey whenever the user-visible content changes — drives
-    // the Torph-style cross-fade morph on `toast.update(...)`.
+    // Pause while hovered, while focus is inside, and while the page is hidden.
+    const [hovered, setHovered] = React.useState(false)
+    const [focused, setFocused] = React.useState(false)
+    const [dragging, setDragging] = React.useState(false)
+    const [pageHidden, setPageHidden] = React.useState(
+        () => typeof document !== 'undefined' && document.visibilityState === 'hidden'
+    )
     React.useEffect(() => {
-        const prev = prevContent.current
-        if (
-            prev.title !== t.title ||
-            prev.description !== t.description ||
-            prev.type !== t.type
-        ) {
-            setContentKey((k) => k + 1)
-            prevContent.current = {
-                title: t.title,
-                description: t.description,
-                type: t.type,
-            }
-        }
-    }, [t.title, t.description, t.type])
+        const on = () => setPageHidden(document.visibilityState === 'hidden')
+        document.addEventListener('visibilitychange', on)
+        return () => document.removeEventListener('visibilitychange', on)
+    }, [])
+    const paused = hovered || focused || dragging || pageHidden
 
     React.useEffect(() => {
-        requestAnimationFrame(() => setIsVisible(true))
+        const frame = requestAnimationFrame(() => setIsVisible(true))
+        return () => cancelAnimationFrame(frame)
     }, [])
 
-    React.useEffect(() => {
-        if (t.duration && t.duration > 0) {
-            const timer = setTimeout(() => {
-                setIsLeaving(true)
-                setTimeout(onDismiss, 180)
-            }, t.duration)
-            return () => clearTimeout(timer)
-        }
-    }, [t.duration, onDismiss])
+    const leave = React.useCallback(
+        (to: { x: number; y: number } = { x: 0, y: 0 }) => {
+            setLeaving(to)
+            window.setTimeout(onDismiss, prefersReducedMotion() ? 0 : LEAVE_MS)
+        },
+        [onDismiss]
+    )
 
-    const handleDismiss = () => {
-        setIsLeaving(true)
-        setTimeout(onDismiss, 180)
+    // The time left survives a pause; new words (a collapsed burst, an
+    // update) start it again.
+    const remaining = React.useRef(t.duration ?? DEFAULT_DURATION)
+    React.useEffect(() => {
+        remaining.current = t.duration ?? DEFAULT_DURATION
+    }, [t.rev, t.duration])
+    React.useEffect(() => {
+        const total = t.duration ?? DEFAULT_DURATION
+        if (!total || total <= 0 || paused || leaving) return
+        const started = Date.now()
+        const timer = window.setTimeout(() => leave(), remaining.current)
+        return () => {
+            window.clearTimeout(timer)
+            remaining.current = Math.max(0, remaining.current - (Date.now() - started))
+        }
+    }, [t.duration, t.rev, paused, leaving, leave])
+
+    // ─── Swipe to dismiss ─────────────────────────────────────────
+    const drag = React.useRef<Drag | null>(null)
+    const swallowClick = React.useRef(false)
+
+    const paint = (dx: number, dy: number, animate: boolean) => {
+        const el = ref.current
+        if (!el) return
+        const dist = Math.max(Math.abs(dx), Math.abs(dy))
+        el.style.transition = animate ? `transform ${LEAVE_MS}ms var(--motion-ease-out), opacity ${LEAVE_MS}ms var(--motion-ease-out)` : 'none'
+        el.style.transform = dx || dy ? `translate3d(${dx}px, ${dy}px, 0)` : ''
+        el.style.opacity = dist ? String(Math.max(0.2, 1 - dist / 240)) : ''
     }
 
-    /* One message — combine legacy title + description.
-       AUTM-1221: joined with a full stop, not an em dash. The em dash is a
-       machine-written tell and it is out across Autara's copy; it also read
-       as a range ("Saved — 3 items") rather than two sentences. */
-    const message = [t.title, t.description]
-        .filter(Boolean)
-        .map((part) => String(part).trim().replace(/[.\s]+$/, ''))
-        .join('. ')
+    const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+        if (e.button !== 0 || leaving) return
+        drag.current = { id: e.pointerId, x0: e.clientX, y0: e.clientY, t0: performance.now(), axis: null, dx: 0, dy: 0 }
+    }
+    const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+        const d = drag.current
+        if (!d || d.id !== e.pointerId) return
+        const dx = e.clientX - d.x0
+        const dy = e.clientY - d.y0
+        if (!d.axis) {
+            if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return
+            d.axis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y'
+            capture(ref.current, e.pointerId, true)
+            setDragging(true)
+        }
+        d.dx = d.axis === 'x' ? dx : 0
+        // Vertically, only towards the stack's own edge.
+        d.dy = d.axis === 'y' ? (isTop ? Math.min(0, dy) : Math.max(0, dy)) : 0
+        paint(d.dx, d.dy, false)
+    }
+    const endDrag = (e: React.PointerEvent<HTMLDivElement>, cancelled: boolean) => {
+        const d = drag.current
+        drag.current = null
+        if (!d || d.id !== e.pointerId || !d.axis) return
+        capture(ref.current, e.pointerId, false)
+        setDragging(false)
+        swallowClick.current = true
+        const dist = Math.abs(d.axis === 'x' ? d.dx : d.dy)
+        const speed = dist / Math.max(1, performance.now() - d.t0)
+        if (!cancelled && (dist > SWIPE_DISTANCE || speed > SWIPE_VELOCITY)) {
+            const out = d.axis === 'x' ? { x: Math.sign(d.dx) * 480, y: 0 } : { x: 0, y: Math.sign(d.dy) * 160 }
+            if (prefersReducedMotion()) paint(d.dx, d.dy, false)
+            else paint(out.x, out.y, true)
+            leave(out)
+        } else {
+            paint(0, 0, !prefersReducedMotion())
+        }
+    }
 
-    // Slide IN from above for top-anchored stacks, from below for
-    // bottom-anchored ones. Same idle / leaving offsets — the direction
-    // is the only thing that flips.
+    const message = messageOf(t)
+    const tone = t.tone ?? (t.type && t.type !== 'default' ? TYPE_TONE[t.type] : undefined)
+    const showDisc = t.type === 'loading' || Boolean(t.icon) || (t.type != null && t.type !== 'default')
     const idleOffset = isTop ? '-translate-y-2' : 'translate-y-2'
-
-    // AUTM-1594 — canvas v44 "Toasts": ink (white in dark) with a status
-    // dot, 16px radius, 15px. `light` is the band companion, no outline.
-    const isDark = variant === 'dark'
-    const variantCls = isDark
-        ? 'bg-[var(--surface-inverse)] text-[var(--text-on-inverse)]'
-        : 'bg-[var(--band)] text-[var(--text-strong)]'
+    const shown = isVisible && !leaving
 
     return (
         <div
+            ref={ref}
+            data-toast=""
+            data-toast-type={t.type ?? 'default'}
+            data-tone={tone}
+            data-testid={t.testId}
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+            onFocus={() => setFocused(true)}
+            onBlur={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false)
+            }}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove}
+            onPointerUp={(e) => endDrag(e, false)}
+            onPointerCancel={(e) => endDrag(e, true)}
+            onClickCapture={(e) => {
+                if (swallowClick.current) {
+                    swallowClick.current = false
+                    e.preventDefault()
+                    e.stopPropagation()
+                }
+            }}
             className={cn(
-                /* AUTM-1221: 12px, on the 8/12/16/24 ladder. Round is
-                   reserved for avatars and status dots (glass rule 3); the
-                   capsule was the last pill in the feedback set. */
-                'pointer-events-auto inline-flex max-w-[min(560px,calc(100vw-32px))] items-center gap-2.5 rounded-2xl px-4 py-3 text-[0.9375rem] leading-snug transition-all duration-[180ms] ease-out',
-                /* AUTM-1792: a toast floats over the page, so it takes the
-                   lift. Without it the band toast sat on band and vanished. */
-                'shadow-float',
-                variantCls,
-                isVisible && !isLeaving
-                    ? 'translate-y-0 opacity-100'
-                    : `${idleOffset} opacity-0`
+                'pointer-events-auto relative flex w-full max-w-[30rem] touch-none select-none items-center gap-3 rounded-2xl',
+                'border border-[var(--hairline)] bg-[var(--raised)] py-1.5 pl-2.5 pr-1.5 text-[var(--text-strong)] shadow-float',
+                'font-[family-name:var(--font-brand)]',
+                /* Transform and opacity only, on the panel tokens (AUTM-1843):
+                   in on the house ease-out, out on the quicker panel-out.
+                   Reduced motion: a fade, no travel. */
+                'transition-[translate,opacity]',
+                shown
+                    ? 'translate-y-0 opacity-100 duration-[var(--motion-panel-in)] ease-[var(--motion-ease-out)]'
+                    : cn(idleOffset, 'opacity-0 duration-[var(--motion-panel-out)] ease-[var(--motion-ease-in)] motion-reduce:translate-y-0')
             )}
-            role={t.type === 'error' ? 'alert' : 'status'}
         >
-            {t.type === 'loading' ? (
-                /* AUTM-1708: a loading toast turns the Autara mark where the
-                   dot was. A still dot on "Saving your changes" read the same
-                   as a stuck one. Decorative: the toast is already a status
-                   and its words say what is happening. */
-                <AutaraLoader size={16} tone="current" decorative data-toast-dot="loading" />
-            ) : t.type && t.type !== 'default' ? (
-                /* The sheet's status dot. The words say what happened; the
-                   dot only marks the kind, so it is hidden from AT. */
+            {showDisc ? (
                 <span
                     aria-hidden="true"
-                    data-toast-dot={t.type}
-                    className={cn('size-2 shrink-0 rounded-full', TOAST_DOT[t.type])}
-                />
-            ) : null}
-            {/* AUTM-1883: two lines at most, never one truncated line. The
-                capsule stays centred on its dot and actions; `text-pretty`
-                keeps a lone word off the second line. With large text on a
-                phone (the screen narrower than 20em of text) two lines hold
-                about 30 characters, so there the toast keeps every word
-                (WCAG 1.4.4) and grows instead. An `em` container query,
-                because a media query cannot see the text size. */}
-            <span
-                key={contentKey}
-                data-toast-message=""
-                className="autara-toast-content min-w-0 line-clamp-2 break-words text-pretty @max-[20em]:line-clamp-none"
-            >
-                {message}
-            </span>
-            {t.action && (
-                <button
-                    onClick={t.action.onClick}
+                    data-toast-icon={t.type === 'loading' ? 'loading' : tone ?? 'info'}
                     className={cn(
-                        /* AUTM-1221: sentence case on the type scale. A
-                           letterspaced uppercase action label is the
-                           treatment the house rules retired. */
-                        'ml-1 shrink-0 rounded-full px-3 py-1 text-[0.8125rem] font-medium transition-colors',
-                        isDark
-                            ? 'bg-[var(--text-on-inverse)]/10 text-[var(--text-on-inverse)] hover:bg-[var(--text-on-inverse)]/20'
-                            : 'bg-[var(--raised)] text-[var(--text-strong)] hover:bg-[var(--paper)]'
+                        'grid size-9 shrink-0 place-items-center rounded-full [&_svg]:size-[1.125rem]',
+                        TONE[tone ?? 'info']
+                    )}
+                >
+                    {t.type === 'loading' ? (
+                        /* AUTM-1708: the mark, turning. Decorative: the words say what is happening. */
+                        <AutaraLoader size={16} tone="current" decorative />
+                    ) : t.icon ? (
+                        t.icon
+                    ) : t.type && t.type !== 'default' ? (
+                        TYPE_GLYPH[t.type]
+                    ) : null}
+                </span>
+            ) : null}
+            {/* AUTM-1883: two lines at most, never one truncated line;
+                `text-pretty` keeps a lone word off the second line. With large
+                text on a phone (narrower than 20em of text) every word stays
+                (WCAG 1.4.4). The title at medium weight, the rest muted, so
+                the first words carry the news. */}
+            <p
+                key={t.rev}
+                data-toast-message=""
+                className={cn(
+                    /* Margin, not padding: a clamp hides overflow at the PADDING
+                       edge, so padding showed a sliver of the third line. */
+                    'autara-toast-content min-w-0 flex-1 my-1.5 text-[0.9375rem] leading-snug',
+                    'line-clamp-2 break-words text-pretty @max-[20em]:line-clamp-none',
+                    !showDisc && 'pl-1.5'
+                )}
+            >
+                {t.title ? <span className="font-medium text-[var(--text-strong)]">{t.title.trim().replace(/[.\s]+$/, '')}</span> : null}
+                {t.title && t.description ? '. ' : null}
+                {t.description ? (
+                    <span className={t.title ? 'text-[var(--text-muted)]' : 'text-[var(--text-strong)]'}>
+                        {t.description.trim().replace(/[.\s]+$/, '')}
+                    </span>
+                ) : null}
+                {!t.title && !t.description ? message : null}
+            </p>
+            {t.action ? (
+                <button
+                    type="button"
+                    onClick={() => {
+                        t.action?.onClick()
+                        leave()
+                    }}
+                    data-toast-action=""
+                    className={cn(
+                        /* A quiet accent text button with a 44px target: the
+                           next step, never a black button (Don, 2026-10-14). */
+                        'motion-press -my-1 inline-flex h-11 shrink-0 items-center rounded-full px-3 text-[0.9375rem] font-medium text-[var(--accent)]',
+                        'transition-colors hover:bg-[var(--band)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--raised)]'
                     )}
                 >
                     {t.action.label}
                 </button>
-            )}
-            {/* AUTM-1756: the library's one close control, at `sm` (a 36px
-                disc with a 44px touch area) so the capsule keeps its height.
-                It was a 20px bare cross that drew a disc only on hover. On the
-                ink toast it is the inverse disc, which follows that surface
-                (ink in light, white in dark); on band it is the neutral one. */}
-            <CloseButton
-                label="Dismiss notification"
-                onClick={handleDismiss}
-                size="sm"
-                tone={isDark ? 'inverse' : 'neutral'}
-                className="-my-1 -mr-1.5 ml-0.5 shrink-0"
-            />
+            ) : null}
+            {/* AUTM-1756: the library's one Close, at its large size (44px,
+                48 to a finger), the neutral disc on the raised surface. */}
+            <CloseButton label="Dismiss notification" onClick={() => leave()} size="md" tone="neutral" className="shrink-0" />
             <style>{`
-                .autara-toast-content { animation: autaraToastMorph 220ms ease-out; }
+                .autara-toast-content { animation: autaraToastMorph var(--motion-crossfade, 160ms) var(--motion-ease-out, ease-out); }
                 @keyframes autaraToastMorph {
-                    0%   { opacity: 0; transform: translateY(2px); filter: blur(2px); }
-                    100% { opacity: 1; transform: translateY(0);  filter: blur(0);  }
+                    0%   { opacity: 0; transform: translateY(2px); }
+                    100% { opacity: 1; transform: translateY(0); }
                 }
+                @media (prefers-reduced-motion: reduce) { .autara-toast-content { animation: none; } }
             `}</style>
         </div>
     )
@@ -459,6 +671,7 @@ export {
     toast,
     type Toast,
     type ToastType,
+    type ToastTone,
     type ToastPosition,
     type ToastVariant,
 }

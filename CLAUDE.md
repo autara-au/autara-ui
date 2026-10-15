@@ -320,6 +320,16 @@ docs/
   layered, so a story looks right while a consumer paints, for example,
   ServiceCard's selected name ink on deep purple. Found under AUTM-1694;
   `ServiceCard.test.tsx` pins it.
+- **Toast (AUTM-1871, AUTM-1813): the capsule has NO live role.** The provider
+  keeps one polite `role="status"` region (and one `role="alert"` for errors)
+  in a persistent "Notifications" region and renders each toast INSIDE its
+  region, so QA's `getByRole('status').filter({ hasText })` finds the region
+  holding the toast; style or measure the capsule by `[data-toast]`. Never a
+  hidden copy of the words beside the capsule: every `getByText` on a toast
+  then finds two elements (it broke the portal's specs the first time). `groupKey` collapses a burst into one toast in place (the
+  merchant portal passes the booking). Defaults: 6 s, pausing on hover, focus
+  and a hidden page; three at most; `position="auto"` (top centre under 40rem,
+  bottom right from it). `variant` is a no-op now (one raised token surface).
 - Storybook 10's default canvas is dark; `storybook.css` forces
   warm-cream via `!important` on `html`, `body`, `#storybook-root`,
   `.docs-story`, `.sb-show-main`, `.sbdocs-*` so stories render in the
