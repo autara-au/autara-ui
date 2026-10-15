@@ -35,6 +35,11 @@ export interface SwatchOption {
     color: string
     /** The tick's colour on this swatch (the palette's text colour for it). */
     ink: string
+    /**
+     * Draw a hairline round the swatch: for a colour with no edge of its own
+     * against the page (a white or silver car on white paper, AUTM-1870).
+     */
+    edge?: boolean
 }
 
 export interface SwatchRadioGroupProps {
@@ -128,9 +133,13 @@ export function SwatchRadioGroup({
                             )}
                             style={{
                                 background: option.color,
-                                boxShadow: selected
-                                    ? '0 0 0 2px var(--paper), 0 0 0 4px var(--text-strong)'
-                                    : undefined,
+                                boxShadow:
+                                    [
+                                        selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--text-strong)' : '',
+                                        option.edge ? 'inset 0 0 0 1px var(--border-strong)' : '',
+                                    ]
+                                        .filter(Boolean)
+                                        .join(', ') || undefined,
                             }}
                         >
                             <input

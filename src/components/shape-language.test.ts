@@ -79,6 +79,8 @@ const KEEPS: Record<string, string> = {
     'MediaFrame.tsx': 'the round shape is a person (a pro in a chat header or on the live booking), as Avatar (AUTM-1781)',
     'BookingPass.tsx': 'the tear line\'s two notches, half circles cut into the pass the way a ticket is cut, never a control; the face is MediaFrame\'s round person (AUTM-1799)',
     'FactRows.tsx': 'the 40px icon disc beside each value, a glyph in a circle like ChoiceCard and ListSection (AUTM-1799)',
+    'VehiclePicker.tsx': 'the model and type chips are pills, as FilterChipRow\'s on canvas v44: a choice, not an action; the back control is the 44px icon disc (AUTM-1870)',
+    'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s (AUTM-1870)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
 
