@@ -72,6 +72,11 @@ export interface ChatEventCardProps extends Omit<HTMLAttributes<HTMLElement>, "t
   /** Who it is from, said before the title. Default "Autara". */
   from?: string;
   action?: ChatEventAction;
+  /**
+   * The action failed, said plainly in danger text with an icon ("We couldn't
+   * open the payment page. Nothing was charged. Try again."). The action stays.
+   */
+  error?: ReactNode;
   /** True for a card that arrived live while the thread was open: it rises in once. */
   arrived?: boolean;
   testId?: string;
@@ -155,6 +160,19 @@ export const chatEventGlyphs = {
   ),
 } satisfies Record<string, ReactNode>;
 
+/** Solar "Danger Circle", Bold, inlined, as MessageCard's error line. */
+function ErrorGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor" className="mt-0.5 shrink-0">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10ZM12 6.25a.75.75 0 0 1 .75.75v6a.75.75 0 0 1-1.5 0V7a.75.75 0 0 1 .75-.75ZM12 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z"
+      />
+    </svg>
+  );
+}
+
 const TONE_GLYPH: Record<ChatEventTone, ReactNode> = {
   action: chatEventGlyphs.payment,
   progress: chatEventGlyphs.requested,
@@ -171,6 +189,7 @@ export function ChatEventCard({
   dateTime,
   from = "Autara",
   action,
+  error,
   arrived,
   testId,
   className,
@@ -222,6 +241,16 @@ export function ChatEventCard({
         {detail ? (
           <p id={detailId} className="text-[0.875rem] leading-normal text-[var(--text-muted)]">
             {detail}
+          </p>
+        ) : null}
+
+        {error ? (
+          <p
+            role="alert"
+            className="flex items-start gap-1.5 text-[0.875rem] font-medium leading-snug text-[var(--danger)]"
+          >
+            <ErrorGlyph />
+            <span>{error}</span>
           </p>
         ) : null}
 

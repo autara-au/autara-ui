@@ -66,6 +66,23 @@ export const BalanceDueWithPay: Story = {
   },
 };
 
+/** The Pay action failed: said in place, the action stays, nothing else changes. */
+export const ActionFailed: Story = {
+  render: () => (
+    <Column>
+      <ChatEventCard
+        tone="action"
+        icon={chatEventGlyphs.payment}
+        title="Job complete, $80.00 to pay"
+        detail="Your card wasn't charged, so the balance is still due."
+        time="1:12 pm"
+        error="We couldn't open the payment page. Nothing was charged. Try again."
+        action={{ label: "Pay $80.00", onClick: () => {} }}
+      />
+    </Column>
+  ),
+};
+
 /** Cancelled by the pro with the refund, as the customer sees it: closed, never a warning colour. */
 export const CancelledWithRefund: Story = {
   render: () => (

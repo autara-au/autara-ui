@@ -62,6 +62,20 @@ describe('ChatEventCard', () => {
         expect(disc.className).not.toMatch(/danger|amber|warning|alert/)
     })
 
+    it('a failed action says so in an alert and keeps the action', () => {
+        render(
+            <ChatEventCard
+                tone="action"
+                title="Job complete, $80.00 to pay"
+                time="1:12 pm"
+                error="We couldn't open the payment page. Nothing was charged. Try again."
+                action={{ label: 'Pay $80.00', onClick: () => {} }}
+            />,
+        )
+        expect(screen.getByRole('alert').textContent).toBe("We couldn't open the payment page. Nothing was charged. Try again.")
+        expect(screen.getByRole('button', { name: 'Pay $80.00' })).toBeTruthy()
+    })
+
     it('rises in only when it arrived live', () => {
         const { unmount } = render(<ChatEventCard tone="done" title="x" time="1 pm" />)
         expect(screen.getByRole('article').className).not.toMatch(/motion-rows/)
