@@ -16,8 +16,10 @@ import { AutaraLoader } from './AutaraLoader'
  * were one truncated line, so on a phone "Reminder sent to Priya by text
  * and email. Next one possible at 15:35" lost everything after "email",
  * and the half that said when to try again was the half that went. Two
- * lines hold a sentence and its follow-up at 320; a third is clamped, so
- * write toasts that fit in two.
+ * lines hold a sentence and its follow-up at 375; a third is clamped, so
+ * write toasts that fit in two. Where the screen is narrower than 20em of
+ * text (320 at 100%, any phone at large text) nothing is clamped: the toast
+ * grows and keeps every word.
  *
  * The provider exposes a singleton `toast()` plus `toast.success /
  * .error / .warning / .info / .loading` shortcuts. A new
@@ -223,18 +225,20 @@ const TOAST_DOT: Record<Exclude<ToastType, 'default' | 'loading'>, string> = {
 
 // ─── Viewport + Item ──────────────────────────────────────────────
 
-// Maps the 6 anchor positions to viewport-layout classes. Corner
-// positions hug their corner; centre positions span the full
-// horizontal axis so the capsules sit dead-centre. `top-*` positions
+// Maps the 6 anchor positions to viewport-layout classes. Every position
+// spans the full width (pointer-events stay off it) and aligns its capsules
+// to its corner, edge or centre. AUTM-1883: full width so the viewport can be
+// the size container the large-text rule below measures; a corner viewport
+// sized to its content cannot be one. `top-*` positions
 // use `flex-col-reverse` so the newest toast renders at the corner /
 // edge and older ones recede further into the page — matching Sonner.
 const VIEWPORT_POS: Record<ToastPosition, string> = {
-    'top-left': 'top-0 left-0 items-start flex-col-reverse',
+    'top-left': 'top-0 inset-x-0 items-start flex-col-reverse',
     'top-center': 'top-0 inset-x-0 items-center flex-col-reverse',
-    'top-right': 'top-0 right-0 items-end flex-col-reverse',
-    'bottom-left': 'bottom-0 left-0 items-start flex-col',
+    'top-right': 'top-0 inset-x-0 items-end flex-col-reverse',
+    'bottom-left': 'bottom-0 inset-x-0 items-start flex-col',
     'bottom-center': 'bottom-0 inset-x-0 items-center flex-col',
-    'bottom-right': 'bottom-0 right-0 items-end flex-col',
+    'bottom-right': 'bottom-0 inset-x-0 items-end flex-col',
 }
 
 function ToastViewport({
@@ -262,7 +266,7 @@ function ToastViewport({
     const viewport = (
         <div
             className={cn(
-                'fixed z-[100] flex gap-2 p-4 pointer-events-none',
+                'fixed z-[100] flex gap-2 p-4 pointer-events-none @container',
                 VIEWPORT_POS[position]
             )}
             role="region"
@@ -397,11 +401,15 @@ function ToastItem({
             ) : null}
             {/* AUTM-1883: two lines at most, never one truncated line. The
                 capsule stays centred on its dot and actions; `text-pretty`
-                keeps a lone word off the second line. */}
+                keeps a lone word off the second line. With large text on a
+                phone (the screen narrower than 20em of text) two lines hold
+                about 30 characters, so there the toast keeps every word
+                (WCAG 1.4.4) and grows instead. An `em` container query,
+                because a media query cannot see the text size. */}
             <span
                 key={contentKey}
                 data-toast-message=""
-                className="autara-toast-content min-w-0 line-clamp-2 break-words text-pretty"
+                className="autara-toast-content min-w-0 line-clamp-2 break-words text-pretty @max-[20em]:line-clamp-none"
             >
                 {message}
             </span>

@@ -26,6 +26,8 @@ describe("Toast (AUTM-1883)", () => {
         expect(words.className).toContain("line-clamp-2");
         expect(words.className).not.toMatch(/\btruncate\b/);
         expect(words.className).toContain("min-w-0");
+        // Large text on a phone: every word, no clamp (the browser test measures it).
+        expect(words.className).toContain("@max-[20em]:line-clamp-none");
     });
 
     it("keeps the whole sentence, without its closing full stop (AUTM-1221)", async () => {
