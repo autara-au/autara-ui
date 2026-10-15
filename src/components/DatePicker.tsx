@@ -403,6 +403,8 @@ export function DatePicker({
                         const isSelected = date === value
                         const isDisabled = disabled || state === 'unavailable'
                         const isClosed = state === 'closed' && !isSelected
+                        // AUTM-1867 — open, but nothing free: dimmed ink, no hatch.
+                        const isFull = state === 'full' && !isSelected
                         const dot = DAY_STATE_DOT[state]
                         return (
                             <button
@@ -433,7 +435,9 @@ export function DatePicker({
                                         : isClosed
                                           ? // AUTM-1633 — closed but still yours: muted ink over the hatch.
                                             'border-dashed border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
-                                          : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
+                                          : isFull
+                                            ? 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
+                                            : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
                                     !isSelected &&
                                         !isDisabled &&
                                         'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)]',
