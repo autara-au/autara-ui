@@ -154,7 +154,10 @@ export function ComposerAttachMenu({
 
   if (asMenu) {
     return (
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      // Not modal: a modal Radix menu hides the page with aria-hidden while
+      // its controls stay focusable (axe aria-hidden-focus, AUTM-1885). Escape,
+      // a click outside and focus back on the + work the same either way.
+      <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
         <DropdownMenuTrigger asChild disabled={disabled}>
           <IconButton
             icon={<PlusGlyph />}
