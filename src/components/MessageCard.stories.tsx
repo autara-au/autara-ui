@@ -83,7 +83,7 @@ export const MerchantWaiting: Story = {
         figure="+$25.00"
         state="waiting"
         stateLabel="Waiting for Sam"
-        secondaryAction={{ label: "Remove", ariaLabel: "Remove Roof box clean and wax", onClick: () => {} }}
+        secondaryAction={{ label: "Remove", ariaLabel: "Remove Roof box clean and wax", onClick: () => {}, destructive: true }}
         primaryAction={{ label: "Remind Sam", ariaLabel: "Remind Sam about Roof box clean and wax", onClick: () => {} }}
         footnote="Not charged unless Sam approves. A reminder can be sent every 15 minutes."
       />

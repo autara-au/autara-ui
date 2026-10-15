@@ -31,7 +31,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["primary", "quiet", "danger", "ondeep", "link", "ghost", "strong"],
+      options: ["primary", "quiet", "danger", "ondeep", "ondeep-danger", "link", "ghost", "strong"],
     },
     size: { control: { type: "select" }, options: ["sm", "md", "lg"] },
     disabled: { control: "boolean" },
@@ -273,6 +273,20 @@ export const OnBrandDeep: Story = {
     <div className="flex gap-2 rounded-[1.25rem] bg-[var(--hero)] p-3.5">
       <Button>View booking</Button>
       <Button variant="ondeep">Add to calendar</Button>
+    </div>
+  ),
+};
+
+/**
+ * AUTM-1878 follow-up: the destructive action on a brand-deep hero (a
+ * request's Decline on the record's ticket): a white pill with the fill red
+ * label, 6.5:1 in both themes. Lime still leads.
+ */
+export const DestructiveOnBrandDeep: Story = {
+  render: () => (
+    <div className="flex gap-2 rounded-[1.25rem] bg-[var(--hero)] p-3.5">
+      <Button variant="ondeep-danger">Decline</Button>
+      <Button>Confirm</Button>
     </div>
   ),
 };
