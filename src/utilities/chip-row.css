@@ -26,8 +26,8 @@
  *                        and from assistive tech, when there is nothing more
  *                        that way.
  *
- * The vertical brand scrollbars (utilities/scrollbars.css) are untouched:
- * only a chip row loses its bar.
+ * Since AUTM-1899 nothing inside a page draws a bar (utilities/scrollbars.css);
+ * a chip row also hides its own, for a finger and under forced colours too.
  *
  * In `@layer components`, so a Tailwind utility on the same element (a gap, a
  * padding, `flex-wrap` at a breakpoint) still wins.

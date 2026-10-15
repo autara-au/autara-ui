@@ -67,26 +67,13 @@ describe('ScrollArea (AUTM-1756)', () => {
         expect(screen.getByTestId('area')).not.toHaveAttribute('tabindex')
     })
 
-    it('marks itself while scrolling, and clears it once still', () => {
-        vi.useFakeTimers()
+    it('AUTM-1899: no longer marks itself for a scrollbar reveal (there is no bar to reveal)', () => {
         render(<ScrollArea data-testid="area">rows</ScrollArea>)
         const area = screen.getByTestId('area')
-        fireEvent.scroll(area)
-        expect(area).toHaveAttribute('data-scrolling')
-        act(() => {
-            vi.advanceTimersByTime(1000)
-        })
-        expect(area).not.toHaveAttribute('data-scrolling')
-    })
-
-    it('reveals its bar, and rebuilds the thumb on pointer enter and leave', () => {
-        render(<ScrollArea data-testid="area">rows</ScrollArea>)
-        const area = screen.getByTestId('area')
-        expect(area).toHaveAttribute('data-scrollbar-reveal')
-        expect(area).not.toHaveAttribute('data-scrollbar-tick')
         fireEvent.pointerEnter(area)
-        expect(area).toHaveAttribute('data-scrollbar-tick')
-        fireEvent.pointerLeave(area)
+        fireEvent.scroll(area)
+        expect(area).not.toHaveAttribute('data-scrollbar-reveal')
+        expect(area).not.toHaveAttribute('data-scrolling')
         expect(area).not.toHaveAttribute('data-scrollbar-tick')
     })
 
@@ -146,8 +133,8 @@ describe('ScrollArea (AUTM-1756)', () => {
     })
 })
 
-describe('useScrollbarReveal (AUTM-1756)', () => {
-    it('marks a consumer-owned scroller and clears the mark on unmount', async () => {
+describe('useScrollbarReveal (deprecated, AUTM-1899)', () => {
+    it('is still exported, so existing callers compile, and does nothing', async () => {
         const { useRef } = await import('react')
         const { useScrollbarReveal } = await import('./ScrollArea')
         function Page() {
@@ -157,10 +144,14 @@ describe('useScrollbarReveal (AUTM-1756)', () => {
         }
         const { unmount } = render(<Page />)
         const main = screen.getByTestId('main')
-        expect(main).toHaveAttribute('data-scrollbar-reveal')
         fireEvent.scroll(main)
-        expect(main).toHaveAttribute('data-scrolling')
+        expect(main.attributes).toHaveLength(1)
         unmount()
-        expect(main).not.toHaveAttribute('data-scrollbar-reveal')
+    })
+
+    it('stays in the package surface', async () => {
+        const pkg = await import('../index')
+        expect(typeof pkg.useScrollbarReveal).toBe('function')
+        expect(typeof pkg.ScrollArea).toBe('object')
     })
 })

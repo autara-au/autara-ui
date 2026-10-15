@@ -1,4 +1,4 @@
-/* ─── Autara Scrollbar Tokens (AUTM-1739, AUTM-1756) ────────────────────
+/* ─── Autara Scrollbar Tokens (AUTM-1739, AUTM-1756, AUTM-1899) ─────────
  *
  * Don, 2026-10-05: "scroll bars in windows pretty much ugly default". Then,
  * 2026-10-15, of the Customers and Inbox lists: "it's bad when I see the
@@ -8,6 +8,10 @@
  * the theme on its own. The rules that use these are in
  * utilities/scrollbars.css, in the base layer.
  *
+ * Since AUTM-1899 (Don, 2026-10-16: "scrollbars everywhere showing, can we
+ * hide them?") only the page's own bar, on the root element, draws this
+ * thumb; nothing inside a page draws a bar with a mouse or a trackpad.
+ *
  * Measured over the grounds it scrolls on (scrollbars.test.ts holds them):
  *   thumb (shown)   light 3.6:1 on paper, 3.4:1 on band;
  *                   dark  4.3:1 on paper, 4.2:1 on band, 3.9:1 on raised
@@ -15,8 +19,9 @@
  * The thumb is 3:1 or better wherever it shows, so it can be found
  * (WCAG 1.4.11's bar for a control's boundary).
  *
- * On a brand-deep ground (`.scroll-on-deep`, or `data-ground="deep"`): a
- * lighter purple, the brand mixed into white, on a transparent track.
+ * On a brand-deep page (`.scroll-on-deep`, or `data-ground="deep"`, on
+ * <html>): a lighter purple, the brand mixed into white, on a transparent
+ * track.
  *
  * `[data-theme]` re-declares them on a themed island, because a custom
  * property resolves its var() where it is declared: declared on :root only,
