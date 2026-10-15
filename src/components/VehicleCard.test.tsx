@@ -4,7 +4,7 @@ import { VehicleAddCard, VehicleCard, vehicleCardFacts } from './VehicleCard'
 
 /** AUTM-1870: a saved car as itself, in the garage and as a checkout choice. */
 describe('VehicleCard', () => {
-    it('draws the car in its paint, the plate as a plate, Default, and the facts in words', () => {
+    it('draws the car as its make mark and a dot of its paint, the plate as a plate, Default, and the facts in words', () => {
         render(
             <VehicleCard
                 make="Toyota"
@@ -23,18 +23,31 @@ describe('VehicleCard', () => {
         expect(screen.getByRole('heading', { level: 2, name: 'Toyota HiLux' })).toBeTruthy()
         expect(card.textContent).toContain('Default')
         expect(card.querySelector('[data-slot="plate"]')?.textContent).toBe('Rego ABC123')
-        expect(card.textContent).toContain('Ute / Pickup · 2021 · White')
-        const drawing = card.querySelector('svg[data-body]')!
-        expect(drawing.getAttribute('data-body')).toBe('UTE')
-        expect(drawing.getAttribute('data-paint')).toBe('white')
-        expect(drawing.getAttribute('aria-hidden')).toBe('true')
+        expect(card.textContent).toContain('Ute / Pickup \u00b7 2021 \u00b7 White')
+        // No car illustration (Don, 2026-10-15): the mark in the image slot, the paint as a dot.
+        expect(card.querySelector('[data-slot="image"] svg[data-mark="logo"]')).toBeTruthy()
+        expect(card.querySelector('[data-slot="paint"]')?.getAttribute('data-paint')).toBe('white')
+        expect(card.querySelector('[data-slot="paint"]')?.getAttribute('aria-hidden')).toBe('true')
+        expect(card.querySelector('svg[data-body]')).toBeNull()
         expect(screen.getByRole('button', { name: 'Edit' })).toBeTruthy()
     })
 
-    it('a colour it cannot paint is still said; an unknown type draws the generic car', () => {
+    it('a photo fills the image slot when there is one (AUTM-1882), the paint dot kept', () => {
+        render(<VehicleCard make="Toyota" model="HiLux" color="Red" photoUrl="https://example.test/hilux.jpg" testId="card" />)
+        const slot = screen.getByTestId('card').querySelector('[data-slot="image"]')!
+        expect(slot.querySelector('img')?.getAttribute('src')).toBe('https://example.test/hilux.jpg')
+        expect(slot.querySelector('img')?.getAttribute('alt')).toBe('')
+        expect(slot.querySelector('[data-slot="mark"]')).toBeNull()
+        expect(slot.querySelector('[data-slot="paint"]')?.getAttribute('data-paint')).toBe('red')
+    })
+
+    it('a colour it cannot paint is still said, with no dot; a make without a logo has its monogram', () => {
         expect(vehicleCardFacts({ body: 'CAR', year: null, color: 'Purple' })).toBe('Purple')
         render(<VehicleCard make="Lada" model="Niva" body="CAR" color="Purple" testId="card" />)
-        expect(screen.getByTestId('card').querySelector('svg')?.getAttribute('data-body')).toBe('OTHER')
+        const card = screen.getByTestId('card')
+        expect(card.querySelector('[data-slot="paint"]')).toBeNull()
+        expect(card.querySelector('svg[data-mark="monogram"]')?.textContent).toBe('L')
+        expect(card.textContent).toContain('Purple')
     })
 
     it('as a choice, the cars of one name are a radio group', () => {

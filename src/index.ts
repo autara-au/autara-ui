@@ -169,9 +169,8 @@ export {
     // AUTM-1870: a car in a few taps, drawn as itself.
     VehiclePicker, validateVehiclePicker, vehiclePickerStepFor, EMPTY_VEHICLE_PICKER_VALUE, VEHICLE_PICKER_MESSAGES,
     type VehiclePickerProps, type VehiclePickerValue, type VehiclePickerStep, type VehiclePickerField, type VehiclePickerErrors,
-    VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps,
     VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps,
-    VehicleCard, VehicleAddCard, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
+    VehicleCard, VehicleAddCard, VehiclePaintDot, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
     // AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
     CategoryArt, categoryArtKind, type CategoryArtKind,
     MerchantProfileCover, MerchantProfileCoverArt, MerchantProfileHeader,

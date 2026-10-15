@@ -58,8 +58,11 @@ describe('VehiclePicker', () => {
 
         fireEvent.click(screen.getByRole('radio', { name: 'White' })) // tap 2
         expect(last(values).color).toBe('White')
-        expect(screen.getByTestId('vp-silhouette').getAttribute('data-paint')).toBe('white')
-        expect(screen.getByTestId('vp-silhouette').getAttribute('data-body')).toBe('UTE')
+        // No car illustration (Don, 2026-10-15): the make's mark with a dot of the paint.
+        expect(screen.getByTestId('vp-car-paint').getAttribute('data-paint')).toBe('white')
+        expect(screen.getByTestId('vp-car-mark').getAttribute('data-mark')).toBe('logo')
+        // The paint is the main choice on this step: 56px swatches.
+        expect(screen.getByTestId('vp-colour-white').className).toContain('size-[var(--sw-size)]')
         expect(validateVehiclePicker(last(values))).toEqual({})
     })
 

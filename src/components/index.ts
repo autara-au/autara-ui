@@ -365,7 +365,7 @@ export {
 // ─── AUTM-1195 — pick one of a few, as cards: a real radio group ────────
 export { ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps } from './ChoiceCard'
 export { SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption } from './SwatchRadioGroup'
-// AUTM-1870: a car in a few taps, drawn as itself: the picker, the silhouette per body type, the garage card.
+// AUTM-1870: a car in a few taps: the picker, the make mark, the garage card (no car illustrations, Don 2026-10-15).
 export {
     VehiclePicker,
     validateVehiclePicker,
@@ -378,11 +378,11 @@ export {
     type VehiclePickerField,
     type VehiclePickerErrors,
 } from './VehiclePicker'
-export { VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps } from './VehicleSilhouette'
 export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps } from './VehicleMakeMark'
 export {
     VehicleCard,
     VehicleAddCard,
+    VehiclePaintDot,
     vehicleCardFacts,
     type VehicleCardProps,
     type VehicleAddCardProps,
