@@ -136,6 +136,55 @@ function edgeOf(row: HTMLElement): number {
     return Number.isFinite(value) ? value : 0
 }
 
+/**
+ * The room the chevron's disc itself takes at each end, in px
+ * (`--chip-row-solid`: 0 with no chevron, else the disc and the row's 4px
+ * margin). A custom property comes back as written, so its rem is resolved
+ * here against the root size, as the browser resolves it.
+ */
+function solidOf(row: HTMLElement): number {
+    if (typeof getComputedStyle === 'undefined') return 0
+    const raw = getComputedStyle(row).getPropertyValue('--chip-row-solid').trim()
+    const value = parseFloat(raw)
+    if (!Number.isFinite(value)) return 0
+    if (raw.endsWith('rem')) return value * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
+    return value
+}
+
+/**
+ * Where the row must sit for a chip to be in view (AUTM-1756, a chip taken
+ * by the keyboard or chosen on arrival), by the most room the chip fits in:
+ *
+ *   1. clear of both fades (`--chip-row-edge`), when it fits between them;
+ *   2. else clear of both chevrons (`--chip-row-solid`), its ends in the
+ *      fades' ramps but never under a disc;
+ *   3. else its START clear of the start chevron, so it reads from the
+ *      beginning: a chip wider than the row between the discs cannot be
+ *      whole, and the end of a label is the part to lose.
+ *
+ * Measured, never assumed: a chip's width follows the font the device has
+ * and the text size, so a row of chips that fits between the fades with one
+ * font does not with another (CI's Linux fallback is wider than macOS's).
+ */
+export function chipRowRevealTarget(row: HTMLElement, chip: HTMLElement): number {
+    const view = row.clientWidth
+    const max = Math.max(0, row.scrollWidth - view)
+    const solid = Math.min(solidOf(row), view / 2)
+    const edge = Math.max(solid, edgeOf(row))
+    const { start, end } = spanOf(row, chip)
+    const width = end - start
+    const left = row.scrollLeft
+    let target = left
+    if (width > view - 2 * solid) {
+        target = start - solid
+    } else {
+        const margin = width <= view - 2 * edge ? edge : solid
+        if (start < left + margin) target = start - margin
+        else if (end > left + view - margin) target = end - view + margin
+    }
+    return Math.round(Math.min(max, Math.max(0, target)))
+}
+
 /** A chip's start and end along the row's content, in px. */
 function spanOf(row: HTMLElement, chip: HTMLElement): { start: number; end: number } {
     const box = row.getBoundingClientRect()
@@ -341,13 +390,19 @@ export const ChipRow = forwardRef<HTMLElement, ChipRowProps>(function ChipRow(
     /** Bring a chip into view clear of the fades, scrolling the row alone. */
     const reveal = useCallback((chip: HTMLElement) => {
         const el = rowRef.current
-        if (!el || chip === el) return
-        const edge = Math.min(edgeOf(el), el.clientWidth / 3)
-        const { start, end } = spanOf(el, chip)
-        const left = el.scrollLeft
-        if (start < left + edge) el.scrollLeft = Math.max(0, start - edge)
-        else if (end > left + el.clientWidth - edge) el.scrollLeft = end - el.clientWidth + edge
+        if (!el || chip === el || !el.contains(chip)) return
+        const target = chipRowRevealTarget(el, chip)
+        if (Math.abs(target - el.scrollLeft) >= 1) el.scrollLeft = target
     }, [])
+
+    /* The browser scrolls a chip reached by Tab into view itself, AFTER the
+       focus event, by the row's scroll padding alone; for a chip wider than
+       the room between the fades that can leave its start under the start
+       chevron. So keyboard focus is revealed again on the next frame, once
+       the browser's own scroll is done: instant, never a glide, so the focus
+       ring is where it lands at once. */
+    const revealFrame = useRef(0)
+    useEffect(() => () => cancelAnimationFrame(revealFrame.current), [])
 
     /* The chosen chip (a checked radio, a selected tab or option, a pressed
        toggle, the current link) is in view on arrival, clear of the fades,
@@ -531,7 +586,14 @@ export const ChipRow = forwardRef<HTMLElement, ChipRowProps>(function ChipRow(
         }
         // A chip pressed with the mouse is already where the pointer is; only
         // keyboard focus moves the row, so a press never shifts it underfoot.
-        if (keyboard) reveal(target)
+        if (!keyboard) return
+        stopGlide()
+        reveal(target)
+        if (typeof requestAnimationFrame === 'undefined') return
+        cancelAnimationFrame(revealFrame.current)
+        revealFrame.current = requestAnimationFrame(() => {
+            if (document.activeElement === target) reveal(target)
+        })
     }
 
     const row = createElement(
