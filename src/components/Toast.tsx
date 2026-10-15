@@ -27,14 +27,15 @@ import { CloseButton } from './IconButton'
  * `position="auto"` (the default) puts the stack at the top on a phone and
  * bottom right from 40rem.
  *
- * AUTM-1813: ONE polite live region lives for the provider's whole life, and
- * each toast's words are written into it when the toast appears (an error's
- * into the one assertive region), because a live region inserted together
- * with its words is not reliably read out. The capsule itself carries no live
- * role, so nothing is announced twice. QA's helpers find a toast through
- * those regions (`getByRole('status')` / `getByRole('alert')` with its text),
- * inside the "Notifications" region, which is now there before the first
- * toast.
+ * AUTM-1813: ONE polite live region (`role="status"`) lives for the
+ * provider's whole life, with one assertive region (`role="alert"`) for
+ * errors, inside the "Notifications" region, and each toast is rendered INTO
+ * its region when it appears: a live region inserted together with its words
+ * is not reliably read out, a node added to one that exists is. The capsule
+ * carries no live role of its own, so nothing is announced twice, and its
+ * words exist once in the page (a hidden copy beside the capsule made every
+ * `getByText` on a toast find two elements). QA's helpers keep working:
+ * `getByRole('status').filter({ hasText })` and `getByRole('alert')`.
  *
  * AUTM-1883: the words wrap to two lines and a third is clamped, except where
  * the screen is narrower than 20em of text (large text on a phone), where the
@@ -319,6 +320,17 @@ const VIEWPORT_POS: Record<ToastPosition, string> = {
     'bottom-right': 'bottom-0 inset-x-0 items-end flex-col',
 }
 
+/** How each inner column aligns its toasts, matching the viewport's corner. */
+const ALIGN: Record<ToastPosition, string> = {
+    auto: 'items-center sm:items-end',
+    'top-left': 'items-start',
+    'top-center': 'items-center',
+    'top-right': 'items-end',
+    'bottom-left': 'items-start',
+    'bottom-center': 'items-center',
+    'bottom-right': 'items-end',
+}
+
 function useIsTop(position: ToastPosition): boolean {
     const query = '(min-width: 40rem)'
     const read = () => (typeof window !== 'undefined' && window.matchMedia ? !window.matchMedia(query).matches : true)
@@ -354,31 +366,38 @@ function ToastViewport({
     const polite = toasts.filter((t) => t.type !== 'error')
     const assertive = toasts.filter((t) => t.type === 'error')
 
-    // AUTM-1813: the region and its two live regions are here before the first
-    // toast and stay; only their words come and go.
+    // AUTM-1813: the region and its two live regions are here before the
+    // first toast and stay; the toasts are rendered INSIDE them, so a toast's
+    // words are added to a live region that already exists (read out
+    // reliably) and exist once in the page (a `getByText` finds one element).
+    // Not `aria-atomic`: a new toast is read, not the whole stack again.
+    // Errors sit in the assertive region at the stack's edge.
+    const column = cn('flex w-full flex-col gap-2', isTop ? 'flex-col-reverse' : 'flex-col', ALIGN[position])
     const viewport = (
         <section
             aria-label="Notifications"
             className={cn(
-                'fixed z-[100] flex gap-2 pointer-events-none @container',
+                'fixed z-[100] flex pointer-events-none @container',
                 'px-3 sm:px-4 pt-[calc(env(safe-area-inset-top,0px)+var(--toast-offset-top,0px)+0.75rem)] pb-[calc(env(safe-area-inset-bottom,0px)+var(--toast-offset-bottom,0px)+0.75rem)] sm:pb-[calc(env(safe-area-inset-bottom,0px)+var(--toast-offset-bottom,0px)+1rem)]',
                 VIEWPORT_POS[position]
             )}
             data-toast-viewport={isTop ? 'top' : 'bottom'}
         >
-            <div role="status" aria-live="polite" className="sr-only" data-toast-live="polite">
+            <div role="status" aria-live="polite" aria-atomic="false" className={column} data-toast-live="polite">
                 {polite.map((t) => (
-                    <p key={t.id}>{messageOf(t)}</p>
+                    <ToastItem key={t.id} toast={t} onDismiss={() => removeToast(t.id)} isTop={isTop} />
                 ))}
             </div>
-            <div role="alert" className="sr-only" data-toast-live="assertive">
+            <div
+                role="alert"
+                aria-atomic="false"
+                className={cn(column, isTop ? 'not-empty:mb-2' : 'not-empty:mt-2')}
+                data-toast-live="assertive"
+            >
                 {assertive.map((t) => (
-                    <p key={t.id}>{messageOf(t)}</p>
+                    <ToastItem key={t.id} toast={t} onDismiss={() => removeToast(t.id)} isTop={isTop} />
                 ))}
             </div>
-            {toasts.map((t) => (
-                <ToastItem key={t.id} toast={t} onDismiss={() => removeToast(t.id)} isTop={isTop} />
-            ))}
         </section>
     )
 

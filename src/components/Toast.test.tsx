@@ -78,6 +78,12 @@ describe("Toast (AUTM-1813): one live region", () => {
         expect(screen.getAllByRole("status")).toHaveLength(1);
     });
 
+    it("a toast's words exist once in the page, inside its live region (getByText finds one element)", async () => {
+        await show(() => toast.success("Reminder sent to the customer"));
+        expect(screen.getAllByText("Reminder sent to the customer")).toHaveLength(1);
+        expect(screen.getByRole("status")).toContainElement(capsules()[0]);
+    });
+
     it("an error is announced assertively, in the alert region", async () => {
         await show(() => toast.error("We couldn't send the reminder. Try again in a moment."));
         expect(screen.getByRole("alert")).toHaveTextContent("We couldn't send the reminder");

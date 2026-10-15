@@ -322,10 +322,11 @@ docs/
   `ServiceCard.test.tsx` pins it.
 - **Toast (AUTM-1871, AUTM-1813): the capsule has NO live role.** The provider
   keeps one polite `role="status"` region (and one `role="alert"` for errors)
-  in a persistent "Notifications" region and writes each visible toast's words
-  into it, so QA's `getByRole('status').filter({ hasText })` finds a toast by
-  its text there, not on the capsule; style or measure the capsule by
-  `[data-toast]`. `groupKey` collapses a burst into one toast in place (the
+  in a persistent "Notifications" region and renders each toast INSIDE its
+  region, so QA's `getByRole('status').filter({ hasText })` finds the region
+  holding the toast; style or measure the capsule by `[data-toast]`. Never a
+  hidden copy of the words beside the capsule: every `getByText` on a toast
+  then finds two elements (it broke the portal's specs the first time). `groupKey` collapses a burst into one toast in place (the
   merchant portal passes the booking). Defaults: 6 s, pausing on hover, focus
   and a hidden page; three at most; `position="auto"` (top centre under 40rem,
   bottom right from it). `variant` is a no-op now (one raised token surface).
