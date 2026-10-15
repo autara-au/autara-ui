@@ -209,7 +209,14 @@ docs/
   change the two together. A mouse or pen drag swallows the click its release
   would fire (capture phase on the row), so a chip's own `onClick` never sees a
   drag. The chevrons are `tabIndex={-1}` (Tab walks the chips) and keep
-  DatePicker's QA test ids `-earlier` / `-later`.
+  DatePicker's QA test ids `-earlier` / `-later`. A chip taken by the keyboard
+  is revealed by `chipRowRevealTarget`: clear of the fades if it fits between
+  them, else clear of the chevrons, else its start clear of the start
+  chevron; and again one frame after focus, because Chromium's own focus
+  scroll runs AFTER the focus event and uses the scroll padding alone. Chip
+  widths follow the font the machine has: CI's Linux fallback is wider than
+  macOS's, which is how #162 went green locally and red in CI. A browser test
+  never assumes a chip fits; it measures, or sets the widths from the row.
 - **`PageContainer` / `.page-container` is the page track** (AUTM-1739):
   1440px of content (`--page-max`) between a fluid `--page-gutter` (16px to
   96px). Sections, grids and product visuals take the full track; running

@@ -66,12 +66,61 @@ async function glided() {
     await frames();
 }
 
-/** A chip's box against the row's, less the room kept for the fade. */
-function clearOfFades(chip: HTMLElement) {
+/** The room the row keeps at each end: the fade's (`edge`) and the disc's (`solid`), in px. */
+function ends() {
+    const cs = getComputedStyle(row());
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    return {
+        edge: parseFloat(cs.scrollPaddingInlineStart),
+        solid: parseFloat(cs.getPropertyValue("--chip-row-solid")) * rem,
+    };
+}
+
+/**
+ * A chip's box against the row's, less `room` at each end that has more past
+ * it (an end the row has reached has no fade and no chevron to clear).
+ */
+function clearOf(chip: HTMLElement, room: number) {
     const r = row().getBoundingClientRect();
     const c = chip.getBoundingClientRect();
-    const edge = parseFloat(getComputedStyle(row()).scrollPaddingInlineStart);
-    return c.left >= r.left + edge - 1 && c.right <= r.right - edge + 1;
+    const start = row().hasAttribute("data-fade-start") ? room : 0;
+    const end = row().hasAttribute("data-fade-end") ? room : 0;
+    return c.left >= r.left + start - 1 && c.right <= r.right - end + 1;
+}
+
+/** A chip's box against the row's, less the room kept for the fade. */
+function clearOfFades(chip: HTMLElement) {
+    return clearOf(chip, ends().edge);
+}
+
+/**
+ * Where ChipRow promises a chip taken by the keyboard lands, by the room it
+ * fits in: clear of both fades if it fits between them, else clear of both
+ * chevrons, else its start clear of the start chevron. Chip widths follow the
+ * device's font (CI's Linux fallback is wider than macOS's), so the promise
+ * is checked against the chip's measured width, never a fixed one.
+ */
+function expectRevealed(chip: HTMLElement) {
+    const view = row().clientWidth;
+    const { edge, solid } = ends();
+    const width = chip.getBoundingClientRect().width;
+    if (width <= view - 2 * edge) expect(clearOf(chip, edge), "clear of the fades").toBe(true);
+    else if (width <= view - 2 * solid) expect(clearOf(chip, solid), "clear of the chevrons").toBe(true);
+    else
+        expect(chip.getBoundingClientRect().left, "its start clear of the start chevron").toBeGreaterThanOrEqual(
+            row().getBoundingClientRect().left + (row().hasAttribute("data-fade-start") ? solid : 0) - 1,
+        );
+}
+
+/** Nowhere is a chip under a chevron that is showing, unless it is wider than the room between them. */
+function expectNotUnderAChevron(chip: HTMLElement) {
+    const c = chip.getBoundingClientRect();
+    if (c.width > row().clientWidth - 2 * ends().solid) return;
+    for (const b of [next(), previous()]) {
+        if (!shown(b)) continue;
+        const a = b.getBoundingClientRect();
+        expect(c.right <= a.left + 1 || c.left >= a.right - 1, "not under a chevron").toBe(true);
+    }
 }
 
 describe("ChipRow in a browser (AUTM-1756 follow-up)", () => {
@@ -207,7 +256,7 @@ describe("ChipRow in a browser (AUTM-1756 follow-up)", () => {
         expect(el.scrollLeft).toBeGreaterThanOrEqual(110);
     });
 
-    it("Tab reaches every chip, and each one taken by the keyboard is brought clear of the fades", async () => {
+    it("Tab reaches every chip, and each one taken by the keyboard lands in view, clear of the fades where it fits", async () => {
         render(
             <>
                 <button type="button">Before</button>
@@ -218,18 +267,71 @@ describe("ChipRow in a browser (AUTM-1756 follow-up)", () => {
         screen.getByRole("button", { name: "Before" }).focus();
         for (let i = 0; i < LABELS.length; i++) {
             await userEvent.tab();
-            await frames();
+            // The browser's own focus scroll, then the row's correction a frame later.
+            await frames(3);
             const chip = screen.getByTestId(`chip-${i}`);
             expect(document.activeElement).toBe(chip);
-            expect(clearOfFades(chip) || i === 0 || i === LABELS.length - 1).toBe(true);
-            // Nowhere is the chip under a chevron.
-            const c = chip.getBoundingClientRect();
-            for (const b of [next(), previous()]) {
-                if (!shown(b)) continue;
-                const a = b.getBoundingClientRect();
-                expect(c.right <= a.left + 1 || c.left >= a.right - 1).toBe(true);
+            expectRevealed(chip);
+            expectNotUnderAChevron(chip);
+        }
+    });
+
+    it("a chip too wide for the room between the fades lands clear of the chevrons; one too wide for that shows its start", async () => {
+        render(
+            <>
+                <button type="button">Before</button>
+                <Row />
+            </>,
+        );
+        await frames();
+        const view = row().clientWidth;
+        const { edge, solid } = ends();
+        expect(solid).toBeGreaterThan(0);
+        expect(edge).toBeGreaterThan(solid);
+        // Font-independent: the widths are set from the row's own measure.
+        const between = Math.round(view - edge - solid); // wider than the fades allow, narrower than the chevrons
+        const wider = Math.round(view - solid); // wider than the room between the chevrons
+        const widths = [90, between, 90, wider, 90, 90];
+        widths.forEach((w, i) => {
+            const chip = screen.getByTestId(`chip-${i}`);
+            chip.style.width = `${w}px`;
+            chip.style.justifyContent = "center";
+        });
+        await frames();
+        screen.getByRole("button", { name: "Before" }).focus();
+        for (let i = 0; i < widths.length; i++) {
+            await userEvent.tab();
+            await frames(3);
+            const chip = screen.getByTestId(`chip-${i}`);
+            expect(document.activeElement).toBe(chip);
+            expectRevealed(chip);
+            expectNotUnderAChevron(chip);
+            if (i === 1) {
+                expect(clearOfFades(chip)).toBe(false);
+                expect(clearOf(chip, solid)).toBe(true);
+            }
+            if (i === 3) {
+                const r = row().getBoundingClientRect();
+                expect(Math.abs(chip.getBoundingClientRect().left - (r.left + solid))).toBeLessThanOrEqual(1);
             }
         }
+    });
+
+    it("keyboard focus lands at once, never on a glide", async () => {
+        render(
+            <>
+                <button type="button">Before</button>
+                <Row />
+            </>,
+        );
+        await frames();
+        screen.getByRole("button", { name: "Before" }).focus();
+        for (let i = 0; i < 4; i++) await userEvent.tab();
+        await frames(3);
+        const settled = row().scrollLeft;
+        await new Promise((r) => setTimeout(r, 300));
+        expect(row().scrollLeft).toBe(settled);
+        expectRevealed(screen.getByTestId("chip-3"));
     });
 
     it("at 200% text the chevrons still hold a 44px target and the row still has no bar", async () => {
