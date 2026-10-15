@@ -103,9 +103,14 @@ export function vehiclePaint(color?: string | null): VehiclePaint | null {
     if (!key) return null
     const direct = VEHICLE_PAINTS.find((p) => p.value === key || normalise(p.label) === key)
     if (direct) return direct
-    const alias = PAINT_ALIASES[key] ?? Object.entries(PAINT_ALIASES).find(([a]) => key.includes(a))?.[1]
-    if (alias) return VEHICLE_PAINTS.find((p) => p.value === alias) ?? null
-    return VEHICLE_PAINTS.find((p) => key.includes(p.value)) ?? null
+    const exact = PAINT_ALIASES[key]
+    if (exact) return VEHICLE_PAINTS.find((p) => p.value === exact) ?? null
+    // AUTM-1878 follow-up: a paint's own name inside a longer one wins over
+    // a finish alias, so "Deep Black Pearl" is black, not "pearl" (white).
+    const named = VEHICLE_PAINTS.find((p) => key.includes(p.value))
+    if (named) return named
+    const alias = Object.entries(PAINT_ALIASES).find(([a]) => key.includes(a))?.[1]
+    return alias ? (VEHICLE_PAINTS.find((p) => p.value === alias) ?? null) : null
 }
 
 export interface VehicleCatalogModel {
