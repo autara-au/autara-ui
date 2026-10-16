@@ -119,6 +119,8 @@ export {
     // AUTM-1018 — reserves its own space, same mechanism as the consent notice.
     PWAInstallBanner, PWA_INSTALL_BANNER_HEIGHT_VAR, PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
+    // AUTM-1906 — the one-time install offer, in the page.
+    InstallOffer, InstallSteps, type InstallOfferProps, type InstallStepsProps,
     // AUTM-852 — the consent notice, and the space it reserves for itself.
     ConsentBanner, CONSENT_BANNER_HEIGHT_VAR, CONSENT_BANNER_OFFSET,
     type ConsentBannerProps,
@@ -237,6 +239,25 @@ export {
     type VehicleCatalogModel,
     type VehicleSearchResult,
 } from './lib/vehicle-catalog'
+
+/* AUTM-1906: installing the web app. `catchInstallPrompt` once at the root,
+ * then `useInstallOffer` where the offer is drawn (InstallOffer). */
+export {
+    catchInstallPrompt,
+    subscribeInstallPrompt,
+    canPromptInstall,
+    promptInstall,
+    runningInstalled,
+    installedThisSession,
+    installPlatform,
+    useInstallPrompt,
+    useInstallOffer,
+    type InstallOutcome,
+    type InstallPlatform,
+    type InstallPromptState,
+    type InstallOfferOptions,
+    type InstallOfferState,
+} from './lib/install-prompt'
 
 /* AUTM-1781: the direction of the next screen change, for `.motion-screen`. */
 export {
