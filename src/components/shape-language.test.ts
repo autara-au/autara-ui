@@ -69,6 +69,7 @@ const KEEPS: Record<string, string> = {
     'Dialog.tsx': 'the 44px close disc, an icon disc like IconButton (AUTM-1594)',
     'Sheet.tsx': 'the close disc, drawn at 28px with a 44px hit area, the quiet sibling of Dialog\'s (AUTM-1594); the bottom sheet\'s grabber pill',
     'Toast.tsx': 'the status dot, and the action pill and dismiss disc on the capsule (AUTM-1594)',
+    'InstallOffer.tsx': "InstallSteps' 24px step numerals, step discs like Stepper's (AUTM-1906)",
     'EmptyState.tsx': 'the 44px icon disc, canvas v44 "Empty" (AUTM-1594)',
     'LockedFeature.tsx': 'the optional icon disc (AUTM-1594)',
     'SwatchRadioGroup.tsx': 'colour swatches are 44px circles on canvas v50, a choice of colour, not an action (AUTM-1591)',

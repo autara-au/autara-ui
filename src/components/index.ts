@@ -290,6 +290,13 @@ export {
     PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
 } from './PWAInstallBanner'
+// AUTM-1906 — the one-time install offer, in the page (customer-web's, promoted).
+export {
+    InstallOffer,
+    InstallSteps,
+    type InstallOfferProps,
+    type InstallStepsProps,
+} from './InstallOffer'
 // AUTM-852 — the consent notice, and the space it reserves for itself.
 export {
     ConsentBanner,
