@@ -50,4 +50,12 @@ describe('MessageComposer', () => {
         expect((screen.getByRole('textbox', { name: 'Message' }) as HTMLTextAreaElement).disabled).toBe(false)
         expect(screen.getByRole('button', { name: 'Send' }).getAttribute('aria-busy')).toBe('true')
     })
+
+  it('AUTM-1905: the dock layout\'s Send leads with the paper plane, hidden; its name stays Send', () => {
+    render(<MessageComposer value="Hi" onChange={() => {}} onSend={() => {}} />)
+    const send = screen.getByRole('button', { name: 'Send' })
+    const icon = send.querySelector('svg')
+    expect(icon).not.toBeNull()
+    expect(icon?.getAttribute('aria-hidden')).toBe('true')
+  })
 })

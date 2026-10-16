@@ -89,4 +89,19 @@ describe('MessageCard', () => {
         )
         expect(screen.getByTestId('remove').className).toContain('text-[var(--danger)]')
     })
+
+  it('AUTM-1905: an action can lead with a hidden icon; the label stays its name', () => {
+    render(
+      <MessageCard
+        title="Roof box clean and wax"
+        primaryAction={{
+          label: 'Remind Sam',
+          onClick: () => {},
+          leadingIcon: <svg data-testid="remind-icon" aria-hidden="true" />,
+        }}
+      />,
+    )
+    const button = screen.getByRole('button', { name: 'Remind Sam' })
+    expect(button.querySelector('[data-testid="remind-icon"]')).not.toBeNull()
+  })
 })

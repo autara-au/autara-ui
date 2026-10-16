@@ -3,6 +3,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MessageCard } from "./MessageCard";
 import { Button } from "./Button";
 
+/** Solar "Bell Bing" in the Linear style, inlined for the story (consumers pass their own). */
+function BellGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" width="1.25em" height="1.25em" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d="M18.75 9.71v-.7C18.75 5.13 15.73 2 12 2S5.25 5.13 5.25 9.01v.7a4.4 4.4 0 0 1-.7 2.39l-1.15 1.78c-1.04 1.63-.24 3.84 1.6 4.36a25.8 25.8 0 0 0 14 0c1.84-.52 2.64-2.73 1.6-4.36l-1.15-1.78a4.4 4.4 0 0 1-.7-2.39Z" />
+      <path d="M7.5 19c.66 1.75 2.4 3 4.5 3s3.84-1.25 4.5-3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /**
  * AUTM-1806 (U3). Every figure in these stories stands in for a server value:
  * the amount and the balance come from the booking_addons row and the API's
@@ -84,7 +94,13 @@ export const MerchantWaiting: Story = {
         state="waiting"
         stateLabel="Waiting for Sam"
         secondaryAction={{ label: "Remove", ariaLabel: "Remove Roof box clean and wax", onClick: () => {}, destructive: true }}
-        primaryAction={{ label: "Remind Sam", ariaLabel: "Remind Sam about Roof box clean and wax", onClick: () => {} }}
+        primaryAction={{
+          label: "Remind Sam",
+          ariaLabel: "Remind Sam about Roof box clean and wax",
+          onClick: () => {},
+          // AUTM-1905: the action verb's icon (AUTM-1900), hidden, 1.25em.
+          leadingIcon: <BellGlyph />,
+        }}
         footnote="Not charged unless Sam approves. A reminder can be sent every 15 minutes."
       />
     </Column>
