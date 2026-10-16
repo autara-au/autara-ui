@@ -79,7 +79,7 @@ export const WithAppIcon: Story = {
 
 /**
  * EDGE CASE: a 320px phone, or a wider one at 200% text. The breakpoint is a
- * container query in rem (20rem of card), so it follows text scale: below it
+ * container query in rem (18rem of card), so it follows text scale: below it
  * the mark moves above the words instead of squeezing them, and the buttons
  * wrap rather than clip. Both stay 44px. Set the browser's text size to 200%
  * on a phone-width canvas to see the same thing at full width.

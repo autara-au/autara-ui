@@ -31,7 +31,7 @@ import { Button } from './Button'
  * Anatomy: the EmptyState band card (20px in, a 44px mark, an 18px bold title,
  * a 15px muted line). The mark is the app's own icon when the surface passes
  * one, so the person sees what will be on their home screen. Install is the
- * card's one primary; Not now is a ghost. Below 20rem of card (a 320 phone,
+ * card's one primary; Not now is a ghost. Below 18rem of card (a 320 phone,
  * or 200% text) the mark moves above the words rather than squeezing them.
  */
 
@@ -79,7 +79,7 @@ export function InstallOffer({
             data-path={path}
             className={cn('@container rounded-2xl bg-[var(--band)] p-5', className)}
         >
-            <div className="flex flex-col gap-3 @min-[20rem]:flex-row @min-[20rem]:items-start @min-[20rem]:gap-4">
+            <div className="flex flex-col gap-3 @min-[18rem]:flex-row @min-[18rem]:items-start @min-[18rem]:gap-4">
                 <span
                     aria-hidden
                     className="grid size-11 flex-none place-items-center overflow-hidden rounded-[0.75rem] bg-[var(--raised)] text-[var(--text-strong)] [&>img]:size-full [&>img]:object-cover"
