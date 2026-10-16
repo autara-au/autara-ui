@@ -267,8 +267,14 @@ const BAR =
 
 const ROW = 'mx-auto flex w-full max-w-2xl items-center gap-2.5 lg:max-w-none lg:flex-col lg:items-stretch lg:gap-2'
 
+/*
+ * AUTM-1905: `flex-wrap` so a label too long for one line beside its icon puts the
+ * icon on its own line above it, centred, instead of overflowing the padding (at
+ * 200% text "Message Fitzroy Paint Co" pushed the icon onto the pill's edge,
+ * because centred content that overflows spills out of both sides).
+ */
 const PILL_BASE =
-    'motion-press inline-flex min-h-14 min-w-0 items-center justify-center gap-2 rounded-full px-5 py-2 text-center text-[1.0625rem] leading-tight font-medium [overflow-wrap:break-word] ' +
+    'motion-press inline-flex min-h-14 min-w-0 flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-full px-5 py-2 text-center text-[1.0625rem] leading-tight font-medium [overflow-wrap:break-word] ' +
     'disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-not-allowed aria-disabled:opacity-50'
 
 /** Lime on paper: the one action that leads. */
@@ -280,7 +286,7 @@ const NEXT_SECONDARY = `${PILL_BASE} flex-1 bg-[var(--band)] text-[var(--text-st
 /** A 56px band disc below lg; a band pill with its name from lg. */
 const NEXT_ICON =
     'motion-press inline-flex size-14 shrink-0 items-center justify-center gap-2 rounded-full bg-[var(--band)] text-[var(--text-strong)] not-disabled:hover:bg-[var(--band-press)] ' +
-    'lg:h-auto lg:min-h-12 lg:w-full lg:px-5 lg:text-base lg:font-medium'
+    'lg:h-auto lg:min-h-12 lg:w-full lg:flex-wrap lg:gap-x-2 lg:gap-y-1 lg:px-5 lg:py-2 lg:text-center lg:text-base lg:font-medium lg:[overflow-wrap:break-word]'
 
 function Control({
     control,
@@ -299,7 +305,8 @@ function Control({
     const content = (
         <>
             {control.icon ? (
-                <span aria-hidden className="grid shrink-0 place-items-center [&>svg]:size-[22px]">
+                // 22px at 16px text, in em so it grows with the label (AUTM-1905).
+                <span aria-hidden className="grid shrink-0 place-items-center [&>svg]:size-[1.375em]">
                     {control.icon}
                 </span>
             ) : null}

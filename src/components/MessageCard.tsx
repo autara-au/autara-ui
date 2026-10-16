@@ -52,6 +52,11 @@ export interface MessageCardAction {
    * library's `danger`, red words on the quiet pill, never as the primary.
    */
   destructive?: boolean;
+  /**
+   * AUTM-1905: the action verb's icon (AUTM-1900's ruling: Remind, Approve and
+   * peers), about 1.25em and `aria-hidden`; the label stays the accessible name.
+   */
+  leadingIcon?: ReactNode;
 }
 
 export interface MessageCardProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
@@ -182,6 +187,7 @@ export function MessageCard({
                 key={i}
                 variant={isPrimary ? "primary" : a.destructive ? "danger" : "quiet"}
                 size="md"
+                leadingIcon={a.leadingIcon}
                 busy={a.busy}
                 disabled={a.disabled || (busy && !a.busy)}
                 onClick={a.onClick}
