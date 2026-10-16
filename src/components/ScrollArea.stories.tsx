@@ -6,14 +6,16 @@ import { BackButton } from './BackButton'
 
 /**
  * ScrollArea (AUTM-1756). A region that scrolls on its own: a split pane's
- * list, a drawer, a chat thread, a chip row. Contained overscroll, scroll
- * padding under a sticky header, edge fades on a horizontal row, the brand
- * thumb shown on hover and while scrolling, and focus only where nothing
+ * list, a drawer, a chat thread. Contained overscroll, scroll padding under a
+ * sticky header, edge fades on a horizontal row, and focus only where nothing
  * inside can take it. One page scroll beats two: a screen whose page already
  * scrolls needs none of this.
  *
- * The thumb shows with a mouse or trackpad; overlay scrollbars (macOS by
- * default, phones) show only while scrolling.
+ * No scrollbar inside a page since AUTM-1899 (Don, 2026-10-16: "scrollbars
+ * everywhere showing, can we hide them?"): with a mouse or a trackpad these
+ * areas draw no bar at rest, on hover or while scrolling, and still scroll by
+ * wheel, trackpad, touch and keyboard. Under forced colours the system bars
+ * come back. See Foundations/Scrollbars.
  */
 const meta: Meta<typeof ScrollArea> = {
     title: 'Layout/ScrollArea',
@@ -153,7 +155,7 @@ export const SplitInContext: Story = {
     ),
 }
 
-/** Both themes, side by side: the brand thumb in each. */
+/** Both themes, side by side: no bar in either, with a mouse or a trackpad. */
 export const BothThemes: Story = {
     parameters: { layout: 'fullscreen' },
     render: () => (

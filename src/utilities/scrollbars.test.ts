@@ -2,15 +2,18 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
-/* AUTM-1739, AUTM-1756: the scrollbar rules are CSS only, so these hold the
-   contract the story shows: brand thumb from tokens, a drawn rounded thumb in
-   Blink and WebKit, the standard properties only where those are absent,
-   shown on hover, focus and while scrolling, nothing under forced colours or
-   for a finger, and nothing hidden. */
+/* AUTM-1739, AUTM-1756, AUTM-1899: the scrollbar rules are CSS only, so these
+   hold the contract the story shows. With a mouse or a trackpad, nothing
+   inside a page draws a bar (`scrollbar-width: none`, a zero-size
+   `::-webkit-scrollbar` where that is unsupported); the page's own bar, on
+   the root, keeps the brand thumb (`::-webkit-scrollbar` in Blink and WebKit,
+   the standard properties in Firefox only); a finger and forced colours are
+   left to the platform. scrollbars.browser.test.ts measures the same in
+   Chromium. */
 const rules = readFileSync(join(__dirname, 'scrollbars.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 const tokens = readFileSync(join(__dirname, '..', 'tokens', 'scrollbar.css'), 'utf8')
 
-/** The body of the first `@supports <cond> {` block, by brace matching. */
+/** The body of the first block opened by `opener` (which ends in `{`), by brace matching. */
 function block(src: string, opener: RegExp): string {
     const m = opener.exec(src)
     if (!m) return ''
@@ -25,8 +28,10 @@ function block(src: string, opener: RegExp): string {
     return ''
 }
 
+const pointer = block(rules, /@media \(forced-colors: none\) and \(hover: hover\) and \(pointer: fine\)\s*\{/)
 const webkit = block(rules, /@supports selector\(::-webkit-scrollbar\)\s*\{/)
 const standard = block(rules, /@supports not selector\(::-webkit-scrollbar\)\s*\{/)
+const fallback = block(rules, /@supports not \(scrollbar-width: none\)\s*\{/)
 
 describe('scrollbars', () => {
     it('are in the base layer, so a consumer rule still wins', () => {
@@ -44,46 +49,55 @@ describe('scrollbars', () => {
     })
 
     it('apply only to a pointer that hovers, outside forced colours', () => {
-        expect(rules).toMatch(/@media \(forced-colors: none\) and \(hover: hover\) and \(pointer: fine\)/)
+        expect(pointer).not.toBe('')
+        expect(pointer).toContain(webkit)
+        expect(pointer).toContain(standard)
+        expect(pointer).toContain(fallback)
     })
 
-    it('Blink and WebKit draw a thin, rounded, inset thumb from the tokens', () => {
-        expect(webkit).toMatch(/::-webkit-scrollbar\s*\{[^}]*width:\s*var\(--scrollbar-size\)/)
-        expect(webkit).toMatch(/::-webkit-scrollbar-thumb\s*\{[^}]*border-radius:\s*9999px/)
-        expect(webkit).toMatch(/::-webkit-scrollbar-thumb\s*\{[^}]*background-clip:\s*padding-box/)
-        expect(webkit).toMatch(/::-webkit-scrollbar-thumb:hover,\s*::-webkit-scrollbar-thumb:active\s*\{[^}]*var\(--scrollbar-thumb-hover\)/)
+    it('AUTM-1899: nothing inside a page draws a bar, at zero specificity', () => {
+        expect(pointer).toMatch(/(^|\n)\s*:where\(:not\(:root\)\)\s*\{\s*scrollbar-width:\s*none;\s*\}/)
     })
 
-    it('never sets the standard properties where ::-webkit-scrollbar is drawn (Chromium 121+ would ignore the drawn thumb)', () => {
-        expect(webkit).not.toMatch(/scrollbar-(width|color)\s*:/)
-        // and outside both @supports blocks, nothing sets them either
-        const outside = rules.replace(webkit, '').replace(standard, '')
-        expect(outside).not.toMatch(/scrollbar-(width|color)\s*:/)
+    it('AUTM-1899: Blink and WebKit without scrollbar-width get a zero-size bar, never on <body> or the root', () => {
+        expect(fallback).toMatch(/:where\(:not\(:root, body\)\)::-webkit-scrollbar\s*\{\s*width:\s*0;\s*height:\s*0;\s*\}/)
     })
 
-    it('show the thumb at rest on any scroller, so a bar can always be found', () => {
-        expect(webkit).toMatch(/(^|\n)\s*::-webkit-scrollbar-thumb\s*\{[^}]*background-color:\s*var\(--scrollbar-thumb\)/)
-        expect(standard).toMatch(/\*\s*\{\s*scrollbar-width:\s*thin;\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/)
+    it('AUTM-1899: the page keeps its bar: nothing hides the root', () => {
+        // `scrollbar-width: none` appears once, in the :where(:not(:root)) rule.
+        expect(rules.match(/scrollbar-width:\s*none;/g)).toHaveLength(1)
+        expect(rules).not.toMatch(/(^|[\s,{}]):root\s*\{[^}]*scrollbar-width:\s*none/)
+        expect(rules).not.toMatch(/display:\s*none/)
     })
 
-    it('a revealing region hides it at rest and shows it on hover, on focus inside and while scrolling', () => {
-        expect(webkit).toMatch(/\[data-scrollbar-reveal\]::-webkit-scrollbar-thumb\s*\{\s*background-color:\s*transparent;/)
+    it('Blink and WebKit draw the page a thin, rounded, inset thumb from the tokens, on the root only', () => {
+        expect(webkit).toMatch(/:root::-webkit-scrollbar\s*\{[^}]*width:\s*var\(--scrollbar-size\)/)
+        expect(webkit).toMatch(/:root::-webkit-scrollbar-thumb\s*\{[^}]*border-radius:\s*9999px/)
+        expect(webkit).toMatch(/:root::-webkit-scrollbar-thumb\s*\{[^}]*background-clip:\s*padding-box/)
+        expect(webkit).toMatch(/:root::-webkit-scrollbar-thumb\s*\{[^}]*background-color:\s*var\(--scrollbar-thumb\)/)
         expect(webkit).toMatch(
-            /\[data-scrollbar-reveal\]:hover::-webkit-scrollbar-thumb,\s*\[data-scrollbar-reveal\]:focus-within::-webkit-scrollbar-thumb,\s*\[data-scrollbar-reveal\]\[data-scrolling\]::-webkit-scrollbar-thumb\s*\{\s*background-color:\s*var\(--scrollbar-thumb\);/
+            /:root::-webkit-scrollbar-thumb:hover,\s*:root::-webkit-scrollbar-thumb:active\s*\{[^}]*var\(--scrollbar-thumb-hover\)/
         )
-        expect(standard).toMatch(/\[data-scrollbar-reveal\]\s*\{\s*scrollbar-color:\s*transparent var\(--scrollbar-track\);/)
+        // Every selector here is the root's: Chromium styles the viewport's
+        // bar from <body> first when <body> has ::-webkit-scrollbar rules.
+        const selectors = webkit.match(/[^{}]+(?=\{)/g) ?? []
+        for (const list of selectors) {
+            for (const sel of list.split(',')) expect(sel.trim()).toMatch(/^:root::-webkit-scrollbar/)
+        }
+    })
+
+    it('never sets the standard properties where ::-webkit-scrollbar draws the page (Chromium 121+ would ignore the drawn thumb)', () => {
+        expect(webkit).not.toMatch(/scrollbar-(width|color)\s*:/)
+    })
+
+    it('Firefox takes the standard properties on the root, from the same tokens', () => {
         expect(standard).toMatch(
-            /\[data-scrollbar-reveal\]:hover,\s*\[data-scrollbar-reveal\]:focus-within,\s*\[data-scrollbar-reveal\]\[data-scrolling\]\s*\{\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/
+            /^\s*:root\s*\{\s*scrollbar-width:\s*thin;\s*scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);\s*\}\s*$/
         )
     })
 
-    it('the reveal repaints the thumb through a geometry tick (Chromium repaints nothing else)', () => {
-        expect(webkit).toMatch(/\[data-scrollbar-tick\]::-webkit-scrollbar-thumb\s*\{\s*min-height:\s*2\.51rem;/)
-    })
-
-    it('Firefox takes the standard properties from the same tokens', () => {
-        expect(standard).toMatch(/scrollbar-width:\s*thin;/)
-        expect(standard).toMatch(/scrollbar-color:\s*var\(--scrollbar-thumb\) var\(--scrollbar-track\);/)
+    it('AUTM-1899: the reveal is gone (nothing left to reveal)', () => {
+        expect(rules).not.toMatch(/data-scrollbar-reveal|data-scrollbar-tick|data-scrolling/)
     })
 
     it('leave the system scrollbars alone under forced colours', () => {
@@ -92,11 +106,6 @@ describe('scrollbars', () => {
         expect(guarded.length).toBe(2)
         const outside = rules.replace(/@layer base\s*\{[\s\S]*\}\s*$/, '')
         expect(outside).not.toMatch(/scrollbar/)
-    })
-
-    it('never hide a scrollbar', () => {
-        expect(rules).not.toMatch(/scrollbar-width:\s*none/)
-        expect(rules).not.toMatch(/display:\s*none/)
     })
 
     it('take a lighter purple on a brand-deep ground, on a transparent track', () => {

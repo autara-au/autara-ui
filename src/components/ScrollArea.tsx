@@ -16,11 +16,13 @@ import { cn } from '../lib/cn'
 /**
  * ScrollArea — a region that scrolls on its own (AUTM-1756).
  *
- * Don, 2026-10-15: "it's bad when I see the scroll bar, make it brand native
- * and optimize the scroll views throughout the app". The scrollbar itself is
- * styled for every element in the base layer (utilities/scrollbars.css). This
- * is the rest of a good scroll view, for the panels, drawers, list panes,
- * chat threads and chip rows that scroll inside a page:
+ * Don, 2026-10-15: "optimize the scroll views throughout the app". Then,
+ * 2026-10-16 (AUTM-1899): "scrollbars everywhere showing, can we hide them?"
+ * So a region inside a page draws no scrollbar with a mouse or a trackpad
+ * (utilities/scrollbars.css, in the base layer, for every element, not only
+ * this one); the wheel, the trackpad, a finger and the keyboard still scroll
+ * it. This is the rest of a good scroll view, for the panels, drawers, list
+ * panes and chat threads that scroll inside a page:
  *
  *   - `overscroll-behavior: contain`: reaching the end never scrolls the
  *     page behind it or bounces the shell (`.scroll-area`).
@@ -28,10 +30,10 @@ import { cn } from '../lib/cn'
  *     `scroll-padding-top`, so a row brought into view by Tab or by
  *     `scrollIntoView` lands under the header, not behind it.
  *   - `fade` (default on for `orientation="horizontal"`): the edge that has
- *     more to show fades out, so a chip row says "there is more" instead of
- *     cutting a chip mid-word. A mask, so it works on any ground.
- *   - the brand thumb only while it is used: hovered, holding focus, or
- *     scrolling (`useScrollbarReveal`, below), out of the way at rest.
+ *     more to show fades out, so a row says "there is more" instead of
+ *     cutting an item mid-word. A mask, so it works on any ground. With no
+ *     bar, the fade is the one sign a horizontal row scrolls; consider it for
+ *     a vertical area whose last row could read as the end.
  *   - Keyboard: a region that overflows and holds nothing focusable takes
  *     `tabIndex={0}` (and `role="region"` with `label`) so arrow keys and
  *     Page Down scroll it; one that holds a link or a button does not, since
@@ -46,7 +48,7 @@ import { cn } from '../lib/cn'
  *   <ScrollArea label="Customers" className="min-h-0 flex-1">{rows}</ScrollArea>
  *
  * A row of CHIPS is a `ChipRow` (AUTM-1756 follow-up), not a horizontal
- * ScrollArea: no scrollbar, a chevron on the fade, a mouse or pen drag. Keep
+ * ScrollArea: a chevron on the fade, a mouse or pen drag. Keep
  * `orientation="horizontal"` for wide content that is not chips (a table).
  */
 
@@ -84,9 +86,6 @@ const FOCUSABLE = [
     '[contenteditable]:not([contenteditable="false"])',
     '[tabindex]:not([tabindex="-1"])',
 ].join(',')
-
-/** How long after the last scroll event the area still counts as scrolling. */
-const SCROLL_IDLE_MS = 900
 
 export interface ScrollEdges {
     /** There is more before what is shown (left, or above). */
@@ -144,59 +143,15 @@ export function useScrollEdges(
 }
 
 /**
- * Reveal a scroller's bar only while it is used (AUTM-1756): hidden at rest,
- * shown while the pointer is over it, while focus is inside it and while it
- * scrolls (`data-scrolling`, cleared 900ms after the last scroll event). For a
- * scroller a consumer owns that is not a ScrollArea, such as a page's <main>:
+ * @deprecated AUTM-1899: does nothing, and can be deleted at the call site.
  *
- *   const main = useRef<HTMLElement>(null)
- *   useScrollbarReveal(main)
- *
- * It marks the node `data-scrollbar-reveal` (utilities/scrollbars.css hides
- * the thumb at rest only on marked nodes) and repaints the thumb when the
- * state changes. Chromium does not repaint a `::-webkit-scrollbar-thumb` when
- * only the scroller's :hover or :focus-within changes (measured: the computed
- * colour changes, the painted thumb does not), nor on scroll for a composited
- * scroller. Toggling `data-scrollbar-tick` changes the thumb's min-height by a
- * hundredth of a rem, which rebuilds the scrollbar's parts without laying out
- * anything inside. Attributes are set on the node, so nothing re-renders.
+ * It revealed a scroller's brand thumb only while the scroller was in use
+ * (AUTM-1756). Since AUTM-1899 a scroller inside a page draws no bar at all
+ * with a mouse or a trackpad (utilities/scrollbars.css), so there is nothing
+ * to reveal: it no longer marks the node, listens for anything or repaints.
+ * Kept so existing callers still compile; it goes in the next major.
  */
-export function useScrollbarReveal(ref: { current: HTMLElement | null }): void {
-    useEffect(() => {
-        const el = ref.current
-        if (!el) return
-        el.setAttribute('data-scrollbar-reveal', '')
-        let timer: ReturnType<typeof setTimeout> | undefined
-        const tick = () => el.toggleAttribute('data-scrollbar-tick')
-        const onScroll = () => {
-            if (!el.hasAttribute('data-scrolling')) {
-                el.setAttribute('data-scrolling', '')
-                tick()
-            }
-            clearTimeout(timer)
-            timer = setTimeout(() => {
-                el.removeAttribute('data-scrolling')
-                tick()
-            }, SCROLL_IDLE_MS)
-        }
-        el.addEventListener('scroll', onScroll, { passive: true })
-        el.addEventListener('pointerenter', tick)
-        el.addEventListener('pointerleave', tick)
-        el.addEventListener('focusin', tick)
-        el.addEventListener('focusout', tick)
-        return () => {
-            clearTimeout(timer)
-            el.removeEventListener('scroll', onScroll)
-            el.removeEventListener('pointerenter', tick)
-            el.removeEventListener('pointerleave', tick)
-            el.removeEventListener('focusin', tick)
-            el.removeEventListener('focusout', tick)
-            el.removeAttribute('data-scrolling')
-            el.removeAttribute('data-scrollbar-reveal')
-            el.removeAttribute('data-scrollbar-tick')
-        }
-    }, [ref])
-}
+export function useScrollbarReveal(_ref: { current: HTMLElement | null }): void {}
 
 function assignRef<T>(ref: Ref<T> | undefined, value: T) {
     if (typeof ref === 'function') ref(value)
@@ -271,8 +226,6 @@ export const ScrollArea = forwardRef<HTMLElement, ScrollAreaProps>(function Scro
             mo?.disconnect()
         }
     }, [tabIndex])
-
-    useScrollbarReveal(nodeRef)
 
     const focusable = tabIndex !== undefined ? tabIndex >= 0 : needsFocus
     const resolvedRole = role ?? (label && focusable && (as === 'div' || as === 'section') ? 'region' : undefined)

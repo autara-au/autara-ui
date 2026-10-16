@@ -178,24 +178,28 @@ docs/
   both hold, so nothing is ever held at `opacity: 0` waiting for a script.
   Prefer it for new marketing work; `ScrollReveal` stays for consumers that
   already use it.
-- **Scrollbars are styled in the base layer for every consumer** (AUTM-1739,
-  AUTM-1756, utilities/scrollbars.css): a thin rounded `--accent` thumb, drawn
-  with `::-webkit-scrollbar` in Blink and WebKit and with the standard
-  properties in Firefox ONLY (`@supports not selector(::-webkit-scrollbar)`):
-  Chromium 121+ ignores the drawn thumb on any element whose `scrollbar-color`
-  or `scrollbar-width` is not `auto`, and `scrollbar-color` inherits. Mouse and
-  trackpad only; a finger keeps the platform's overlay bar. A consumer rule
-  wins, so a stray `scrollbar-width: none` still hides one. Chromium does NOT
-  repaint a thumb when only its scroller's `:hover`/`:focus-within` changes,
-  nor on scroll for a composited scroller (a page's `<main>`): so the thumb
-  shows at rest everywhere, and only regions marked by ScrollArea or
-  `useScrollbarReveal` hide it at rest; they repaint it by toggling
-  `data-scrollbar-tick`. Never make a thumb transparent at rest without that
-  hook. Playwright's headless shell starts with `--hide-scrollbars`: to shoot
-  a bar, use `channel: "chromium"` and `ignoreDefaultArgs: ["--hide-scrollbars"]`.
-  On a brand-deep page put `.scroll-on-deep` on <html> AND give <html> the
-  deep background: the page's scrollbar belongs to the root, and its
-  transparent track shows the canvas behind it.
+- **Nothing inside a page draws a scrollbar; the page keeps its brand bar**
+  (AUTM-1899, Don 2026-10-16: "scrollbars everywhere showing, can we hide
+  them?", reversing AUTM-1756's always-visible thumb). utilities/scrollbars.css,
+  base layer, mouse and trackpad only (`(hover: hover) and (pointer: fine)`):
+  `:where(:not(:root)) { scrollbar-width: none }` (a zero-size
+  `::-webkit-scrollbar` where `scrollbar-width` is unsupported), and the thin
+  `--accent` thumb on `:root` alone (`::-webkit-scrollbar` in Blink and WebKit,
+  the standard properties in Firefox ONLY: Chromium 121+ ignores the drawn
+  thumb on an element whose `scrollbar-width` or `scrollbar-color` is not
+  `auto`). Never give `<body>` a `::-webkit-scrollbar` rule: Chromium styles
+  the viewport's bar from `<body>` first, so it would take the page's bar with
+  it. `scrollbar-width: none` also drops any `scrollbar-gutter` lane, so a
+  consumer's `stable both-edges` reserves nothing. Forced colours: system bars
+  everywhere; a finger: the platform overlay. `useScrollbarReveal` is a
+  deprecated no-op and ScrollArea no longer marks `data-scrollbar-reveal`.
+  `scrollbars.browser.test.ts` measures the lanes in a Chromium launched
+  without `--hide-scrollbars` (the headless shell hides every bar, and the
+  suite's context is touch). A system bar's lane is 0 on macOS (overlay) and
+  about 15 on Linux, so that test compares against a control scroller. On a
+  brand-deep page put `.scroll-on-deep` on <html> AND give <html> the deep
+  background: the page's scrollbar belongs to the root, and its transparent
+  track shows the canvas behind it.
 - **A row of chips is a `ChipRow`, and it never draws a scrollbar** (AUTM-1756
   follow-up, Don 2026-10-15: "instead of scrollbar can add an chevron arrow in
   the ending ... also dragable"). FilterChipRow, QuickReplies `row`, ChoiceChips

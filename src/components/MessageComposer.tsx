@@ -126,13 +126,19 @@ export function MessageComposer({
 
   // Inset: the field is as tall as what is typed, to its max-height (about
   // four lines), then it scrolls. Measured, because `field-sizing: content`
-  // is not in every WebView this ships to.
+  // is not in every WebView this ships to. AUTM-1899: it only becomes a
+  // scroller once it is at that cap. `scrollHeight` is a whole number of
+  // pixels and the content may not be, so a field that fits could overflow
+  // by a fraction of a pixel and grow a bar where bars still draw (forced
+  // colours, a finger's overlay bar).
   useLayoutEffect(() => {
     if (layout !== "inset") return;
     const el = fieldRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    const needed = el.scrollHeight;
+    el.style.height = `${needed}px`;
+    el.style.overflowY = needed > el.clientHeight + 1 ? "auto" : "hidden";
   }, [value, layout]);
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
