@@ -89,7 +89,11 @@ export function BookingPass({
                             href={href}
                             className={cn(
                                 nameClass,
-                                'inline-flex min-h-6 items-center self-start rounded-sm hover:underline hover:underline-offset-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lime)]',
+                                'relative inline-flex min-h-6 items-center self-start rounded-sm hover:underline hover:underline-offset-[0.2em] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--lime)]',
+                                /* AUTM-1909 — the 44px floor (AUTM-622) as an unpainted hit area,
+                                   the pattern FilterChipRow and Tabs use: the name is drawn at its
+                                   text's height (24px at 100%), and was a 24px tap target. */
+                                "before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
                             )}
                         >
                             {name}
