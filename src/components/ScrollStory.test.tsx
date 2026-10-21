@@ -137,4 +137,24 @@ describe('ScrollStory', () => {
         render(<ScrollStory steps={STEPS} label="x" testId="s" hint={null} />)
         expect(screen.queryByTestId('s-hint')).toBeNull()
     })
+
+    // AUTM-1683: one progress track on the chips, no count and no hint.
+    it('with indicator="track" draws no count and no hint, and the chips still say which step is current', () => {
+        render(<ScrollStory steps={STEPS} label="x" testId="s" indicator="track" />)
+        expect(screen.getByTestId('s')).toHaveAttribute('data-indicator', 'track')
+        expect(screen.queryByTestId('s-count')).toBeNull()
+        expect(screen.queryByTestId('s-hint')).toBeNull()
+        expect(screen.getByTestId('s-tab-today')).toHaveAttribute('aria-current', 'step')
+        cross(2)
+        expect(screen.getByTestId('s-tab-inbox')).toHaveAttribute('aria-current', 'step')
+        expect(screen.getByTestId('s-tab-today')).toHaveAttribute('data-done', 'true')
+        // Every chip keeps its rail: together they are the track.
+        expect(document.querySelectorAll('.scroll-story-rail .scroll-story-fill')).toHaveLength(STEPS.length)
+    })
+
+    it('defaults to chips, with the count', () => {
+        render(<ScrollStory steps={STEPS} label="x" testId="s" />)
+        expect(screen.getByTestId('s')).toHaveAttribute('data-indicator', 'chips')
+        expect(screen.getByTestId('s-count')).toHaveTextContent('1 of 4')
+    })
 })

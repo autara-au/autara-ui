@@ -131,6 +131,47 @@ export const TwoSteps: Story = {
 }
 
 /**
+ * AUTM-1683 (Don, 2026-10-05): `indicator="track"`. The chips are one bar and
+ * their rails one progress track, filling left to right as the page scrolls;
+ * no "1 of 4" count and no hint. On the brand-deep ground, with the defaults.
+ */
+export const Track: Story = {
+    ...Default,
+    args: { ...Default.args!, indicator: 'track' },
+}
+
+/**
+ * The track on a light ground, as autara.au draws it: a lavender card on the
+ * warm band, a white bar, brand labels and a brand fill.
+ */
+export const TrackOnLight: Story = {
+    args: { steps: STEPS, label: 'Screens of the app', testId: 'story', indicator: 'track' },
+    render: (args) => (
+        <div style={{ background: 'var(--band)', color: 'var(--strong)', minHeight: '100vh', padding: '0 1rem' }}>
+            <p style={{ textAlign: 'center', padding: '4rem 1rem 1rem', margin: 0 }}>Scroll down.</p>
+            <ScrollStory
+                {...args}
+                style={
+                    {
+                        maxWidth: '72rem',
+                        margin: '0 auto',
+                        borderRadius: '2rem',
+                        background: 'color-mix(in srgb, var(--brand) 8%, var(--paper))',
+                        '--scroll-story-track-bg': 'var(--paper)',
+                        '--scroll-story-track-fg': 'var(--text-muted)',
+                        '--scroll-story-track-active-fg': 'var(--brand)',
+                        '--scroll-story-rail': 'color-mix(in srgb, var(--brand) 20%, var(--paper))',
+                        '--scroll-story-fill': 'var(--brand)',
+                        '--scroll-story-muted': 'var(--text-muted)',
+                    } as CSSProperties
+                }
+            />
+            <section style={{ padding: '6rem 2rem', minHeight: '60vh' }}>The pin has let go; this section scrolls as normal.</section>
+        </div>
+    ),
+}
+
+/**
  * In context: under a centred hero, with a fixed header's room at the pin's
  * top (`--scroll-story-top`). The pin starts at the very top, so a header
  * that hides and shows over that room never moves it.
