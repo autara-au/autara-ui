@@ -34,8 +34,9 @@ NavigationMenuList.displayName = NavigationMenuPrimitive.List.displayName
 
 const NavigationMenuItem = NavigationMenuPrimitive.Item
 
+// AUTM-2025: a 44px unpainted hit area (AUTM-622) around the 36px trigger.
 const navigationMenuTriggerStyle = cva(
-    'group inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-[13px] font-medium text-white/50 transition-colors hover:text-white/80 hover:bg-white/[0.04] focus:text-white/80 focus:outline-none disabled:pointer-events-none disabled:opacity-50'
+    'group relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[\'\'] inline-flex h-9 w-max items-center justify-center rounded-lg px-3 py-1.5 text-[0.8125rem] font-medium text-white/50 transition-colors hover:text-white/80 hover:bg-white/[0.04] focus:text-white/80 focus:outline-none disabled:pointer-events-none disabled:opacity-50'
 )
 
 const NavigationMenuTrigger = React.forwardRef<
