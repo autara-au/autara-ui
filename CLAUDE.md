@@ -61,7 +61,7 @@ src/
 │   └── index.css           # @import all
 ├── utilities/              # CSS utility classes
 │   ├── forms.css           # .field-input, .field-textarea, .input-light alias
-│   ├── glass.css           # .glass-card, .nav-glass, .service-card (no shadows)
+│   ├── glass.css           # retired by AUTM-1594; kept for old consumers
 │   ├── editorial.css       # .hairline-grid, .editorial-eyebrow, .counter-huge
 │   ├── noise.css           # .noise-overlay
 │   ├── buttons.css, gradients.css, sections.css, animations.css
@@ -73,7 +73,7 @@ src/
 .storybook/
 ├── main.ts                 # framework + viteFinal
 ├── preview.ts              # global decorator + viewports
-└── storybook.css           # loads tokens + utilities + forces warm-cream canvas
+└── storybook.css           # loads tokens + utilities + forces the paper ground
 
 docs/
 ├── Introduction.mdx
@@ -113,18 +113,27 @@ docs/
 
 ## Aesthetic invariants — the things that make Autara look like Autara
 
-- **Warm cream** `#FBFAF6` — page background, never clinical white
-- **Hairline borders** at `rgba(17,24,39,0.08)` — the primary depth signal
-- **NO drop shadows** — `--shadow-*` tokens all evaluate to `none`
-- **Brand purple `#4E1BBD` is an ACCENT** — used for rating stars,
-  brand badges, focus rings, link underlines. Primary CTAs on cream
-  surfaces are **solid black** (`BrandButton variant="dark"`), not
-  purple. Purple primary is reserved for dark/photo surfaces.
-  Since AUTM-734 this rule is *encoded*, not just documented:
-  `variant="dark"` paints `--cta-fill`, which is ink in light theme and
-  brand purple in dark. Don't reach for `--surface-inverse` on a CTA —
-  that token inverts (correct for a Tooltip/Toast capsule, wrong for a
-  button, which turned into a white slab on dark before this landed).
+- **Paper ground** `--background` / `--surface` `#ffffff`, with `band`
+  (`#f4f2ec`) cards on it and one `brand-deep` hero per screen (AUTM-1594,
+  canvas v44). *Corrected 2026-10-23 (AUTM-2025): this said warm cream
+  `#FBFAF6`, retired by AUTM-1594.*
+- **Hairline borders** at `rgba(17,24,39,0.08)` for dividers; cards are set
+  apart by fill, not by a border
+- **NO drop shadows** — `--shadow-*` tokens all evaluate to `none`; the one
+  exception is `--float-shadow` on floating sheets and popovers
+- **Lime is the one primary action** — `Button variant="primary"`, lime with
+  an ink label, on paper, band, sheets and dialogs alike. Everything else is
+  `quiet`. **No black buttons anywhere** (Don, 2026-10-12, AUTM-1838).
+  Brand purple (`--accent`) is for links, focus, selected states and status;
+  never hardcode `#4E1BBD` for text or borders, since it vanishes on dark.
+  *Corrected 2026-10-23 (AUTM-2025): this said primary CTAs are solid black
+  (`BrandButton variant="dark"`), which AUTM-1838 retired.*
+- **No glass, no gradients** on product surfaces (AUTM-1594). `glass.css`
+  and `gradients.css` still ship for old consumers; do not use them in new work.
+- **Motion**: one ease-out (`--motion-ease-out`), transform and opacity only,
+  durations from the `--motion-*` tokens (`src/lib/motion-tokens.ts` in JS),
+  and reduced motion honoured. A JS animation must honour it itself
+  (`useReducedMotion`); the stylesheet clamp cannot reach it.
 - **Satoshi typography** — NOT bundled since AUTM-1724: the tokens name the
   family and every consumer self-hosts the faces (see Known gotchas). Use
   weights 400 / 500 / 700 for body and UI; 700 is Satoshi Bold. 900 is

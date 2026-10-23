@@ -81,7 +81,7 @@ export const CompactSearchPill = React.forwardRef<
             ref={ref}
             aria-hidden={!visible}
             className={cn(
-                'lg:hidden fixed inset-x-0 z-40 px-3 transition-all duration-300',
+                'lg:hidden fixed inset-x-0 z-40 px-3 transition-[opacity,transform] duration-300',
                 visible
                     ? 'opacity-100 translate-y-0 pointer-events-auto'
                     : 'opacity-0 -translate-y-2 pointer-events-none',
@@ -101,7 +101,7 @@ export const CompactSearchPill = React.forwardRef<
                     <button
                         type="button"
                         onClick={onOpen}
-                        className="flex flex-1 min-w-0 items-center text-left text-[12.5px] font-medium truncate"
+                        className="flex flex-1 min-w-0 items-center text-left text-[0.7812rem] font-medium truncate"
                         aria-label={
                             ariaLabel ??
                             `Search — currently ${value || placeholder.toLowerCase()}`
@@ -118,14 +118,16 @@ export const CompactSearchPill = React.forwardRef<
                             {value || placeholder}
                         </span>
                     </button>
+                    {/* AUTM-2025: the 36 to 40px pill button keeps its look; the 44px floor
+                        (AUTM-622) is an unpainted hit area, as AUTM-1909 did for the pass. */}
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="ml-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-3.5 text-[12.5px] font-medium text-white transition-colors hover:brightness-110 shrink-0"
+                        className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-3.5 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
                         aria-label="Search the marketplace"
                     >
                         {submitLabel}
-                        <span aria-hidden className="text-[15px] leading-none">
+                        <span aria-hidden className="text-[0.9375rem] leading-none">
                             ↗
                         </span>
                     </button>

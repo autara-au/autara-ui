@@ -22,7 +22,8 @@
     color: white;
     font-weight: 500;
     font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.3s var(--motion-ease-out), color 0.3s var(--motion-ease-out),
+        border-color 0.3s var(--motion-ease-out), transform 0.3s var(--motion-ease-out);
     position: relative;
     overflow: hidden;
 }
@@ -59,7 +60,8 @@
     color: white;
     font-weight: 500;
     font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.3s var(--motion-ease-out), color 0.3s var(--motion-ease-out),
+        border-color 0.3s var(--motion-ease-out), transform 0.3s var(--motion-ease-out);
 }
 
 .btn-outline:hover {
@@ -79,7 +81,8 @@
     color: var(--text-strong);
     font-weight: 500;
     font-size: 14px;
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.3s var(--motion-ease-out), color 0.3s var(--motion-ease-out),
+        border-color 0.3s var(--motion-ease-out), transform 0.3s var(--motion-ease-out);
 }
 
 .btn-outline-light:hover {
