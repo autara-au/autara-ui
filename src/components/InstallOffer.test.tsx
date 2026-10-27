@@ -51,6 +51,56 @@ describe('InstallOffer', () => {
     })
 })
 
+/* AUTM-2048 — the slim row. Same contract as the card: the region, the test
+   ids, the two paths; the dismiss is a close disc named by dismissLabel. */
+describe('InstallOffer layout="row"', () => {
+    it('keeps the region, the test ids and the heading, and marks the layout', () => {
+        render(
+            <InstallOffer layout="row" path="prompt" title="Install Autara for business" body="Opens to Today in its own window." onDismiss={() => {}} testId="today-install-offer" />,
+        )
+        const region = screen.getByRole('region', { name: 'Install Autara for business' })
+        expect(region).toHaveAttribute('data-testid', 'today-install-offer')
+        expect(region).toHaveAttribute('data-layout', 'row')
+        expect(region).toHaveAttribute('data-path', 'prompt')
+        expect(screen.getByRole('heading', { level: 2, name: 'Install Autara for business' }).className).toBe('')
+        expect(screen.getByText('Opens to Today in its own window.')).toBeInTheDocument()
+    })
+
+    it('Install installs; the close disc is named by dismissLabel and dismisses', async () => {
+        const onInstall = vi.fn()
+        const onDismiss = vi.fn()
+        render(
+            <InstallOffer layout="row" path="prompt" title="Install" body="x" dismissLabel="No thanks" onInstall={onInstall} onDismiss={onDismiss} testId="today-install-offer" />,
+        )
+        await userEvent.click(screen.getByTestId('today-install-offer-install'))
+        expect(onInstall).toHaveBeenCalledTimes(1)
+        const close = screen.getByRole('button', { name: 'No thanks' })
+        expect(close).toHaveAttribute('data-testid', 'today-install-offer-dismiss')
+        await userEvent.click(close)
+        expect(onDismiss).toHaveBeenCalledTimes(1)
+        expect(screen.queryByRole('button', { name: 'Not now' })).toBeNull()
+    })
+
+    it('on an iPhone or iPad: the Share steps, no Install', () => {
+        render(<InstallOffer layout="row" path="apple-mobile" title="Add" body="x" onDismiss={() => {}} testId="today-install-offer" />)
+        expect(screen.queryByTestId('today-install-offer-install')).toBeNull()
+        expect(screen.getByTestId('today-install-offer-steps')).toHaveTextContent('Add to Home Screen')
+        expect(screen.getByRole('button', { name: 'Not now' })).toHaveAttribute('data-testid', 'today-install-offer-dismiss')
+    })
+
+    it('draws the phone glyph when no icon is passed, decoratively', () => {
+        render(<InstallOffer layout="row" path="prompt" title="Install" body="x" onDismiss={() => {}} />)
+        const mark = document.querySelector('section > div > span[aria-hidden]')
+        expect(mark?.querySelector('svg')).not.toBeNull()
+    })
+
+    it('leaves the card as the default', () => {
+        render(<InstallOffer path="prompt" title="Install" body="x" onDismiss={() => {}} />)
+        expect(screen.getByRole('region')).not.toHaveAttribute('data-layout')
+        expect(screen.getByRole('button', { name: 'Not now' })).toBeInTheDocument()
+    })
+})
+
 describe('InstallSteps', () => {
     it.each([
         ['apple-mobile', 'Add to Home Screen'],

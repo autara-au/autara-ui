@@ -2,6 +2,7 @@ import * as React from 'react'
 import { cn } from '../lib/cn'
 import type { InstallPlatform } from '../lib/install-prompt'
 import { Button } from './Button'
+import { CloseButton } from './IconButton'
 
 /**
  * InstallOffer: "add this app to your home screen", once, in the page.
@@ -33,6 +34,20 @@ import { Button } from './Button'
  * one, so the person sees what will be on their home screen. Install is the
  * card's one primary; Not now is a ghost. Below 18rem of card (a 320 phone,
  * or 200% text) the mark moves above the words rather than squeezing them.
+ *
+ * `layout="row"` (AUTM-2048, Don 2026-10-27, direction A of the AUTM-1906
+ * proofs): the same offer as one slim row, about a third of the card's height,
+ * for a surface where it is the last thing on a working screen (the merchant
+ * portal's Today). A 40px mark, the title over one line, Install, and a close
+ * disc (`CloseButton` sm: 36px drawn, 44px to the touch) named by
+ * `dismissLabel`. Three arrangements, from the row's own width in rem, so
+ * text size moves them too: from 34rem one line; to 19rem the close stays
+ * top right and Install drops under the words; under 19rem (a 320 phone, or
+ * any phone at 200% text) the mark and the close share the top line and the
+ * rest stacks below. The iPhone and iPad path has no Install, so its two
+ * Share steps sit under the words, side by side where there is room. Flat on
+ * `--band`, no glass (AUTM-1594). The card stays the default, so a surface
+ * that draws the card (customer-web, AUTM-1908) is unchanged.
  */
 
 export interface InstallOfferProps {
@@ -52,6 +67,11 @@ export interface InstallOfferProps {
     onDismiss: () => void
     /** The title's heading level in the surface's outline. Default 2. */
     headingLevel?: 2 | 3
+    /**
+     * `card` (default): the band card with Install and a Not now button.
+     * `row`: one slim row with a close disc named by `dismissLabel` (AUTM-2048).
+     */
+    layout?: 'card' | 'row'
     /** Root `data-testid`; the buttons take `-install` and `-dismiss`, the steps `-steps`. */
     testId?: string
     className?: string
@@ -68,10 +88,62 @@ export function InstallOffer({
     onDismiss,
     headingLevel = 2,
     testId = 'install-offer',
+    layout = 'card',
     className,
 }: InstallOfferProps) {
     const titleId = React.useId()
     const Heading = headingLevel === 3 ? 'h3' : 'h2'
+    if (layout === 'row') {
+        return (
+            <section
+                aria-labelledby={titleId}
+                data-testid={testId}
+                data-path={path}
+                data-layout="row"
+                className={cn('@container rounded-2xl bg-[var(--band)] p-3 @min-[34rem]:py-3 @min-[34rem]:pr-3 @min-[34rem]:pl-4', className)}
+            >
+                <div className="grid grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 @min-[34rem]:gap-x-4">
+                    <span
+                        aria-hidden
+                        className="col-start-1 row-start-1 grid size-10 place-items-center self-start overflow-hidden rounded-[0.625rem] bg-[var(--raised)] text-[var(--text-strong)] @min-[34rem]:self-center [&>img]:size-full [&>img]:object-cover"
+                    >
+                        {icon ?? <HomeScreenGlyph />}
+                    </span>
+                    <div className="col-start-2 row-start-1 min-w-0 @max-[19rem]:col-span-3 @max-[19rem]:col-start-1 @max-[19rem]:row-start-2">
+                        <Heading id={titleId}>
+                            <span className="block text-base leading-snug font-bold text-[var(--text-strong)]">{title}</span>
+                        </Heading>
+                        <p className="text-[0.9375rem] leading-snug text-[var(--text-muted)]">{body}</p>
+                    </div>
+                    {path === 'prompt' ? (
+                        <Button
+                            size="sm"
+                            variant="primary"
+                            onClick={onInstall}
+                            data-testid={`${testId}-install`}
+                            className="col-span-2 col-start-2 row-start-2 justify-self-start @min-[34rem]:col-span-1 @min-[34rem]:col-start-3 @min-[34rem]:row-start-1 @max-[19rem]:col-span-3 @max-[19rem]:col-start-1 @max-[19rem]:row-start-3"
+                        >
+                            {installLabel}
+                        </Button>
+                    ) : null}
+                    <CloseButton
+                        size="sm"
+                        label={dismissLabel}
+                        onClick={onDismiss}
+                        data-testid={`${testId}-dismiss`}
+                        className="col-start-3 row-start-1 self-start @min-[34rem]:col-start-4 @min-[34rem]:self-center"
+                    />
+                    {path === 'apple-mobile' ? (
+                        <InstallSteps
+                            platform="apple-mobile"
+                            testId={`${testId}-steps`}
+                            className="col-span-2 col-start-2 row-start-2 gap-1.5 @min-[34rem]:col-span-3 @min-[34rem]:flex-row @min-[34rem]:flex-wrap @min-[34rem]:gap-x-6 @min-[34rem]:gap-y-1.5 @max-[19rem]:col-span-3 @max-[19rem]:col-start-1 @max-[19rem]:row-start-3"
+                        />
+                    ) : null}
+                </div>
+            </section>
+        )
+    }
     return (
         <section
             aria-labelledby={titleId}
