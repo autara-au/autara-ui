@@ -1,63 +1,105 @@
-/* ─── Scrollbars (AUTM-1739) ────────────────────────────────────────────
+/* ─── Scrollbars (AUTM-1739, AUTM-1756, AUTM-1899) ───────────────────────
  *
- * Don, 2026-10-05: "scroll bars in windows pretty much ugly default, need
- * visual perfection on scroll views as well." In the base layer, so every
- * consumer's page and every inner scroll area (dialogs, sheets, dropdown
- * lists, rails, tables) takes them with the version bump, and any consumer
- * rule still wins.
+ * Don, 2026-10-16, on the merchant booking chat, where the thread and the
+ * one-line message box each drew a purple bar: "scrollbars everywhere
+ * showing, can we hide them? for better UI?" That reverses 2026-10-15's
+ * always-visible brand thumb for everything that scrolls inside a page. In
+ * the base layer, so every consumer takes it with the version bump, and any
+ * consumer rule still wins.
  *
- * The standard properties first: `scrollbar-width: thin` and
- * `scrollbar-color` from the tokens (tokens/scrollbar.css). Chromium 121+,
- * Firefox and Safari 26 read those and ignore the `::-webkit-scrollbar`
- * rules below, which are the fallback for older WebKit. The thumb firms on
- * hover: the standard properties cannot target the thumb itself, so an inner
- * scroll area's thumb firms while the pointer is over that area; the WebKit
- * fallback hovers the thumb itself.
+ * What a merchant sees with a mouse or a trackpad:
+ *   - inside a page (a chat thread, a list pane, a drawer, a dialog, a
+ *     dropdown list, a textarea): no scrollbar, at rest, on hover or while
+ *     scrolling, and no lane where one would be. The wheel, the trackpad, a
+ *     finger, the keyboard and a scripted scroll all still scroll it;
+ *   - the page itself (the root element, which owns the viewport's bar):
+ *     the thin, rounded brand thumb as before (tokens/scrollbar.css), 6px
+ *     drawn in a 12px lane, 8px and firmer while the pointer is on it. So a
+ *     page that scrolls as a document (the marketing site) looks the same.
  *
- * On a brand-deep ground, `.scroll-on-deep` (or `data-ground="deep"`) takes
- * the lighter purple thumb on a transparent track. A page's own scrollbar
- * belongs to the root element: put the class on <html> for a page that is
- * deep end to end, and give <html> the deep background, or the transparent
- * track shows whatever is behind the canvas.
+ * How, engine by engine:
+ *   - inner scrollers: `scrollbar-width: none`, which Chromium 121+, Firefox
+ *     and Safari 18.2+ honour, and which also drops any `scrollbar-gutter`
+ *     lane. Older Blink and WebKit fall back to a zero-size
+ *     `::-webkit-scrollbar`. The standard property beats `::-webkit-scrollbar`
+ *     in Chromium, so a consumer's `scrollbar-color` on an ancestor cannot
+ *     bring a bar back.
+ *   - the root: Blink and WebKit draw `::-webkit-scrollbar` on `:root` (the
+ *     only way to get a rounded, inset thumb), so the root keeps
+ *     `scrollbar-width` and `scrollbar-color` at `auto` there: Chromium
+ *     ignores the drawn thumb on an element where either is set. Firefox has
+ *     no `::-webkit-scrollbar` and takes the standard properties on `:root`.
+ *   - `<body>` is hidden like any inner element, on purpose: Chromium styles
+ *     the viewport's bar from the first of <body> and <html> that has its own
+ *     `::-webkit-scrollbar` rules, so a rule matching <body> would take the
+ *     page's bar with it. Nothing here gives <body> those rules.
+ *
+ * A finger (no hover, coarse pointer: phones, tablets, the native shells)
+ * keeps the platform's own overlay bar, which already shows only while
+ * scrolling and takes no room.
+ *
+ * On a brand-deep page, put `.scroll-on-deep` (or `data-ground="deep"`) on
+ * <html> for the lighter purple thumb, and give <html> the deep background,
+ * or the transparent track shows whatever is behind the canvas.
  *
  * Under forced colours (Windows High Contrast) none of this applies: the
- * system draws its own scrollbars. Nothing here hides a scrollbar; content
- * that scrolls keeps one.
+ * system draws its own scrollbars, on the page and inside it.
  */
 @layer base {
     @media (forced-colors: none) {
-        * {
-            scrollbar-width: thin;
-            scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
-        }
-        /* Inner scroll areas only: the page's own (on <html>) would read as
-           hovered whenever the pointer is anywhere on the page. */
-        :where(body *):hover {
-            scrollbar-color: var(--scrollbar-thumb-hover) var(--scrollbar-track);
-        }
         .scroll-on-deep,
         [data-ground="deep"] {
             --scrollbar-thumb: var(--scrollbar-thumb-deep);
             --scrollbar-thumb-hover: var(--scrollbar-thumb-deep-hover);
         }
+    }
 
-        /* Older WebKit: the same colours, a 6px thumb in a 10px gutter. */
-        ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+    @media (forced-colors: none) and (hover: hover) and (pointer: fine) {
+        /* Inside the page: no bar, no lane. Zero specificity, so a consumer's
+           own base-layer rule on an element still wins. */
+        :where(:not(:root)) {
+            scrollbar-width: none;
         }
-        ::-webkit-scrollbar-track,
-        ::-webkit-scrollbar-corner {
-            background: var(--scrollbar-track);
+        /* Blink and WebKit too old for `scrollbar-width`. Never <body>, which
+           would take the page's bar with it (see above). */
+        @supports not (scrollbar-width: none) {
+            :where(:not(:root, body))::-webkit-scrollbar {
+                width: 0;
+                height: 0;
+            }
         }
-        ::-webkit-scrollbar-thumb {
-            border: 2px solid transparent;
-            border-radius: 9999px;
-            background-color: var(--scrollbar-thumb);
-            background-clip: padding-box;
+
+        /* The page: the brand thumb. Blink and WebKit draw it. */
+        @supports selector(::-webkit-scrollbar) {
+            :root::-webkit-scrollbar {
+                width: var(--scrollbar-size);
+                height: var(--scrollbar-size);
+            }
+            :root::-webkit-scrollbar-track,
+            :root::-webkit-scrollbar-corner {
+                background: var(--scrollbar-track);
+            }
+            :root::-webkit-scrollbar-thumb {
+                min-height: 2.5rem;
+                min-width: 2.5rem;
+                border: var(--scrollbar-inset) solid transparent;
+                border-radius: 9999px;
+                background-color: var(--scrollbar-thumb);
+                background-clip: padding-box;
+            }
+            :root::-webkit-scrollbar-thumb:hover,
+            :root::-webkit-scrollbar-thumb:active {
+                border-width: var(--scrollbar-inset-hover);
+                background-color: var(--scrollbar-thumb-hover);
+            }
         }
-        ::-webkit-scrollbar-thumb:hover {
-            background-color: var(--scrollbar-thumb-hover);
+
+        /* The page in Firefox: the standard properties, from the same tokens. */
+        @supports not selector(::-webkit-scrollbar) {
+            :root {
+                scrollbar-width: thin;
+                scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+            }
         }
     }
 }

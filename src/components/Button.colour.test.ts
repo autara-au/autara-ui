@@ -67,6 +67,8 @@ const VARIANTS: [string, string, (t: Theme) => RGB][] = [
     ['link', 'accent', (t) => token('background', t)],
     // Translucent white over the brand-deep hero it is drawn for.
     ['ondeep', 'on-deep', (t) => over([255, 255, 255], 0.14, token('hero', t))],
+    // AUTM-1878 follow-up: destructive on the hero, the fill red on the white pill.
+    ['ondeep-danger', 'danger-fill', (t) => token('on-deep', t)],
 ]
 
 describe('Button: every variant label reads on its fill, which is now also its disabled and busy colour', () => {
@@ -77,6 +79,7 @@ describe('Button: every variant label reads on its fill, which is now also its d
         expect(BUTTON).not.toContain('bg-[var(--strong)]')
         expect(BUTTON).toContain('bg-[var(--band)] text-[var(--text-strong)]')
         expect(BUTTON).toContain('bg-[rgba(255,255,255,0.14)] text-[var(--on-deep)]')
+        expect(BUTTON).toContain('bg-[var(--on-deep)] text-[var(--danger-fill)]')
         expect(BUTTON).toContain('text-[var(--accent)]')
     })
 

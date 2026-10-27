@@ -3,6 +3,13 @@ export {
     GradientBar,
     Button, buttonVariants, type ButtonProps,
     IconButton, type IconButtonProps,
+    // AUTM-1756: the icon disc's tones and sizes, the one close control, and
+    // a region that scrolls on its own.
+    CloseButton, CloseGlyph, iconDiscClasses, resolveIconButtonTone,
+    type IconButtonTone, type IconButtonSize, type CloseButtonProps,
+    ScrollArea, useScrollEdges, useScrollbarReveal, type ScrollAreaProps, type ScrollAreaOrientation, type ScrollEdges,
+    // AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+    ChipRow, chipRowPageTarget, CHIP_ROW_DRAG_THRESHOLD, type ChipRowProps, type ChipRowRole, type ChipRowArrows,
     // AUTM-1787: a list row's everyday actions.
     RowActions, type RowAction, type RowActionsProps,
     // AUTM-1755: a list beside its record, with a splitter.
@@ -46,7 +53,7 @@ export {
     ScrollReveal, type ScrollRevealProps,
     FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem,
     // New components
-    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant,
+    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant,
     Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator,
     Switch,
     Checkbox,
@@ -112,6 +119,8 @@ export {
     // AUTM-1018 — reserves its own space, same mechanism as the consent notice.
     PWAInstallBanner, PWA_INSTALL_BANNER_HEIGHT_VAR, PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
+    // AUTM-1906 — the one-time install offer, in the page.
+    InstallOffer, InstallSteps, type InstallOfferProps, type InstallStepsProps,
     // AUTM-852 — the consent notice, and the space it reserves for itself.
     ConsentBanner, CONSENT_BANNER_HEIGHT_VAR, CONSENT_BANNER_OFFSET,
     type ConsentBannerProps,
@@ -171,9 +180,9 @@ export {
     // AUTM-1870: a car in a few taps, drawn as itself.
     VehiclePicker, validateVehiclePicker, vehiclePickerStepFor, EMPTY_VEHICLE_PICKER_VALUE, VEHICLE_PICKER_MESSAGES,
     type VehiclePickerProps, type VehiclePickerValue, type VehiclePickerStep, type VehiclePickerField, type VehiclePickerErrors,
-    VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps,
     VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps,
-    VehicleCard, VehicleAddCard, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
+    VehicleCard, VehicleAddCard, VehiclePaintDot, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
+    VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote,
     // AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
     CategoryArt, categoryArtKind, type CategoryArtKind,
     MerchantProfileCover, MerchantProfileCoverArt, MerchantProfileHeader,
@@ -232,6 +241,25 @@ export {
     type VehicleCatalogModel,
     type VehicleSearchResult,
 } from './lib/vehicle-catalog'
+
+/* AUTM-1906: installing the web app. `catchInstallPrompt` once at the root,
+ * then `useInstallOffer` where the offer is drawn (InstallOffer). */
+export {
+    catchInstallPrompt,
+    subscribeInstallPrompt,
+    canPromptInstall,
+    promptInstall,
+    runningInstalled,
+    installedThisSession,
+    installPlatform,
+    useInstallPrompt,
+    useInstallOffer,
+    type InstallOutcome,
+    type InstallPlatform,
+    type InstallPromptState,
+    type InstallOfferOptions,
+    type InstallOfferState,
+} from './lib/install-prompt'
 
 /* AUTM-1781: the direction of the next screen change, for `.motion-screen`. */
 export {

@@ -66,6 +66,14 @@ export interface MoneyRow {
      * the label ("Captured", "On hold", "Balance due"). AUTM-1856.
      */
     state?: ReactNode
+    /**
+     * `variant="chips"`: what the reader can do about this money, inside its
+     * chip under the amount ("Send payment link" on a balance due). AUTM-1878:
+     * the action belongs to the figure it acts on, not to a full-width pill
+     * under the whole breakdown. Its own `<dd>`, so the list stays a valid
+     * `<dl>`. Give it a fill that reads on the band card (the raised surface).
+     */
+    action?: ReactNode
 }
 
 /** The state badge's palette: lime money in, aqua in flight, purple yours to act on, grey otherwise. */
@@ -122,6 +130,7 @@ function Chip({ row }: { row: MoneyRow }) {
             </dt>
             {/* Whole: an amount never breaks mid-number, and fits its chip. */}
             <MoneyFigure className="leading-[1.1] font-black tracking-[-0.02em] tabular-nums">{row.value}</MoneyFigure>
+            {row.action ? <dd className="m-0 mt-1.5 flex min-w-0 text-base font-medium">{row.action}</dd> : null}
         </div>
     )
 }

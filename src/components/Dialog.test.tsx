@@ -103,8 +103,10 @@ describe('Dialog layout="responsive"', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Edit business address' }))
         expect(screen.getByTestId('head').className).toContain('[&>:first-child]:pr-11')
         const close = screen.getByRole('button', { name: 'Close dialog' })
-        expect(close.className).toContain('h-11')
-        expect(close.className).toContain('w-11')
+        // AUTM-1756: the filled 44px disc, 48px to a finger.
+        expect(close.className).toContain('size-11')
+        expect(close.className).toContain('pointer-coarse:size-12')
+        expect(close.className).toContain('bg-[var(--icon-disc)]')
     })
 
     it('lays the actions side by side, stacking primary-on-top when they do not fit', async () => {
@@ -236,7 +238,8 @@ describe('Dialog default layout is unchanged', () => {
             expect(panel.className).toContain(cls)
         }
         expect(panel.className).not.toContain('dialog-panel--responsive')
-        expect(screen.getByTestId('head').className).toBe('flex flex-col space-y-1.5 text-left')
+        // AUTM-1756: the header keeps clear of the drawn close disc.
+        expect(screen.getByTestId('head').className).toBe('flex flex-col space-y-1.5 pr-8 text-left')
         expect(screen.getByTestId('foot').className).toBe('flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end')
         expect(screen.getByTestId('body').className).toBe('min-w-0')
     })

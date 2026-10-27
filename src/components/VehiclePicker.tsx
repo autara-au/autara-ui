@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { cn } from '../lib/cn'
+import { IconButton } from './IconButton'
 import {
     AU_VEHICLE_CATALOG,
     VEHICLE_BODIES,
@@ -23,7 +24,7 @@ import { Input } from './Input'
 import { SearchInput } from './SearchInput'
 import { SwatchRadioGroup } from './SwatchRadioGroup'
 import { VehicleMakeMark } from './VehicleMakeMark'
-import { VehicleSilhouette } from './VehicleSilhouette'
+import { VehiclePaintDot } from './VehicleCard'
 
 /**
  * VehiclePicker: add a car in a few taps (AUTM-1870, Don 2026-10-14).
@@ -36,9 +37,10 @@ import { VehicleSilhouette } from './VehicleSilhouette'
  *      to Toyota HiLux. Empty, it shows the popular Australian makes as name
  *      tiles (names, never manufacturer logos), More makes, and Not listed.
  *   2. Model. That make's models as chips, best sellers first, and Not listed.
- *   3. Details. The car as a side-view silhouette in the shape its model
- *      implies (a HiLux is a ute) with Change, repainted by the colour swatch
- *      the customer taps; then rego and year, both optional.
+ *   3. Details. The car as its make's mark (logo or monogram) with a dot of
+ *      the paint tapped, the type its model implies (a HiLux is a ute) with
+ *      Change; the colour swatches large; then rego and year, both optional.
+ *      Don, 2026-10-15: no car illustrations, Wise-simple, one obvious step.
  *
  * A listed car is search, result, colour: the consumer's button (Add car,
  * or checkout's Continue) is the third tap. A car the catalog does not know
@@ -557,19 +559,16 @@ export function VehiclePicker({
         content = (
             <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-2">
-                    <button
-                        type="button"
+                    {/* AUTM-1756: the library's back disc, which shows on
+                        band as well as paper (band on band vanished). */}
+                    <IconButton
                         disabled={disabled}
                         onClick={backToFind}
-                        aria-label="Back to makes"
+                        label="Back to makes"
                         data-testid={`${p}-back`}
-                        className={cn(
-                            'grid size-11 shrink-0 place-items-center rounded-full bg-[var(--band)] text-[var(--text-strong)] hover:bg-[var(--band-press)] motion-press',
-                            FOCUS
-                        )}
-                    >
-                        <BackGlyph />
-                    </button>
+                        icon={<BackGlyph />}
+                        className="shrink-0"
+                    />
                     <VehicleMakeMark make={make?.name ?? value.make} className="size-7 text-[var(--text-strong)]" />
                     <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
                         {make?.name ?? value.make}
@@ -622,17 +621,34 @@ export function VehiclePicker({
         const showTypes = typeOpen || !value.body || !!errors.body
         const paint = vehiclePaint(value.color)
         const carName = `${value.make} ${value.model}`.trim()
+        /* The car's image slot: the make's mark (logo or monogram), large, and
+           a dot of the paint once one is tapped. */
+        const carSlot = (
+            <span className="relative grid size-20 shrink-0 place-items-center rounded-[var(--radius-autara-md)] bg-[var(--paper)] text-[var(--text-strong)]">
+                {value.make.trim() ? (
+                    <VehicleMakeMark make={value.make} className="size-12" testId={`${p}-car-mark`} />
+                ) : null}
+                {paint ? (
+                    <VehiclePaintDot
+                        paint={paint}
+                        ringOn="var(--band)"
+                        className="absolute -bottom-1.5 -right-1.5 size-7"
+                        testId={`${p}-car-paint`}
+                    />
+                ) : null}
+            </span>
+        )
         content = (
             <div className="flex flex-col gap-5">
                 <div className="flex flex-col gap-3 rounded-[var(--radius-autara-lg)] bg-[var(--band)] p-4">
-                    <div className="mx-auto w-full max-w-[17rem]">
-                        <VehicleSilhouette body={value.body || 'OTHER'} color={value.color} testId={`${p}-silhouette`} />
-                    </div>
                     {modelIsTyped ? (
                         <div className="flex flex-col gap-3">
-                            <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
-                                Your car
-                            </Heading>
+                            <div className="flex items-center gap-3">
+                                {carSlot}
+                                <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
+                                    Your car
+                                </Heading>
+                            </div>
                             <div className="grid gap-3 sm:grid-cols-2">
                                 {makeIsTyped ? (
                                     <FormField label="Make" required error={errors.make}>
@@ -677,48 +693,47 @@ export function VehiclePicker({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex min-w-0 flex-col" data-testid={`${p}-car`}>
-                            <div className="flex flex-wrap items-center justify-between gap-x-3">
-                                {/* The chosen car: its make's mark beside its name. */}
-                                <div className="flex min-w-0 items-center gap-2">
-                                    <VehicleMakeMark
-                                        make={value.make}
-                                        className="size-7 text-[var(--text-strong)]"
-                                        testId={`${p}-car-mark`}
-                                    />
+                        /* Wraps: at 200% text the rem-sized slot leaves the words no
+                           room beside it, so they drop under it instead of clipping. */
+                        <div className="flex min-w-0 flex-wrap items-center gap-4" data-testid={`${p}-car`}>
+                            {/* The chosen car: its make's mark, large, with a dot of its paint
+                                (Don, 2026-10-15: no car illustrations). */}
+                            {carSlot}
+                            <div className="flex min-w-[min(100%,12rem)] flex-1 flex-col gap-0.5">
+                                <div className="flex flex-wrap items-center justify-between gap-x-3">
                                     <Heading level={headingLevel} id={titleId} headingRef={headingRef}>
                                         {carName}
                                     </Heading>
-                                </div>
-                                <button
-                                    type="button"
-                                    disabled={disabled}
-                                    className={LINK}
-                                    onClick={backToFind}
-                                    aria-label={`Change car, ${carName}`}
-                                    data-testid={`${p}-change`}
-                                >
-                                    Change car
-                                </button>
-                            </div>
-                            {/* The type the model implies, said once, with its Change
-                                (Don, 2026-10-14: the ten type chips go). */}
-                            {!showTypes ? (
-                                <p className="m-0 flex flex-wrap items-center gap-x-2 text-[0.9375rem] text-[var(--text-muted)]">
-                                    <span data-testid={`${p}-type-current`}>{bodyLabel}</span>
                                     <button
                                         type="button"
                                         disabled={disabled}
                                         className={LINK}
-                                        aria-expanded={false}
-                                        aria-label={`Change type, ${bodyLabel}`}
-                                        onClick={() => setTypeOpen(true)}
-                                        data-testid={`${p}-type-change`}
+                                        onClick={backToFind}
+                                        aria-label={`Change car, ${carName}`}
+                                        data-testid={`${p}-change`}
                                     >
-                                        Change type
+                                        Change car
                                     </button>
-                                </p>
-                            ) : null}
+                                </div>
+                                {/* The type the model implies, said once, with its Change
+                                    (Don, 2026-10-14: the ten type chips go). */}
+                                {!showTypes ? (
+                                    <p className="m-0 flex flex-wrap items-center gap-x-2 text-[0.9375rem] text-[var(--text-muted)]">
+                                        <span data-testid={`${p}-type-current`}>{bodyLabel}</span>
+                                        <button
+                                            type="button"
+                                            disabled={disabled}
+                                            className={LINK}
+                                            aria-expanded={false}
+                                            aria-label={`Change type, ${bodyLabel}`}
+                                            onClick={() => setTypeOpen(true)}
+                                            data-testid={`${p}-type-change`}
+                                        >
+                                            Change type
+                                        </button>
+                                    </p>
+                                ) : null}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -798,6 +813,7 @@ export function VehiclePicker({
                     disabled={disabled}
                     columns={5}
                     compactColumns={5}
+                    size="lg"
                     testId={`${p}-colour`}
                     /* The swatch says itself (its name is the radio's); only a saved
                        colour the palette has no swatch for is said in words. */

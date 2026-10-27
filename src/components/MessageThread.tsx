@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode, type UIEvent } from "react";
 import { AsyncSkeleton } from "./AsyncSkeleton";
 import { ErrorCard } from "./ErrorCard";
 import { MessageBubble, type MessageSide } from "./MessageBubble";
@@ -81,6 +81,29 @@ export interface MessageThreadProps {
    * without this a screen reader hears nothing at all. Default "Loading messages".
    */
   loadingLabel?: string;
+  /**
+   * AUTM-1878: the scroll area's name when it is not a log (`logLabel`
+   * unset), so the focusable region still says what it is. Default
+   * "Messages".
+   */
+  label?: string;
+  /**
+   * AUTM-1878: `end` opens the thread on its newest row and keeps it there
+   * as rows arrive (unless the reader has scrolled up to read history), the
+   * way every messenger opens. `none` (default) leaves the first paint at the
+   * top, as before.
+   */
+  anchor?: "end" | "none";
+  /**
+   * AUTM-1878: a soft fade at the top edge while there is more above, in
+   * place of a bubble cut in half by the box's edge.
+   */
+  fadeTop?: boolean;
+  /**
+   * AUTM-1878: drawn above the first row inside the scroll area, on the
+   * thread's measure: a "Load earlier" control, for example.
+   */
+  before?: ReactNode;
   className?: string;
 }
 
@@ -113,6 +136,14 @@ function defaultFormatTimestamp(date: Date): string {
  * the fix for the stranded empty/error tile floating above a large void on
  * wide (iPad) viewports. Designed to sit as a `flex-1` child of a
  * `flex flex-col h-full` screen, with MessageComposer docked beneath.
+ *
+ * AUTM-1878: the scroll area takes keyboard focus (tab to it, then the arrow
+ * keys and Page Up scroll the history), with the house focus ring, because a
+ * thread of plain bubbles has nothing else focusable inside it and could not
+ * be scrolled without a pointer (axe `scrollable-region-focusable`). It is a
+ * named `log` with `logLabel`, otherwise a named region. Timestamps are at
+ * the body-small step (13px), not 12. `anchor`, `fadeTop` and `before` are
+ * opt-in, so a consumer that has not asked sees no change.
  */
 export function MessageThread({
   items,
@@ -132,10 +163,28 @@ export function MessageThread({
   failedAnnouncement = "A message wasn't sent. It is still in the thread to retry.",
   retryTestId,
   loadingLabel = "Loading messages",
+  label = "Messages",
+  anchor = "none",
+  fadeTop = false,
+  before,
   className,
 }: MessageThreadProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const prevCount = useRef(items.length);
+  // Whether there is history above the visible rows (drives the fade).
+  const [above, setAbove] = useState(false);
+  // Anchored: the first paint with rows lands on the newest one, before the
+  // reader sees it, so the thread never opens on its oldest message.
+  const anchored = useRef(false);
+  const hasRows = !loading && !error && items.length > 0;
+  useLayoutEffect(() => {
+    if (anchor !== "end" || !hasRows || anchored.current) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    anchored.current = true;
+    el.scrollTop = el.scrollHeight;
+    setAbove(el.scrollTop > 4);
+  }, [anchor, hasRows]);
   const failedIds = useRef<Set<string>>(new Set());
   const [announcement, setAnnouncement] = useState("");
 
@@ -164,15 +213,24 @@ export function MessageThread({
     if (items.length > prevCount.current) {
       const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
       if (nearBottom || prevCount.current === 0) {
-        el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+        const reduce =
+          typeof window !== "undefined" &&
+          window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+        el.scrollTo({ top: el.scrollHeight, behavior: reduce ? "auto" : "smooth" });
       }
     }
     prevCount.current = items.length;
   }, [items.length]);
 
+  function handleScroll(e: UIEvent<HTMLDivElement>) {
+    if (!fadeTop) return;
+    const next = e.currentTarget.scrollTop > 4;
+    if (next !== above) setAbove(next);
+  }
+
   if (loading) {
     return (
-      <div className={cn("flex-1 overflow-y-auto px-4 pt-4", className)}>
+      <div className={cn("flex-1 overflow-y-auto overscroll-contain px-4 pt-4", className)}>
         <div className={cn("mx-auto w-full", measureClassName)}>
           <p role="status" className="sr-only">
             {loadingLabel}
@@ -226,13 +284,26 @@ export function MessageThread({
   return (
     <div
       ref={scrollRef}
-      role={logLabel ? "log" : undefined}
-      aria-label={logLabel}
-      className={cn("flex-1 overflow-y-auto px-4 pb-4 pt-4", className)}
+      role={logLabel ? "log" : "region"}
+      aria-label={logLabel ?? label}
+      tabIndex={0}
+      onScroll={handleScroll}
+      data-fade={fadeTop && above ? "top" : undefined}
+      className={cn(
+        // AUTM-1756: contained, so reaching the oldest message never scrolls
+        // the page or the drawer behind the thread.
+        "flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-4",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]",
+        // A soft edge while there is history above: 3rem of fade, so a
+        // bubble half out of view dissolves instead of being sliced.
+        fadeTop && above && "[mask-image:linear-gradient(to_bottom,transparent_0,#000_3rem)]",
+        className,
+      )}
     >
       <p role="status" className="sr-only">
         {announcement}
       </p>
+      {before ? <div className={cn("mx-auto mb-3 flex w-full justify-center", measureClassName)}>{before}</div> : null}
       <ul className={cn("mx-auto flex w-full flex-col gap-2", measureClassName)}>
         {sorted.map((m, i) => {
           const prev = sorted[i - 1];
@@ -257,7 +328,7 @@ export function MessageThread({
                   (found on customer-web's booking chat, AUTM-1205). The
                   formatter is the source of truth now. */}
               {showStamp && date ? (
-                <p className="mt-3 text-center text-xs font-medium text-[var(--text-subtle)]">
+                <p className="mt-3 text-center text-[0.8125rem] font-medium text-[var(--text-subtle)]">
                   {formatTimestamp(date)}
                 </p>
               ) : null}

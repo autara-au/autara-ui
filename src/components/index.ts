@@ -1,6 +1,34 @@
 export { GradientBar } from './GradientBar'
 export { Button, buttonVariants, type ButtonProps } from './Button'
-export { IconButton, type IconButtonProps } from './IconButton'
+export {
+    IconButton,
+    CloseButton,
+    CloseGlyph,
+    iconDiscClasses,
+    resolveIconButtonTone,
+    type IconButtonProps,
+    type IconButtonTone,
+    type IconButtonSize,
+    type CloseButtonProps,
+} from './IconButton'
+// AUTM-1756: a region that scrolls on its own, and its edge reader.
+export {
+    ScrollArea,
+    useScrollEdges,
+    useScrollbarReveal,
+    type ScrollAreaProps,
+    type ScrollAreaOrientation,
+    type ScrollEdges,
+} from './ScrollArea'
+// AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+export {
+    ChipRow,
+    chipRowPageTarget,
+    CHIP_ROW_DRAG_THRESHOLD,
+    type ChipRowProps,
+    type ChipRowRole,
+    type ChipRowArrows,
+} from './ChipRow'
 export { Input, inputVariants, type InputProps } from './Input'
 export { OtpInput, type OtpInputProps } from './OtpInput'
 export {
@@ -126,7 +154,7 @@ export {
 export { ScrollReveal, type ScrollRevealProps } from './ScrollReveal'
 export { FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem } from './MotionDiv'
 
-export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant } from './Toast'
+export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant } from './Toast'
 
 export {
     Select,
@@ -263,6 +291,13 @@ export {
     PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
 } from './PWAInstallBanner'
+// AUTM-1906 — the one-time install offer, in the page (customer-web's, promoted).
+export {
+    InstallOffer,
+    InstallSteps,
+    type InstallOfferProps,
+    type InstallStepsProps,
+} from './InstallOffer'
 // AUTM-852 — the consent notice, and the space it reserves for itself.
 export {
     ConsentBanner,
@@ -366,7 +401,7 @@ export {
 // ─── AUTM-1195 — pick one of a few, as cards: a real radio group ────────
 export { ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps } from './ChoiceCard'
 export { SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption } from './SwatchRadioGroup'
-// AUTM-1870: a car in a few taps, drawn as itself: the picker, the silhouette per body type, the garage card.
+// AUTM-1870: a car in a few taps: the picker, the make mark, the garage card (no car illustrations, Don 2026-10-15).
 export {
     VehiclePicker,
     validateVehiclePicker,
@@ -379,16 +414,18 @@ export {
     type VehiclePickerField,
     type VehiclePickerErrors,
 } from './VehiclePicker'
-export { VehicleSilhouette, silhouetteBody, vehicleSilhouetteTitle, type VehicleSilhouetteProps } from './VehicleSilhouette'
 export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps } from './VehicleMakeMark'
 export {
     VehicleCard,
     VehicleAddCard,
+    VehiclePaintDot,
     vehicleCardFacts,
     type VehicleCardProps,
     type VehicleAddCardProps,
     type VehicleCardSelectable,
 } from './VehicleCard'
+// AUTM-1878 follow-up: a car as a pro sees it, with the jobs done on it.
+export { VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote } from './VehicleProfile'
 // ─── AUTM-1221 — graduated from customer-web (plan item U5) ──────────────
 // Countdown: a deadline the server enforces, counted down and announced
 // once a minute; PolicyTimeline: the tiers of a policy with the live one lit.

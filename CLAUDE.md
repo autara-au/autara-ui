@@ -61,7 +61,7 @@ src/
 │   └── index.css           # @import all
 ├── utilities/              # CSS utility classes
 │   ├── forms.css           # .field-input, .field-textarea, .input-light alias
-│   ├── glass.css           # .glass-card, .nav-glass, .service-card (no shadows)
+│   ├── glass.css           # retired by AUTM-1594; kept for old consumers
 │   ├── editorial.css       # .hairline-grid, .editorial-eyebrow, .counter-huge
 │   ├── noise.css           # .noise-overlay
 │   ├── buttons.css, gradients.css, sections.css, animations.css
@@ -73,7 +73,7 @@ src/
 .storybook/
 ├── main.ts                 # framework + viteFinal
 ├── preview.ts              # global decorator + viewports
-└── storybook.css           # loads tokens + utilities + forces warm-cream canvas
+└── storybook.css           # loads tokens + utilities + forces the paper ground
 
 docs/
 ├── Introduction.mdx
@@ -113,18 +113,27 @@ docs/
 
 ## Aesthetic invariants — the things that make Autara look like Autara
 
-- **Warm cream** `#FBFAF6` — page background, never clinical white
-- **Hairline borders** at `rgba(17,24,39,0.08)` — the primary depth signal
-- **NO drop shadows** — `--shadow-*` tokens all evaluate to `none`
-- **Brand purple `#4E1BBD` is an ACCENT** — used for rating stars,
-  brand badges, focus rings, link underlines. Primary CTAs on cream
-  surfaces are **solid black** (`BrandButton variant="dark"`), not
-  purple. Purple primary is reserved for dark/photo surfaces.
-  Since AUTM-734 this rule is *encoded*, not just documented:
-  `variant="dark"` paints `--cta-fill`, which is ink in light theme and
-  brand purple in dark. Don't reach for `--surface-inverse` on a CTA —
-  that token inverts (correct for a Tooltip/Toast capsule, wrong for a
-  button, which turned into a white slab on dark before this landed).
+- **Paper ground** `--background` / `--surface` `#ffffff`, with `band`
+  (`#f4f2ec`) cards on it and one `brand-deep` hero per screen (AUTM-1594,
+  canvas v44). *Corrected 2026-10-23 (AUTM-2025): this said warm cream
+  `#FBFAF6`, retired by AUTM-1594.*
+- **Hairline borders** at `rgba(17,24,39,0.08)` for dividers; cards are set
+  apart by fill, not by a border
+- **NO drop shadows** — `--shadow-*` tokens all evaluate to `none`; the one
+  exception is `--float-shadow` on floating sheets and popovers
+- **Lime is the one primary action** — `Button variant="primary"`, lime with
+  an ink label, on paper, band, sheets and dialogs alike. Everything else is
+  `quiet`. **No black buttons anywhere** (Don, 2026-10-12, AUTM-1838).
+  Brand purple (`--accent`) is for links, focus, selected states and status;
+  never hardcode `#4E1BBD` for text or borders, since it vanishes on dark.
+  *Corrected 2026-10-23 (AUTM-2025): this said primary CTAs are solid black
+  (`BrandButton variant="dark"`), which AUTM-1838 retired.*
+- **No glass, no gradients** on product surfaces (AUTM-1594). `glass.css`
+  and `gradients.css` still ship for old consumers; do not use them in new work.
+- **Motion**: one ease-out (`--motion-ease-out`), transform and opacity only,
+  durations from the `--motion-*` tokens (`src/lib/motion-tokens.ts` in JS),
+  and reduced motion honoured. A JS animation must honour it itself
+  (`useReducedMotion`); the stylesheet clamp cannot reach it.
 - **Satoshi typography** — NOT bundled since AUTM-1724: the tokens name the
   family and every consumer self-hosts the faces (see Known gotchas). Use
   weights 400 / 500 / 700 for body and UI; 700 is Satoshi Bold. 900 is
@@ -178,17 +187,49 @@ docs/
   both hold, so nothing is ever held at `opacity: 0` waiting for a script.
   Prefer it for new marketing work; `ScrollReveal` stays for consumers that
   already use it.
-- **Scrollbars are styled in the base layer for every consumer** (AUTM-1739,
-  utilities/scrollbars.css). A consumer rule wins, so a stray
-  `scrollbar-width: none` in an app still hides one; do not add one where
-  content can scroll. On a brand-deep page put `.scroll-on-deep` on <html>
-  AND give <html> the deep background: the page's scrollbar belongs to the
-  root, and its transparent track shows the canvas behind it. The standard
-  properties cannot hover the thumb itself, so the thumb firms while the
-  pointer is over an inner scroll area (never the page's). Headless Chromium
-  on macOS draws overlay scrollbars whatever the flags; to see classic ones,
-  start the binary with the Cocoa argument `-AppleShowScrollBars Always` and
-  connect over CDP.
+- **Nothing inside a page draws a scrollbar; the page keeps its brand bar**
+  (AUTM-1899, Don 2026-10-16: "scrollbars everywhere showing, can we hide
+  them?", reversing AUTM-1756's always-visible thumb). utilities/scrollbars.css,
+  base layer, mouse and trackpad only (`(hover: hover) and (pointer: fine)`):
+  `:where(:not(:root)) { scrollbar-width: none }` (a zero-size
+  `::-webkit-scrollbar` where `scrollbar-width` is unsupported), and the thin
+  `--accent` thumb on `:root` alone (`::-webkit-scrollbar` in Blink and WebKit,
+  the standard properties in Firefox ONLY: Chromium 121+ ignores the drawn
+  thumb on an element whose `scrollbar-width` or `scrollbar-color` is not
+  `auto`). Never give `<body>` a `::-webkit-scrollbar` rule: Chromium styles
+  the viewport's bar from `<body>` first, so it would take the page's bar with
+  it. `scrollbar-width: none` also drops any `scrollbar-gutter` lane, so a
+  consumer's `stable both-edges` reserves nothing. Forced colours: system bars
+  everywhere; a finger: the platform overlay. `useScrollbarReveal` is a
+  deprecated no-op and ScrollArea no longer marks `data-scrollbar-reveal`.
+  `scrollbars.browser.test.ts` measures the lanes in a Chromium launched
+  without `--hide-scrollbars` (the headless shell hides every bar, and the
+  suite's context is touch). A system bar's lane is 0 on macOS (overlay) and
+  about 15 on Linux, so that test compares against a control scroller. On a
+  brand-deep page put `.scroll-on-deep` on <html> AND give <html> the deep
+  background: the page's scrollbar belongs to the root, and its transparent
+  track shows the canvas behind it.
+- **A row of chips is a `ChipRow`, and it never draws a scrollbar** (AUTM-1756
+  follow-up, Don 2026-10-15: "instead of scrollbar can add an chevron arrow in
+  the ending ... also dragable"). FilterChipRow, QuickReplies `row`, ChoiceChips
+  `row` and DatePicker's day rail are all built on it; never a horizontal
+  ScrollArea or a bare `overflow-x-auto` row for chips. The chevrons follow
+  `arrows="auto"`: shown where `(any-pointer: fine)` matches, so a finger-only
+  phone gets the fade and the native swipe, and the Vitest browser context
+  (`hasTouch: true`) matches nothing fine: browser tests that press a chevron
+  pass `arrows="always"`. `--chip-row-edge` is both the scroll padding and the
+  end of the fade; the mask is clear under the disc (`--chip-row-solid`), so
+  change the two together. A mouse or pen drag swallows the click its release
+  would fire (capture phase on the row), so a chip's own `onClick` never sees a
+  drag. The chevrons are `tabIndex={-1}` (Tab walks the chips) and keep
+  DatePicker's QA test ids `-earlier` / `-later`. A chip taken by the keyboard
+  is revealed by `chipRowRevealTarget`: clear of the fades if it fits between
+  them, else clear of the chevrons, else its start clear of the start
+  chevron; and again one frame after focus, because Chromium's own focus
+  scroll runs AFTER the focus event and uses the scroll padding alone. Chip
+  widths follow the font the machine has: CI's Linux fallback is wider than
+  macOS's, which is how #162 went green locally and red in CI. A browser test
+  never assumes a chip fits; it measures, or sets the widths from the row.
 - **`PageContainer` / `.page-container` is the page track** (AUTM-1739):
   1440px of content (`--page-max`) between a fluid `--page-gutter` (16px to
   96px). Sections, grids and product visuals take the full track; running
@@ -313,6 +354,16 @@ docs/
   layered, so a story looks right while a consumer paints, for example,
   ServiceCard's selected name ink on deep purple. Found under AUTM-1694;
   `ServiceCard.test.tsx` pins it.
+- **Toast (AUTM-1871, AUTM-1813): the capsule has NO live role.** The provider
+  keeps one polite `role="status"` region (and one `role="alert"` for errors)
+  in a persistent "Notifications" region and renders each toast INSIDE its
+  region, so QA's `getByRole('status').filter({ hasText })` finds the region
+  holding the toast; style or measure the capsule by `[data-toast]`. Never a
+  hidden copy of the words beside the capsule: every `getByText` on a toast
+  then finds two elements (it broke the portal's specs the first time). `groupKey` collapses a burst into one toast in place (the
+  merchant portal passes the booking). Defaults: 6 s, pausing on hover, focus
+  and a hidden page; three at most; `position="auto"` (top centre under 40rem,
+  bottom right from it). `variant` is a no-op now (one raised token surface).
 - Storybook 10's default canvas is dark; `storybook.css` forces
   warm-cream via `!important` on `html`, `body`, `#storybook-root`,
   `.docs-story`, `.sb-show-main`, `.sbdocs-*` so stories render in the

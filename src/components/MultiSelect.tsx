@@ -172,7 +172,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                                page content, this one sits inside a field we
                                control. */
                             className={cn(
-                                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-medium',
+                                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.75rem] font-medium',
                                 'bg-[var(--surface-inverse)] text-[var(--text-on-inverse)]'
                             )}
                         >

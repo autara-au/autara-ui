@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { CONSENT_BANNER_OFFSET } from './ConsentBanner'
 import { useReservedBottomSpace } from '../lib/reserved-bottom-space'
 import { cn } from '../lib/cn'
+import { CloseButton } from './IconButton'
 
 /**
  * PWAInstallBanner — bottom-anchored "Add to home screen" affordance.
@@ -197,32 +198,6 @@ const ShareLinearGlyph = () => (
         />
         <path
             d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-        />
-    </svg>
-)
-
-const CloseGlyph = () => (
-    <svg
-        viewBox="0 0 24 24"
-        width="16"
-        height="16"
-        fill="none"
-        aria-hidden
-    >
-        <rect
-            x="3.5"
-            y="3.5"
-            width="17"
-            height="17"
-            rx="2"
-            stroke="currentColor"
-            strokeWidth="1.6"
-        />
-        <path
-            d="m9 9 6 6M15 9l-6 6"
             stroke="currentColor"
             strokeWidth="1.6"
             strokeLinecap="round"
@@ -445,18 +420,14 @@ export function PWAInstallBanner({
                             </button>
                         </div>
                     </div>
-                    {/* min-h/min-w rather than h/w: 44x44 is a FLOOR, so the
-                        control grows with the text scale instead of clipping.
-                        Same shape as the AUTM-622 pass on Tabs. */}
-                    <button
-                        type="button"
+                    {/* AUTM-1756: the library's one close control, a filled
+                        44px disc (48px to a finger). Its rem size grows with
+                        the text scale, as the 44px floor here did. */}
+                    <CloseButton
+                        label="Dismiss"
                         onClick={dismiss}
-                        aria-label="Dismiss"
                         data-testid={`${testId}-close`}
-                        className="grid min-h-11 min-w-11 shrink-0 place-items-center rounded-lg text-[var(--text-subtle)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-strong)] transition-colors"
-                    >
-                        <CloseGlyph />
-                    </button>
+                    />
                 </div>
             </div>
         </div>,

@@ -4,6 +4,7 @@ import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../lib/cn'
+import { CloseButton } from './IconButton'
 import { useReturnFocus } from '../lib/use-return-focus'
 
 /**
@@ -113,8 +114,8 @@ const SheetContent = React.forwardRef<
     // inset. A bottom sheet sits mid-screen and keeps the plain top-4.
     const closeTop =
         side === 'bottom'
-            ? 'top-4'
-            : 'top-[calc(env(safe-area-inset-top)+16px)]'
+            ? 'top-3'
+            : 'top-[calc(env(safe-area-inset-top)+12px)]'
     return (
         <SheetPortal>
             <SheetOverlay />
@@ -133,36 +134,13 @@ const SheetContent = React.forwardRef<
                         className="mx-auto block h-[5px] w-10 shrink-0 rounded-full bg-[var(--hairline)]"
                     />
                 ) : null}
-                <DialogPrimitive.Close
-                    aria-label="Close drawer"
-                    className={cn(
-                        'absolute right-4 grid h-7 w-7 place-items-center rounded-full',
-                        /* AUTM-1594: drawn at 28px, touched at 44px. The disc is
-                           the sheet's quiet close and stays that size; the
-                           floor is the unpainted pseudo-element, centred on it,
-                           the way Checkbox and Radio carry theirs. At 16px in
-                           from the edge the 44px area still sits inside the
-                           panel. It was 28 x 28 to the finger, which is why
-                           the account menu stayed a dropdown on phones. */
-                        "before:absolute before:left-1/2 before:top-1/2 before:size-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']",
-                        closeTop,
-                        'text-[var(--text-subtle)] transition-colors',
-                        'hover:bg-[var(--band)] hover:text-[var(--text-strong)]',
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper)]'
-                    )}
-                >
-                    <svg
-                        aria-hidden
-                        viewBox="0 0 24 24"
-                        width="14"
-                        height="14"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2.4}
-                        strokeLinecap="round"
-                    >
-                        <path d="M6 6l12 12M18 6L6 18" />
-                    </svg>
+                {/* AUTM-1756 (Don: "this close button is very small in every
+                    dialog"; "Icon buttons are less accessible"): the library's
+                    one close control, a filled 44px disc (48px to a finger)
+                    with a 20px cross. It was a 28px disc drawn only on hover
+                    around a 14px cross, with an unpainted 44px hit area. */}
+                <DialogPrimitive.Close asChild>
+                    <CloseButton label="Close drawer" className={cn('absolute right-3 z-10', closeTop)} />
                 </DialogPrimitive.Close>
                 {children}
             </DialogPrimitive.Content>
@@ -177,7 +155,8 @@ const SheetHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
     <div
         className={cn(
-            'flex flex-col gap-3 px-5 pb-3 pt-3 text-left',
+            // AUTM-1756: the title keeps clear of the drawn close disc.
+            'flex flex-col gap-3 px-5 pb-3 pt-3 text-left [&>:first-child]:pr-12',
             className
         )}
         {...props}

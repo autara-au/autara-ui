@@ -69,6 +69,7 @@ const KEEPS: Record<string, string> = {
     'Dialog.tsx': 'the 44px close disc, an icon disc like IconButton (AUTM-1594)',
     'Sheet.tsx': 'the close disc, drawn at 28px with a 44px hit area, the quiet sibling of Dialog\'s (AUTM-1594); the bottom sheet\'s grabber pill',
     'Toast.tsx': 'the status dot, and the action pill and dismiss disc on the capsule (AUTM-1594)',
+    'InstallOffer.tsx': "InstallSteps' 24px step numerals, step discs like Stepper's (AUTM-1906)",
     'EmptyState.tsx': 'the 44px icon disc, canvas v44 "Empty" (AUTM-1594)',
     'LockedFeature.tsx': 'the optional icon disc (AUTM-1594)',
     'SwatchRadioGroup.tsx': 'colour swatches are 44px circles on canvas v50, a choice of colour, not an action (AUTM-1591)',
@@ -80,7 +81,9 @@ const KEEPS: Record<string, string> = {
     'BookingPass.tsx': 'the tear line\'s two notches, half circles cut into the pass the way a ticket is cut, never a control; the face is MediaFrame\'s round person (AUTM-1799)',
     'FactRows.tsx': 'the 40px icon disc beside each value, a glyph in a circle like ChoiceCard and ListSection (AUTM-1799)',
     'VehiclePicker.tsx': 'the model and type chips are pills, as FilterChipRow\'s on canvas v44: a choice, not an action; the back control is the 44px icon disc (AUTM-1870)',
-    'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s (AUTM-1870)',
+    'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s; the paint dot, a colour swatch like SwatchRadioGroup\'s (AUTM-1870)',
+    'IconButton.tsx': 'the icon disc itself, canvas v44 "Icon disc" (AUTM-1594); filled on every tone, never a bare glyph (AUTM-1756)',
+    'BackButton.tsx': 'the icon disc without a label, a pill with one: the chevron and the destination, as the merchant dock draws "< Invoice" (AUTM-1756)',
     'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
@@ -102,8 +105,6 @@ const KEEPS: Record<string, string> = {
  * AUTM-1221 (the close control, the icon tile, the progress track).
  */
 const PENDING: Record<string, string> = {
-    'BackButton.tsx': 'circular icon button, an action, should move',
-    'CarouselHeader.tsx': 'prev/next icon buttons, actions, should move',
     'ImageCropDialog.tsx': 'range-slider track, a state bar, likely a keep',
     'MultiSelect.tsx': 'value chips + clear button, chips go to 8px',
     'StepCard.tsx': 'step numeral medallion, a numeral in a circle, likely a keep',

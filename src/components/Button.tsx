@@ -25,6 +25,10 @@ import { AutaraLoader, type AutaraLoaderSize } from "./AutaraLoader";
  *                Apple's destructive style, red words on the same surface, and
  *                a ConfirmDialog asks first.
  *   - `ondeep`   translucent white on a brand-deep hero; lime leads there.
+ *   - `ondeep-danger` the destructive action on a brand-deep hero (a
+ *                request's Decline on the record's ticket): a white pill
+ *                with the label in `--danger-fill` (#b42318, 6.5:1 on white),
+ *                the same in both themes because the pill is white in both.
  *   - `link`     brand text, 44px tall, no fill.
  *   - `ghost`    no fill, ink text, band on hover. Not on the sheet: kept for
  *                toolbars where a band pill would be one too many.
@@ -66,7 +70,7 @@ import { AutaraLoader, type AutaraLoaderSize } from "./AutaraLoader";
  * via `asChild`. autara-ui never imports next/link or react-router-dom.
  */
 
-type SheetVariant = "primary" | "quiet" | "danger" | "ondeep" | "link" | "ghost";
+type SheetVariant = "primary" | "quiet" | "danger" | "ondeep" | "ondeep-danger" | "link" | "ghost";
 
 type LegacyVariant =
   | "strong"
@@ -167,6 +171,11 @@ const VARIANT_CLASSES: Record<SheetVariant, string> = {
     "bg-[var(--band)] text-[var(--danger)] not-disabled:hover:bg-[var(--band-press)]",
   ondeep:
     "bg-[rgba(255,255,255,0.14)] text-[var(--on-deep)] not-disabled:hover:bg-[rgba(255,255,255,0.22)]",
+  // AUTM-1878 follow-up (Don, 2026-10-15): destructive on a brand-deep hero.
+  // `--danger` is a light red in dark mode (2.2:1 on white), so the label is
+  // the fill red, which holds 6.5:1 on the white pill in both themes.
+  "ondeep-danger":
+    "bg-[var(--on-deep)] text-[var(--danger-fill)] not-disabled:hover:bg-[rgba(255,255,255,0.88)]",
   // No padding: a text action sits on the line it belongs to. Still 44px
   // tall from `sm`, so the tap target holds.
   link: "bg-transparent px-0 text-[var(--accent)] underline-offset-4 not-disabled:hover:underline",
