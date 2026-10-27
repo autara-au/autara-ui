@@ -84,6 +84,7 @@ const KEEPS: Record<string, string> = {
     'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s; the paint dot, a colour swatch like SwatchRadioGroup\'s (AUTM-1870)',
     'IconButton.tsx': 'the icon disc itself, canvas v44 "Icon disc" (AUTM-1594); filled on every tone, never a bare glyph (AUTM-1756)',
     'BackButton.tsx': 'the icon disc without a label, a pill with one: the chevron and the destination, as the merchant dock draws "< Invoice" (AUTM-1756)',
+    'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
 
