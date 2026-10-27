@@ -1,12 +1,13 @@
 import { useEffect, useState, type ReactNode } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { ChatEventCard, chatEventGlyphs } from "./ChatEventCard";
+import { ChatEventCard, chatEventGlyphs, type ChatEventTone } from "./ChatEventCard";
 import { MessageThread, type MessageItem } from "./MessageThread";
 
 /**
- * AUTM-1881, phase 1 for Don's review. Every word and figure here stands in
- * for what the API renders for one reader from the stored booking event: the
- * card never computes copy or money.
+ * AUTM-1881. Every word and figure here stands in for what the API renders for
+ * one reader from the stored booking event: the card never computes copy or
+ * money. The APIs send `tone` in UPPERCASE; the prop is lowercase, and the
+ * consumer maps it ("From the API" story).
  */
 const meta = {
   title: "Molecules/ChatEventCard",
@@ -135,6 +136,115 @@ export const AllTones: Story = {
         time="11:30 am"
         action={{ label: "Book another time", onClick: () => {} }}
       />
+    </Column>
+  ),
+};
+
+/**
+ * `BookingChatEvent` as merchant-api and customer-api return it (AUTM-1881):
+ * `tone` and `action.kind` in UPPERCASE, as free strings.
+ */
+type ApiBookingChatEvent = {
+  type: string;
+  tone: string;
+  title: string;
+  detail: string | null;
+  needsAction: boolean;
+  action: { kind: string; label: string } | null;
+};
+
+/**
+ * The consumer's half of the contract. The API's tone is UPPERCASE and the
+ * prop is lowercase, so map through a table; an unknown tone falls back to
+ * `progress`, which reads as news rather than an ending or a demand.
+ */
+const TONE: Record<string, ChatEventTone> = {
+  ACTION: "action",
+  PROGRESS: "progress",
+  DONE: "done",
+  CLOSED: "closed",
+};
+
+/** The glyph by event type; a type with none here takes its tone's own glyph. */
+const GLYPH: Record<string, ReactNode> = {
+  REQUESTED: chatEventGlyphs.requested,
+  CONFIRMED: chatEventGlyphs.confirmed,
+  RESCHEDULE_ASKED: chatEventGlyphs.time,
+  STARTED: chatEventGlyphs.started,
+  BALANCE_DUE: chatEventGlyphs.payment,
+  PAYMENT_FAILED: chatEventGlyphs.problem,
+  REFUND_ISSUED: chatEventGlyphs.refund,
+  CANCELLED_BY_PRO: chatEventGlyphs.cancelled,
+};
+
+const fromApi: ApiBookingChatEvent[] = [
+  {
+    type: "CONFIRMED",
+    tone: "DONE",
+    title: "Booking confirmed",
+    detail: "$40.00 deposit charged. See you Sat 18 Oct, 9:00 am.",
+    needsAction: false,
+    action: null,
+  },
+  {
+    type: "BALANCE_DUE",
+    tone: "ACTION",
+    title: "Job complete, $80.00 to pay",
+    detail: "Your card wasn't charged, so the balance is still due.",
+    needsAction: true,
+    action: { kind: "PAY_BALANCE", label: "Pay $80.00" },
+  },
+  {
+    type: "CANCELLED_BY_PRO",
+    tone: "CLOSED",
+    title: "Kerbside Car Care cancelled",
+    detail: "Full refund of $40.00 to your card in 5 to 10 business days.",
+    needsAction: false,
+    action: { kind: "BOOK_AGAIN", label: "Book another time" },
+  },
+  {
+    // A tone this client does not know yet: it still draws, as `progress`.
+    type: "SOMETHING_NEW",
+    tone: "PAUSED",
+    title: "Booking paused",
+    detail: "Kerbside Car Care will be in touch.",
+    needsAction: false,
+    action: null,
+  },
+];
+
+/**
+ * From the API: the APIs send `tone` in UPPERCASE and the prop takes lowercase,
+ * so the consumer maps it (`TONE[event.tone] ?? "progress"`) and turns
+ * `action.kind` into the handler. The last card has a tone this client does
+ * not know, and still draws.
+ */
+export const FromTheApi: Story = {
+  name: "From the API",
+  render: () => (
+    <Column>
+      {fromApi.map((event) => (
+        <ChatEventCard
+          key={event.type}
+          tone={TONE[event.tone] ?? "progress"}
+          icon={GLYPH[event.type]}
+          title={event.title}
+          detail={event.detail ?? undefined}
+          time="9:41 am"
+          action={
+            event.action
+              ? {
+                  label: event.action.label,
+                  onClick: () => {
+                    // The consumer routes by kind: PAY_BALANCE opens checkout, BOOK_AGAIN the pro page.
+                  },
+                  testId: `chat-event-${event.action.kind.toLowerCase().replace(/_/g, "-")}`,
+                }
+              : undefined
+          }
+          testId={`chat-event-${event.type.toLowerCase().replace(/_/g, "-")}`}
+        />
+      ))}
     </Column>
   ),
 };

@@ -39,6 +39,14 @@ import { cn } from "../lib/cn";
  * `prefers-reduced-motion: no-preference`, so a reader who asked for less
  * motion sees it in place. The card adds no other motion; the button's press
  * is Button's own.
+ *
+ * From the API: merchant-api and customer-api send `BookingChatEvent.tone` in
+ * UPPERCASE (`ACTION`, `PROGRESS`, `DONE`, `CLOSED`) as a GraphQL `String!`,
+ * and this prop takes the lowercase union. The consumer maps it, and the
+ * component never does, so its prop API stays what it is. Map through a table
+ * with a fallback, never a bare cast of `toLowerCase()`: the field is a free
+ * string, and a tone a newer server adds must still draw a card. See the
+ * "From the API" story.
  */
 export type ChatEventTone = "action" | "progress" | "done" | "closed";
 
@@ -58,12 +66,26 @@ export interface ChatEventAction {
 }
 
 export interface ChatEventCardProps extends Omit<HTMLAttributes<HTMLElement>, "title"> {
+  /**
+   * The disc's colour and default glyph, in lowercase. The APIs send
+   * `BookingChatEvent.tone` in UPPERCASE, so map it before passing it:
+   *
+   * ```ts
+   * const TONE: Record<string, ChatEventTone> = {
+   *   ACTION: "action", PROGRESS: "progress", DONE: "done", CLOSED: "closed",
+   * };
+   * <ChatEventCard tone={TONE[event.tone] ?? "progress"} … />
+   * ```
+   *
+   * The fallback is `progress` (aqua, "in flight"): an unknown tone then reads
+   * as news, never as an ending (`closed`) or a demand (`action`).
+   */
   tone: ChatEventTone;
   /** A glyph from `chatEventGlyphs`; defaults to the tone's own. */
   icon?: ReactNode;
-  /** One line: what happened ("Booking confirmed"). */
+  /** One line: what happened ("Booking confirmed"). `BookingChatEvent.title`, as sent. */
   title: ReactNode;
-  /** One line: the figure or the next step ("$40.00 deposit charged. See you Sat 18 Oct, 9:00 am."). */
+  /** One line: the figure or the next step ("$40.00 deposit charged. See you Sat 18 Oct, 9:00 am."). `BookingChatEvent.detail`, as sent. */
   detail?: ReactNode;
   /** The time as the reader should see it ("9:41 am"). */
   time: string;
@@ -71,6 +93,10 @@ export interface ChatEventCardProps extends Omit<HTMLAttributes<HTMLElement>, "t
   dateTime?: string;
   /** Who it is from, said before the title. Default "Autara". */
   from?: string;
+  /**
+   * At most one. From the API, `BookingChatEvent.action.label` is the label as
+   * sent, and the consumer turns `action.kind` into `onClick`.
+   */
   action?: ChatEventAction;
   /**
    * The action failed, said plainly in danger text with an icon ("We couldn't
