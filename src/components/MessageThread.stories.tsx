@@ -5,6 +5,7 @@ import { MessageComposer } from "./MessageComposer";
 import { MessageCard } from "./MessageCard";
 import { QuickReplies } from "./QuickReplies";
 import { ComposerAttachMenu, attachMenuGlyphs } from "./ComposerAttachMenu";
+import { EmptyState } from "./EmptyState";
 
 // Fixed base time so timestamp separators render deterministically.
 const BASE = Date.UTC(2026, 4, 15, 9, 17);
@@ -26,7 +27,7 @@ const SAMPLE: MessageItem[] = [
   {
     id: "2",
     side: "own",
-    text: "Yes — 9am works. I'll bring the full kit.",
+    text: "Yes, 9am works. I'll bring the full kit.",
     createdAt: BASE - 57 * MIN,
   },
   {
@@ -44,14 +45,10 @@ const SAMPLE: MessageItem[] = [
 ];
 
 const EmptyTile = (
-  <div className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] px-5 py-6 text-center">
-    <p className="text-[14px] font-bold text-[var(--text-strong)]">
-      No messages yet
-    </p>
-    <p className="mt-1 text-[13px] text-[var(--text-muted)]">
-      Start the conversation — your customer will be notified by push and email.
-    </p>
-  </div>
+  <EmptyState
+    title="No messages yet"
+    description="Ask about parking, access or the car. Your customer is told by push and email, and replies here."
+  />
 );
 
 const meta = {
@@ -80,19 +77,24 @@ export const Default: Story = {
   ),
 };
 
+/**
+ * AUTM-1946: every state is the same named scroll host as the rows. Tab from
+ * the page reaches it (the focus ring is inset), and it is `aria-busy` while
+ * loading, with "Loading messages" said once.
+ */
 export const Loading: Story = {
   render: () => (
     <Frame>
-      <MessageThread items={[]} loading />
+      <MessageThread items={[]} loading label="Messages with Sam" />
     </Frame>
   ),
 };
 
-/** Empty state is vertically centered — no stranded tile + void. */
+/** Empty state is vertically centred, no stranded tile and void, and Tab reaches its region. */
 export const Empty: Story = {
   render: () => (
     <Frame>
-      <MessageThread items={[]} emptyState={EmptyTile} />
+      <MessageThread items={[]} emptyState={EmptyTile} label="Messages with Sam" />
     </Frame>
   ),
 };
@@ -100,8 +102,60 @@ export const Empty: Story = {
 export const ErrorState: Story = {
   render: () => (
     <Frame>
-      <MessageThread items={[]} error onRetry={() => {}} />
+      <MessageThread items={[]} error onRetry={() => {}} label="Messages with Sam" />
     </Frame>
+  ),
+};
+
+/**
+ * AUTM-1946: the error with a Retry that works. Retry goes to loading and then
+ * to the thread. By keyboard, focus stays in the thread the whole way: when
+ * Retry goes, the scroll host takes focus, and it is the same host the rows
+ * arrive in.
+ */
+export const ErrorWithRetry: Story = {
+  render: function ErrorWithRetryStory() {
+    const [state, setState] = useState<"error" | "loading" | "rows">("error");
+    useEffect(() => {
+      if (state !== "loading") return;
+      const t = window.setTimeout(() => setState("rows"), 1200);
+      return () => window.clearTimeout(t);
+    }, [state]);
+    return (
+      <Frame>
+        <MessageThread
+          items={state === "rows" ? SAMPLE : []}
+          loading={state === "loading"}
+          error={state === "error"}
+          errorTitle="Couldn't load messages"
+          errorMessage="Check your connection and tap retry."
+          onRetry={() => setState("loading")}
+          label="Messages with Sam"
+          anchor="end"
+        />
+        <MessageComposer value="" onChange={() => {}} onSend={() => {}} />
+      </Frame>
+    );
+  },
+};
+
+const LONG: MessageItem[] = Array.from({ length: 28 }, (_, i) => ({
+  id: `long-${i}`,
+  side: i % 3 === 0 ? ("own" as const) : ("incoming" as const),
+  text:
+    i % 3 === 0
+      ? `Noted. I'll bring the long hose for bay ${i + 1}.`
+      : `Bay ${i + 1} is the one by the lift. The gate code is the same as last time.`,
+  createdAt: BASE - (28 - i) * 7 * MIN,
+}));
+
+/** A long thread in a bounded box: Tab to it, then the arrow keys and Page Up read the history. */
+export const LongThread: Story = {
+  render: () => (
+    <div className="mx-auto flex h-[480px] max-w-[420px] flex-col overflow-hidden rounded-[1.5rem] bg-[var(--surface-warm)]">
+      <MessageThread items={LONG} anchor="end" fadeTop measureClassName="max-w-none" label="Messages with Sam" />
+      <MessageComposer value="" onChange={() => {}} onSend={() => {}} />
+    </div>
   ),
 };
 
@@ -272,6 +326,31 @@ export const LargeText: Story = {
             { id: "f", side: "own", text: "Gate code is 4821.", createdAt: BOOKED + 3 * MIN, status: "failed", onRetry: () => {} },
           ]}
         />
+      </div>
+    );
+  },
+};
+
+/**
+ * AUTM-1946: loading, error with Retry and empty at 200% text in a phone-sized
+ * box. Each overflows and each is a named region Tab reaches; the error and
+ * the empty state start at the top instead of being cut off above it.
+ */
+export const StatesAtLargeText: Story = {
+  render: function StatesAtLargeTextStory() {
+    useLargeText();
+    const box = "flex h-[360px] w-[390px] flex-col overflow-hidden rounded-[1.5rem] bg-[var(--paper)]";
+    return (
+      <div className="flex flex-wrap items-start gap-6 p-6">
+        <div className={box}>
+          <MessageThread items={[]} loading label="Messages with Sam, loading" />
+        </div>
+        <div className={box}>
+          <MessageThread items={[]} error onRetry={() => {}} label="Messages with Sam, error" />
+        </div>
+        <div className={box}>
+          <MessageThread items={[]} emptyState={EmptyTile} label="Messages with Sam, empty" />
+        </div>
       </div>
     );
   },

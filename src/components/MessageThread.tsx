@@ -109,6 +109,9 @@ export interface MessageThreadProps {
 
 const DEFAULT_GAP_MS = 5 * 60 * 1000;
 
+/** Which state the thread is drawing; also `data-state` on the scroll host. */
+type ThreadPhase = "loading" | "error" | "empty" | "thread";
+
 function toDate(value: MessageItem["createdAt"]): Date | null {
   if (value == null) return null;
   const d = value instanceof Date ? value : new Date(value);
@@ -144,6 +147,20 @@ function defaultFormatTimestamp(date: Date): string {
  * named `log` with `logLabel`, otherwise a named region. Timestamps are at
  * the body-small step (13px), not 12. `anchor`, `fadeTop` and `before` are
  * opt-in, so a consumer that has not asked sees no change.
+ *
+ * AUTM-1946: the loading, error and empty states are drawn in that SAME scroll
+ * host, one element for every state, so the name, the focus and the ring never
+ * depend on the state. They used to be bare `overflow-y-auto` divs, which at
+ * 200% text scrolled with no way in from the keyboard (axe
+ * `scrollable-region-focusable`, the portal Inbox). In those states the host is
+ * a named `region` (named by `logLabel` when set, else `label`), `aria-busy`
+ * while loading, and becomes the `log` only once there are rows: a log that
+ * already existed would read the whole history out as it arrived. The error is
+ * ErrorCard (`role="alert"`, Retry when `onRetry` is given). The empty and error
+ * content is centred with auto margins, never `items-center`: centred content
+ * that overflows is cut off above the scroll origin, where nothing can reach it.
+ * If a state change removes the control that had focus (Retry, say), focus goes
+ * to the host rather than to the page, so the keyboard stays in the thread.
  */
 export function MessageThread({
   items,
@@ -176,7 +193,25 @@ export function MessageThread({
   // Anchored: the first paint with rows lands on the newest one, before the
   // reader sees it, so the thread never opens on its oldest message.
   const anchored = useRef(false);
-  const hasRows = !loading && !error && items.length > 0;
+  const phase: ThreadPhase = loading ? "loading" : error ? "error" : items.length === 0 ? "empty" : "thread";
+  const hasRows = phase === "thread";
+
+  // AUTM-1946: keep the keyboard in the thread when a state change removes the
+  // control that had focus (Retry, once the consumer goes back to loading).
+  // Read during render, while that control is still in the document: React
+  // removes it before any effect runs. The host itself is one element across
+  // every state, so focus ON the host needs no help.
+  const hostNode = scrollRef.current;
+  const activeNode = typeof document === "undefined" ? null : document.activeElement;
+  const focusInside = !!hostNode && !!activeNode && activeNode !== hostNode && hostNode.contains(activeNode);
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !focusInside) return;
+    const now = document.activeElement;
+    if (now === null || now === document.body) el.focus({ preventScroll: true });
+    // Only when the state changes; `focusInside` is that render's reading.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
   useLayoutEffect(() => {
     if (anchor !== "end" || !hasRows || anchored.current) return;
     const el = scrollRef.current;
@@ -228,142 +263,126 @@ export function MessageThread({
     if (next !== above) setAbove(next);
   }
 
-  if (loading) {
-    return (
-      <div className={cn("flex-1 overflow-y-auto overscroll-contain px-4 pt-4", className)}>
-        <div className={cn("mx-auto w-full", measureClassName)}>
-          <p role="status" className="sr-only">
-            {loadingLabel}
-          </p>
-          <AsyncSkeleton variant="list" count={5} rowHeight="h-12" />
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div
-        className={cn(
-          "flex flex-1 items-center justify-center overflow-y-auto px-4 py-6",
-          className,
-        )}
-      >
-        <div className={cn("w-full", measureClassName)}>
-          <ErrorCard
-            title={errorTitle}
-            message={errorMessage}
-            onRetry={onRetry}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div
-        className={cn(
-          "flex flex-1 items-center justify-center overflow-y-auto px-4 py-6",
-          className,
-        )}
-      >
-        <div className={cn("w-full", measureClassName)}>{emptyState}</div>
-      </div>
-    );
-  }
-
   // Sort oldest-first — the source order isn't guaranteed; sort on createdAt
   // so the visual order is deterministic (items without a date keep input order).
-  const sorted = [...items].sort(
-    (a, b) =>
-      (toDate(a.createdAt)?.getTime() ?? 0) -
-      (toDate(b.createdAt)?.getTime() ?? 0),
-  );
+  const sorted = hasRows
+    ? [...items].sort(
+        (a, b) =>
+          (toDate(a.createdAt)?.getTime() ?? 0) -
+          (toDate(b.createdAt)?.getTime() ?? 0),
+      )
+    : [];
+  const fading = hasRows && fadeTop && above;
 
   return (
     <div
       ref={scrollRef}
-      role={logLabel ? "log" : "region"}
+      // A log only once there are rows (see above); a named region before.
+      role={hasRows && logLabel ? "log" : "region"}
       aria-label={logLabel ?? label}
+      aria-busy={phase === "loading" || undefined}
       tabIndex={0}
       onScroll={handleScroll}
-      data-fade={fadeTop && above ? "top" : undefined}
+      data-state={phase}
+      data-fade={fading ? "top" : undefined}
       className={cn(
         // AUTM-1756: contained, so reaching the oldest message never scrolls
         // the page or the drawer behind the thread.
-        "flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-4",
+        "flex-1 overflow-y-auto overscroll-contain px-4",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent)]",
+        phase === "thread" && "pb-4 pt-4",
+        phase === "loading" && "pt-4",
+        // A column, so the card's auto margins centre it while it fits and
+        // let it start at the top, all of it reachable, once it does not.
+        (phase === "error" || phase === "empty") && "flex flex-col py-6",
         // A soft edge while there is history above: 3rem of fade, so a
         // bubble half out of view dissolves instead of being sliced.
-        fadeTop && above && "[mask-image:linear-gradient(to_bottom,transparent_0,#000_3rem)]",
+        fading && "[mask-image:linear-gradient(to_bottom,transparent_0,#000_3rem)]",
         className,
       )}
     >
+      {/* One polite line for every state: "Loading messages" while loading
+          (the skeleton is decorative), a failed send once rows are in. One
+          element throughout, so a retry's loading is said as it starts. */}
       <p role="status" className="sr-only">
-        {announcement}
+        {phase === "loading" ? loadingLabel : hasRows ? announcement : ""}
       </p>
-      {before ? <div className={cn("mx-auto mb-3 flex w-full justify-center", measureClassName)}>{before}</div> : null}
-      <ul className={cn("mx-auto flex w-full flex-col gap-2", measureClassName)}>
-        {sorted.map((m, i) => {
-          const prev = sorted[i - 1];
-          const date = toDate(m.createdAt);
-          const prevDate = toDate(prev?.createdAt);
-          const showStamp =
-            !!date &&
-            (!prev ||
-              prevDate == null ||
-              date.getTime() - prevDate.getTime() > timestampGapMs);
-          const status = m.side === "own" ? m.status : undefined;
-          return (
-            <li
-              key={m.id}
-              className="flex flex-col gap-1"
-              data-testid={m.testId}
-              data-status={status}
-            >
-              {/* AUTM-1221: the CSS forced uppercase and letterspacing over
-                  whatever `formatTimestamp` returned, so a consumer that
-                  sentence-cased its dates still rendered "TODAY · 9:17 AM"
-                  (found on customer-web's booking chat, AUTM-1205). The
-                  formatter is the source of truth now. */}
-              {showStamp && date ? (
-                <p className="mt-3 text-center text-[0.8125rem] font-medium text-[var(--text-subtle)]">
-                  {formatTimestamp(date)}
-                </p>
-              ) : null}
-              {m.body != null ? (
-                <div
-                  className={cn(
-                    "flex w-full",
-                    m.side === "own"
-                      ? "justify-end"
-                      : m.side === "incoming"
-                        ? "justify-start"
-                        : "justify-center",
-                  )}
-                >
-                  {m.body}
-                </div>
-              ) : (
-                <MessageBubble side={m.side}>{m.text}</MessageBubble>
-              )}
-              {status === "sending" ? (
-                <p className="self-end text-[0.8125rem] leading-snug text-[var(--text-subtle)]">
-                  {sendingLabel}
-                </p>
-              ) : null}
-              {status === "failed" ? (
-                <SendFailed
-                  label={m.onRetry ? failedLabel : failedNoRetryLabel}
-                  onRetry={m.onRetry}
-                  testId={retryTestId}
-                />
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+      {phase === "loading" ? (
+        <div className={cn("mx-auto w-full", measureClassName)}>
+          <AsyncSkeleton variant="list" count={5} rowHeight="h-12" />
+        </div>
+      ) : null}
+      {phase === "error" ? (
+        <div className={cn("m-auto w-full", measureClassName)}>
+          <ErrorCard title={errorTitle} message={errorMessage} onRetry={onRetry} />
+        </div>
+      ) : null}
+      {phase === "empty" ? <div className={cn("m-auto w-full", measureClassName)}>{emptyState}</div> : null}
+      {hasRows && before ? (
+        <div className={cn("mx-auto mb-3 flex w-full justify-center", measureClassName)}>{before}</div>
+      ) : null}
+      {hasRows ? (
+        <ul className={cn("mx-auto flex w-full flex-col gap-2", measureClassName)}>
+          {sorted.map((m, i) => {
+            const prev = sorted[i - 1];
+            const date = toDate(m.createdAt);
+            const prevDate = toDate(prev?.createdAt);
+            const showStamp =
+              !!date &&
+              (!prev ||
+                prevDate == null ||
+                date.getTime() - prevDate.getTime() > timestampGapMs);
+            const status = m.side === "own" ? m.status : undefined;
+            return (
+              <li
+                key={m.id}
+                className="flex flex-col gap-1"
+                data-testid={m.testId}
+                data-status={status}
+              >
+                {/* AUTM-1221: the CSS forced uppercase and letterspacing over
+                    whatever `formatTimestamp` returned, so a consumer that
+                    sentence-cased its dates still rendered "TODAY · 9:17 AM"
+                    (found on customer-web's booking chat, AUTM-1205). The
+                    formatter is the source of truth now. */}
+                {showStamp && date ? (
+                  <p className="mt-3 text-center text-[0.8125rem] font-medium text-[var(--text-subtle)]">
+                    {formatTimestamp(date)}
+                  </p>
+                ) : null}
+                {m.body != null ? (
+                  <div
+                    className={cn(
+                      "flex w-full",
+                      m.side === "own"
+                        ? "justify-end"
+                        : m.side === "incoming"
+                          ? "justify-start"
+                          : "justify-center",
+                    )}
+                  >
+                    {m.body}
+                  </div>
+                ) : (
+                  <MessageBubble side={m.side}>{m.text}</MessageBubble>
+                )}
+                {status === "sending" ? (
+                  <p className="self-end text-[0.8125rem] leading-snug text-[var(--text-subtle)]">
+                    {sendingLabel}
+                  </p>
+                ) : null}
+                {status === "failed" ? (
+                  <SendFailed
+                    label={m.onRetry ? failedLabel : failedNoRetryLabel}
+                    onRetry={m.onRetry}
+                    testId={retryTestId}
+                  />
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </div>
   );
 }
