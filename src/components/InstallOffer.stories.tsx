@@ -96,6 +96,100 @@ export const Narrow: Story = {
     ],
 }
 
+/* ── layout="row" (AUTM-2048) ─────────────────────────────────────────────
+ * Don, 2026-10-27, direction A of the AUTM-1906 proofs: the merchant portal's
+ * offer as one slim row at the end of Today's main column, about a third of
+ * the card's height. Gate 2: the merchant, idle, after the day's work, once
+ * per browser; it should read as a row of the product (Wise's round mark,
+ * title, one line, one action, filled close disc), not a banner. The close is
+ * named "No thanks" on the portal because dismissing is for good on that
+ * browser. The card above stays the default (customer-web draws it). In the
+ * page column of this file (36rem), wide enough for the one-line mode. */
+
+const ROW_PROMPT = {
+    layout: 'row' as const,
+    title: 'Install Autara for business',
+    body: 'Opens to Today in its own window.',
+    dismissLabel: 'No thanks',
+    icon: <img src={APP_ICON} alt="" />,
+    testId: 'today-install-offer',
+}
+
+export const Row: Story = {
+    name: 'Row: Chrome and Edge, one tap',
+    args: ROW_PROMPT,
+}
+
+export const RowAppleMobile: Story = {
+    name: 'Row: iPad and iPhone, the Share steps under the words',
+    args: {
+        ...ROW_PROMPT,
+        path: 'apple-mobile',
+        title: 'Add Autara for business to your Home Screen',
+        body: 'Opens to Today, full screen, from its own icon.',
+    },
+}
+
+/** A phone's column (390): Install drops under the words; the close stays top right. */
+export const RowPhone: Story = {
+    name: 'Row: a 390 phone',
+    args: ROW_PROMPT,
+    decorators: [
+        (Story) => (
+            <div style={{ width: 358 }}>
+                <Story />
+            </div>
+        ),
+    ],
+}
+
+/**
+ * EDGE CASE: a 320px phone, or any phone at 200% text. Under 19rem of row the
+ * mark and the close share the top line and the words, Install or the steps
+ * take the full width under them. rem, so text size moves it too.
+ */
+export const RowNarrow: Story = {
+    name: 'Row edge case: a 320px column, iPhone steps',
+    args: {
+        ...ROW_PROMPT,
+        path: 'apple-mobile',
+        title: 'Add Autara for business to your Home Screen',
+        body: 'Opens to Today, full screen, from its own icon.',
+    },
+    decorators: [
+        (Story) => (
+            <div style={{ width: 288 }}>
+                <Story />
+            </div>
+        ),
+    ],
+}
+
+/** EDGE CASE: browser text at 200% on a desktop column, the way the portal's text scale sets it. */
+export const RowText200: Story = {
+    name: 'Row edge case: 200% text',
+    args: ROW_PROMPT,
+    decorators: [
+        (Story) => {
+            React.useEffect(() => {
+                const root = document.documentElement
+                const before = root.style.fontSize
+                root.style.fontSize = '200%'
+                return () => {
+                    root.style.fontSize = before
+                }
+            }, [])
+            return <Story />
+        },
+    ],
+}
+
+/** The phone-glyph mark, when the surface passes no icon. */
+export const RowWithoutIcon: Story = {
+    name: 'Row: no app icon',
+    args: { ...ROW_PROMPT, icon: undefined },
+}
+
 /** Every browser's words, as a surface's "Install the app" help shows them. */
 export const StepsForEveryBrowser: Story = {
     name: 'InstallSteps: every browser',
