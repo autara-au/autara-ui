@@ -1,0 +1,149 @@
+/* ─── AutaraSplash (Don, 2026-11-05) ──────────────────────────────────────
+ *
+ * The arrival: rays drift in from 1.5x A's travel and settle clockwise while
+ * the set turns 36deg into place, then the ring lands; about one second on
+ * one expo ease-out with no overshoot. The hold: rays at half light, one at a
+ * time brightening and drifting a touch outward on a sine ease, 1800ms a lap.
+ * See AutaraSplash.tsx for the why.
+ *
+ * Every piece transforms about the mark's own centre in its own units
+ * (`transform-box: view-box`), so `translate(94px)` is 94 units of the 500
+ * unit mark at any rendered size.
+ *
+ * `--autara-splash-t0` (negative) shifts every delay, so a second copy picks
+ * up the timeline where the first left it. The hold's two animations fill
+ * FORWARDS only: with a backwards fill they would sit on top of the arrival
+ * from the first frame and the rays would never move.
+ *
+ * Colour: the lit ray is a second path over each ray whose opacity moves, so
+ * nothing animates a colour. Lime only on deep and dark. */
+.autara-splash {
+    --autara-splash-mark: #ffffff;
+    --autara-splash-lit: var(--lime, #d4ff4f);
+    --autara-splash-ease: var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    --autara-splash-sine: cubic-bezier(0.45, 0, 0.55, 1);
+}
+.autara-splash[data-on='paper'],
+.autara-splash[data-on='theme'] {
+    --autara-splash-mark: var(--accent, #4e1bbd);
+    --autara-splash-lit: var(--accent, #4e1bbd);
+}
+[data-theme='dark'] .autara-splash[data-on='theme'],
+:root[data-theme='dark'] .autara-splash[data-on='theme'] {
+    --autara-splash-mark: #ffffff;
+    --autara-splash-lit: var(--lime, #d4ff4f);
+}
+
+.autara-splash-rays,
+.autara-splash-ray,
+.autara-splash-ring {
+    transform-box: view-box;
+    transform-origin: 250.2px 250.3px;
+}
+.autara-splash-ray-base {
+    fill: var(--autara-splash-mark);
+    opacity: 0.5;
+}
+.autara-splash-ray-lit {
+    fill: var(--autara-splash-lit);
+    opacity: 0;
+}
+.autara-splash-ring {
+    stroke: var(--autara-splash-mark);
+}
+
+@keyframes autara-splash-turn {
+    from {
+        transform: rotate(-36deg);
+    }
+    to {
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle {
+    from {
+        opacity: 0;
+        transform: translate(calc(var(--ux) * 94px), calc(var(--uy) * 94px)) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-ring {
+    from {
+        opacity: 0;
+        transform: scale(0.72);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-dim {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.5;
+    }
+}
+@keyframes autara-splash-glow {
+    0% {
+        opacity: 0;
+    }
+    16% {
+        opacity: 1;
+    }
+    38%,
+    100% {
+        opacity: 0;
+    }
+}
+@keyframes autara-splash-drift {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(calc(var(--ux) * 12.5px), calc(var(--uy) * 12.5px));
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .autara-splash-rays {
+        animation: autara-splash-turn 900ms var(--autara-splash-ease) var(--autara-splash-t0, 0ms) both;
+    }
+    .autara-splash-ray {
+        animation:
+            autara-splash-settle 760ms var(--autara-splash-ease) calc(var(--i) * 30ms + var(--autara-splash-t0, 0ms)) both,
+            autara-splash-drift 1800ms var(--autara-splash-sine)
+                calc(1420ms + var(--i) * 225ms + var(--autara-splash-t0, 0ms)) infinite forwards;
+    }
+    .autara-splash-ring {
+        animation: autara-splash-ring 520ms var(--autara-splash-ease) calc(420ms + var(--autara-splash-t0, 0ms)) both;
+    }
+    .autara-splash-ray-base {
+        opacity: 1;
+        animation: autara-splash-dim 420ms var(--autara-splash-ease) calc(1000ms + var(--autara-splash-t0, 0ms)) forwards;
+    }
+    .autara-splash-ray-lit {
+        animation: autara-splash-glow 1800ms var(--autara-splash-sine)
+            calc(1420ms + var(--i) * 225ms + var(--autara-splash-t0, 0ms)) infinite forwards;
+    }
+}
+
+/* Reduced motion: the mark is there, still, at half light, and the light
+ * goes round by opacity alone. The global clamp in animations.css cuts
+ * animations to one 0.01ms frame, so the glow restates its timing with
+ * `!important`, for this one class, as AutaraLoader's breathe does. */
+@media (prefers-reduced-motion: reduce) {
+    .autara-splash .autara-splash-ray-lit {
+        animation: autara-splash-glow 1800ms var(--autara-splash-sine) calc(var(--i) * 225ms) infinite forwards !important;
+        animation-duration: 1800ms !important;
+        animation-iteration-count: infinite !important;
+    }
+}
