@@ -179,6 +179,7 @@ export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone } from '
 // AUTM-1706: the Autara mark as a loader; Button's busy state uses it.
 export { AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone } from './AutaraLoader'
 export { AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn } from './AutaraSplash'
+export { AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps } from './AutaraSplashScreen'
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from './MultiSelect'
 
 export {
