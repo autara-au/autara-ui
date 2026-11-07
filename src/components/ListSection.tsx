@@ -75,14 +75,18 @@ import { cn } from '../lib/cn'
  *     visually hidden zone hint.
  */
 
-type ListVariant = 'card' | 'plain'
+type ListVariant = 'card' | 'plain' | 'quiet'
 const ListVariantContext = React.createContext<ListVariant>('card')
 
 export interface ListSectionProps {
     title?: string
     children: ReactNode
     className?: string
-    /** @default 'card' (the band box). `plain`: hairline rows on the page's paper. */
+    /**
+     * @default 'card' (the band box of white row cards). `plain`: hairline rows on
+     * the page's paper. `quiet`: one band surface, the rows on it with no card of
+     * their own (Don, 2026-11-07), for a settings screen of several groups.
+     */
     variant?: ListVariant
     /** The title's element. @default 'h2' */
     titleAs?: 'h2' | 'h3'
@@ -134,7 +138,9 @@ export function ListSection({
                     className={
                         plain
                             ? 'flex flex-col divide-y divide-[var(--hairline)]'
-                            : 'flex flex-col gap-2.5 rounded-[1.5rem] bg-[var(--band)] p-3.5'
+                            : variant === 'quiet'
+                              ? 'flex flex-col gap-0.5 rounded-[1.5rem] bg-[var(--band)] p-1.5'
+                              : 'flex flex-col gap-2.5 rounded-[1.5rem] bg-[var(--band)] p-3.5'
                     }
                 >
                     {children}
@@ -195,6 +201,7 @@ export function ListSectionRow({
 }: ListSectionRowProps) {
     const variant = React.useContext(ListVariantContext)
     const plain = variant === 'plain'
+    const quiet = variant === 'quiet'
     const isLink = !!element || !!href
     const interactive = !!onTap || isLink
 
@@ -202,11 +209,18 @@ export function ListSectionRow({
         'flex min-h-11 w-full items-center gap-3 text-left transition-colors',
         plain
             ? 'rounded-xl px-0 py-3.5'
-            : 'rounded-2xl bg-[var(--raised)] px-4 py-3.5',
+            : quiet
+              ? // The quiet pass (Don, 2026-11-07): the row sits on the
+                // group's band, no card of its own, so a group is one surface
+                // and not a box inside a box.
+                'rounded-[1.125rem] px-3.5 py-3'
+              : 'rounded-2xl bg-[var(--raised)] px-4 py-3.5',
         interactive &&
             (plain
                 ? 'hover:bg-[var(--band)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] sm:-mx-2 sm:w-[calc(100%+1rem)] sm:px-2'
-                : 'hover:bg-[var(--paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]'),
+                : quiet
+                  ? 'hover:bg-[var(--band-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]'
+                  : 'hover:bg-[var(--paper)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]'),
         interactive && press && 'motion-press-row',
         className,
     )
@@ -222,7 +236,10 @@ export function ListSectionRow({
                 <span
                     aria-hidden
                     className={cn(
-                        'grid size-10 shrink-0 place-items-center rounded-full bg-[var(--band)]',
+                        // On a quiet group the disc is paper, so it still
+                        // reads on the band it sits on.
+                        'grid size-10 shrink-0 place-items-center rounded-full',
+                        quiet ? 'bg-[var(--paper)]' : 'bg-[var(--band)]',
                         destructive ? 'text-[var(--danger)]' : 'text-[var(--accent)]',
                     )}
                 >

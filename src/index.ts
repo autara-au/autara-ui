@@ -68,6 +68,7 @@ export {
     AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone,
     AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn,
     AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps,
+    CommandMenu, matchesCommand, type CommandMenuProps, type CommandMenuGroup, type CommandMenuItem,
     MultiSelect, type MultiSelectOption, type MultiSelectProps,
     Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption,
     // v1.1.0 — promoted from autara-customer-web

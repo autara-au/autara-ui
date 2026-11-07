@@ -180,6 +180,7 @@ export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone } from '
 export { AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone } from './AutaraLoader'
 export { AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn } from './AutaraSplash'
 export { AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps } from './AutaraSplashScreen'
+export { CommandMenu, matchesCommand, type CommandMenuProps, type CommandMenuGroup, type CommandMenuItem } from './CommandMenu'
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from './MultiSelect'
 
 export {
