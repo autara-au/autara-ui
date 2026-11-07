@@ -230,3 +230,31 @@ export const PlainWithLeading: Story = {
         </div>
     ),
 }
+
+/**
+ * `variant="quiet"` (Don, 2026-11-07, the merchant app's quiet pass): one band
+ * surface per group with the rows on it, no white card per row, so a settings
+ * screen of several groups is not a box inside a box on every line. The icon
+ * discs are paper so they still read on the band. Hover a row.
+ */
+export const Quiet: Story = {
+    name: 'Quiet (2026-11-07)',
+    render: () => (
+        <div className="w-[480px] bg-[var(--surface)] p-4">
+            <ListSection variant="quiet" title="Business">
+                <ListSectionRow icon={<ShopIcon />} label="Business profile" description="Name, photo, description and address" onTap={() => {}} />
+                <ListSectionRow icon={<BellIcon />} label="Reviews" description="3.2 from 60 reviews" onTap={() => {}} />
+                <ListSectionRow icon={<BellIcon />} label="Verification" description="ABN and documents approved" trailing="Verified" />
+            </ListSection>
+            <ListSection variant="quiet" title="Account">
+                <ListSectionRow icon={<LogoutIcon />} label="Sign out" destructive onTap={() => {}} />
+            </ListSection>
+        </div>
+    ),
+}
+
+export const QuietDark: Story = {
+    name: 'Quiet, dark',
+    globals: { theme: 'dark' },
+    render: Quiet.render,
+}

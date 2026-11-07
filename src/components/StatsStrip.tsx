@@ -33,8 +33,8 @@ import { StatTile, type StatTone } from './StatTile'
 
 export interface StatItem {
     label: string
-    /** Pre-formatted value string. `null` or `undefined` → loading skeleton. */
-    value?: string | number | null
+    /** Pre-formatted value. `null` or `undefined` → loading skeleton. */
+    value?: ReactNode
     caption?: string
     /** Optional 20 px icon glyph rendered top-right of the tile. */
     icon?: ReactNode
@@ -46,6 +46,12 @@ export interface StatItem {
      * answers their question, and two heroes is no hero. See StatTile.
      */
     hero?: boolean
+    /** `quiet`: the cell opens what the figure is made of. */
+    onClick?: () => void
+    /** `data-testid` on the tile or cell (a public API for QA). */
+    testId?: string
+    /** `quiet`: a zero or an unknown figure, drawn muted. */
+    muted?: boolean
 }
 
 export interface StatsStripProps {
@@ -56,6 +62,19 @@ export interface StatsStripProps {
      *  Defaults to `min(stats.length, 4)`. */
     columns?: 2 | 3 | 4
     className?: string
+    /**
+     * `tiles` (default): a grid of band tiles.
+     *
+     * `quiet` (Don, 2026-11-07, the merchant app's quiet pass): ONE band
+     * holding the stats as cells (`StatTile variant="cell"`), a 13px label
+     * over a bold figure, no tile of its own and no Black weight. For a row
+     * of figures that support a screen rather than lead it: under Today's
+     * hero, over a list of customers or invoices. In a narrow strip (a
+     * phone, 200% text) the cells become rows, label left and figure right.
+     */
+    variant?: 'tiles' | 'quiet'
+    /** `quiet`: the cells' top figure size (StatTile `figureSize`). */
+    figureSize?: 'md' | 'lg'
 }
 
 const COLUMN_CLASS: Record<2 | 3 | 4, string> = {
@@ -64,12 +83,54 @@ const COLUMN_CLASS: Record<2 | 3 | 4, string> = {
     4: 'sm:grid-cols-4',
 }
 
+const QUIET_COLUMNS: Record<1 | 2 | 3 | 4, string> = {
+    1: 'grid-cols-1',
+    2: 'grid-cols-2',
+    3: 'grid-cols-3',
+    4: 'grid-cols-4',
+}
+
 export function StatsStrip({
     stats,
     loading = false,
     columns,
     className,
+    variant = 'tiles',
+    figureSize = 'lg',
 }: StatsStripProps) {
+    if (variant === 'quiet') {
+        const n = (columns ?? Math.min(Math.max(stats.length, 1), 4)) as 1 | 2 | 3 | 4
+        return (
+            /* Named, so the cells can lay out as rows when THIS strip is
+               narrow, whatever container sits around it. */
+            <div className="stats-strip-host @container/strip">
+                <div
+                    data-variant="quiet"
+                    className={cn(
+                        'stats-strip grid gap-1 rounded-[1.25rem] bg-[var(--band)] p-1.5 @max-[22em]/strip:grid-cols-1',
+                        QUIET_COLUMNS[n],
+                        className,
+                    )}
+                >
+                    {stats.map((s, i) => (
+                        <div key={i} className="grid min-w-0 [container-type:inline-size]">
+                            <StatTile
+                                variant="cell"
+                                label={s.label}
+                                value={s.value}
+                                caption={s.caption}
+                                muted={s.muted}
+                                figureSize={figureSize}
+                                loading={loading}
+                                onClick={s.onClick}
+                                testId={s.testId}
+                            />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
     const cols: 2 | 3 | 4 = columns ?? (Math.min(stats.length, 4) as 2 | 3 | 4)
     /* AUTM-1792 — on a phone the strip is two columns, and three stats left
        the third alone on a row with the hero squeezed into half a phone,
@@ -109,6 +170,8 @@ export function StatsStrip({
                             tone={s.tone}
                             hero={s.hero}
                             loading={loading}
+                            onClick={s.onClick}
+                            testId={s.testId}
                         />
                     </div>
                 ))}

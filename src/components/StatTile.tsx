@@ -149,6 +149,93 @@ export interface StatTileProps {
      */
     testId?: string
     className?: string
+    /**
+     * `tile` (default): the 20px band tile with a 40px Black figure.
+     *
+     * `cell`: one cell of a quiet strip (`StatsStrip variant="quiet"`; Don,
+     * 2026-11-07, the merchant app's quiet pass). No fill of its own, since
+     * the strip is the one band; a 13px label over a bold figure, never
+     * Black and never lime, because Black is for a screen's one hero and a
+     * row of equal Black figures has none. `hero` and `tone` are ignored.
+     * Where the strip is narrow (a phone, 200% text) the cell lays out as a
+     * row, the label left and the figure right.
+     */
+    variant?: 'tile' | 'cell'
+    /** `cell`: the figure is a zero, or unknown, so it whispers (muted ink). */
+    muted?: boolean
+    /**
+     * `cell`: the figure's top size. `md` 18px, for a strip under a hero (the
+     * merchant's Today); `lg` 22px, for a strip that leads its screen. It
+     * shrinks below that to fit its cell (`cqi`; the cell is a size
+     * container).
+     */
+    figureSize?: 'md' | 'lg'
+}
+
+/**
+ * The quiet strip's cell. Its own function, so the tile above stays as it
+ * was for every consumer that did not ask for a cell.
+ */
+function StatCell({
+    label,
+    value,
+    caption,
+    loading,
+    muted,
+    figureSize,
+    onClick,
+    testId,
+    className,
+}: Pick<StatTileProps, 'label' | 'value' | 'caption' | 'loading' | 'muted' | 'figureSize' | 'onClick' | 'testId' | 'className'>) {
+    const interactive = typeof onClick === 'function'
+    const shell = cn(
+        'flex min-h-11 w-full min-w-0 flex-col items-start justify-center gap-1 rounded-[0.875rem] px-3 py-2.5 text-left transition-colors',
+        // The narrow strip: one row per stat, as a settings list reads.
+        '@max-[22em]/strip:flex-row @max-[22em]/strip:flex-wrap @max-[22em]/strip:items-center @max-[22em]/strip:justify-between @max-[22em]/strip:gap-x-3',
+        interactive &&
+            'hover:bg-[var(--band-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]',
+        className,
+    )
+    const body = (
+        <>
+            <span title={label} className="min-w-0 truncate text-[0.8125rem] leading-tight font-medium text-[var(--text-muted)]">
+                {label}
+            </span>
+            {loading || value == null ? (
+                <span aria-hidden className="block h-5 w-16 motion-skeleton rounded-md bg-[var(--band-press)]" />
+            ) : (
+                <span
+                    className={cn(
+                        // Bold, tabular, one line; sized down to its cell.
+                        'stat-tile-figure leading-tight font-bold tabular-nums whitespace-nowrap',
+                        figureSize === 'lg' ? 'text-[clamp(1rem,14cqi,1.375rem)]' : 'text-[clamp(0.9375rem,14cqi,1.125rem)]',
+                        muted ? 'text-[var(--text-muted)]' : 'text-[var(--text-strong)]',
+                    )}
+                >
+                    {value}
+                </span>
+            )}
+            {caption ? (
+                <span className="w-full text-[0.8125rem] leading-snug text-[var(--text-muted)] @max-[22em]/strip:order-last">
+                    {caption}
+                </span>
+            ) : null}
+        </>
+    )
+    if (!interactive) {
+        return (
+            <div className={shell} data-testid={testId}>
+                {body}
+            </div>
+        )
+    }
+    return (
+        // Named by its words ("Still to collect $0.00"): a cell is small
+        // enough that the figure is the point of pressing it.
+        <button type="button" onClick={onClick} data-testid={testId} className={shell}>
+            {body}
+        </button>
+    )
 }
 
 export function StatTile({
@@ -163,7 +250,25 @@ export function StatTile({
     onClick,
     testId,
     className,
+    variant = 'tile',
+    muted = false,
+    figureSize = 'md',
 }: StatTileProps) {
+    if (variant === 'cell') {
+        return (
+            <StatCell
+                label={label}
+                value={value}
+                caption={caption}
+                loading={loading}
+                muted={muted}
+                figureSize={figureSize}
+                onClick={onClick}
+                testId={testId}
+                className={className}
+            />
+        )
+    }
     const interactive = typeof onClick === 'function'
     const shell = cn(
         /* AUTM-1426 — the same column layout whether the shell is a <div>

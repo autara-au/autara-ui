@@ -214,3 +214,30 @@ export const ChipWithAction: Story = {
     ),
 }
 
+
+/**
+ * `figure="md"` (Don, 2026-11-07): 26px Bold, for money that sits beside the
+ * action that matters more (the deposit and balance beside Confirm in the
+ * merchant's Inbox panel), where two 32px Black figures out-shouted it.
+ */
+export const ChipsBesideAnAction: Story = {
+    name: 'Chips, medium figure, beside an action',
+    args: {
+        variant: 'chips',
+        figure: 'md',
+        label: 'Money',
+        rows: [
+            { label: 'Deposit', value: '$24.00', tone: 'flight', state: 'On hold' },
+            { label: 'Balance', value: '$56.00', state: 'After the job' },
+        ],
+    },
+    render: (args) => (
+        <div className="flex max-w-[320px] flex-col gap-3">
+            <MoneyBreakdown {...args} />
+            <div className="flex gap-2">
+                <button type="button" className="min-h-11 flex-1 rounded-full bg-[var(--band)] text-[var(--danger)]">Decline</button>
+                <button type="button" className="min-h-11 flex-1 rounded-full bg-[var(--lime)] font-bold text-[var(--on-lime)]">Confirm</button>
+            </div>
+        </div>
+    ),
+}

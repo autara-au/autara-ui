@@ -105,11 +105,19 @@ export interface MoneyBreakdownProps {
     card?: boolean
     /** `list` (default): label and amount on a line. `chips`: each row a chip. */
     variant?: 'list' | 'chips'
+    /**
+     * `chips`: the figure's size. `lg` (default) 32px Black, for money that is
+     * the screen's point. `md` 26px Bold (Don, 2026-11-07, the merchant app's
+     * quiet pass), for money beside the action that matters more, as the
+     * deposit and balance beside Confirm in the Inbox panel: two Black figures
+     * there out-shouted the one action.
+     */
+    figure?: 'lg' | 'md'
     testId?: string
     className?: string
 }
 
-function Chip({ row }: { row: MoneyRow }) {
+function Chip({ row, figure = 'lg' }: { row: MoneyRow; figure?: 'lg' | 'md' }) {
     const tone = row.tone ?? 'neutral'
     const badge = STATE_BADGE[tone]
     return (
@@ -129,7 +137,15 @@ function Chip({ row }: { row: MoneyRow }) {
                 ) : null}
             </dt>
             {/* Whole: an amount never breaks mid-number, and fits its chip. */}
-            <MoneyFigure className="leading-[1.1] font-black tracking-[-0.02em] tabular-nums">{row.value}</MoneyFigure>
+            <MoneyFigure
+                className={
+                    figure === 'md'
+                        ? 'text-[length:calc(1.625rem*var(--figure-fit,1))] leading-[1.1] font-bold tracking-[-0.02em] tabular-nums'
+                        : 'leading-[1.1] font-black tracking-[-0.02em] tabular-nums'
+                }
+            >
+                {row.value}
+            </MoneyFigure>
             {row.action ? <dd className="m-0 mt-1.5 flex min-w-0 text-base font-medium">{row.action}</dd> : null}
         </div>
     )
@@ -160,6 +176,7 @@ export function MoneyBreakdown({
     title,
     card = false,
     variant = 'list',
+    figure = 'lg',
     testId,
     className,
 }: MoneyBreakdownProps) {
@@ -173,9 +190,9 @@ export function MoneyBreakdown({
                     className="m-0 grid grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-2.5"
                 >
                     {rows.map((row, i) => (
-                        <Chip key={i} row={row} />
+                        <Chip key={i} row={row} figure={figure} />
                     ))}
-                    {total ? <Chip row={total} /> : null}
+                    {total ? <Chip row={total} figure={figure} /> : null}
                 </dl>
                 {note ? <p className="m-0 text-[0.8125rem] leading-relaxed text-[var(--text-subtle)]">{note}</p> : null}
             </div>
