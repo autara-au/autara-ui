@@ -22,6 +22,7 @@
 @import "./disclosure.css";
 @import "./autohide.css";
 @import "./loader.css";
+@import "./splash.css";
 @import "./social.css";
 /* AUTM-1787: a list row's actions, by the room the row has. */
 @import "./row-actions.css";

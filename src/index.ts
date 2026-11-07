@@ -66,6 +66,8 @@ export {
     Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone,
     // AUTM-1706
     AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone,
+    AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn,
+    AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps,
     MultiSelect, type MultiSelectOption, type MultiSelectProps,
     Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption,
     // v1.1.0 — promoted from autara-customer-web
