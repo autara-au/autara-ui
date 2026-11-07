@@ -198,27 +198,30 @@ function StatCell({
     )
     const body = (
         <>
-            <span title={label} className="min-w-0 truncate text-[0.8125rem] leading-tight font-medium text-[var(--text-muted)]">
+            {/* Paragraphs, as the tile draws them: QA reads a stat by its
+                label's <p> and the number beside it (autara-web-automation
+                ReviewsPage.tileCandidates). */}
+            <p title={label} className="m-0 min-w-0 truncate text-[0.8125rem] leading-tight font-medium text-[var(--text-muted)]">
                 {label}
-            </span>
+            </p>
             {loading || value == null ? (
                 <span aria-hidden className="block h-5 w-16 motion-skeleton rounded-md bg-[var(--band-press)]" />
             ) : (
-                <span
+                <p
                     className={cn(
                         // Bold, tabular, one line; sized down to its cell.
-                        'stat-tile-figure leading-tight font-bold tabular-nums whitespace-nowrap',
+                        'stat-tile-figure m-0 leading-tight font-bold tabular-nums whitespace-nowrap',
                         figureSize === 'lg' ? 'text-[clamp(1rem,14cqi,1.375rem)]' : 'text-[clamp(0.9375rem,14cqi,1.125rem)]',
                         muted ? 'text-[var(--text-muted)]' : 'text-[var(--text-strong)]',
                     )}
                 >
                     {value}
-                </span>
+                </p>
             )}
             {caption ? (
-                <span className="w-full text-[0.8125rem] leading-snug text-[var(--text-muted)] @max-[22em]/strip:order-last">
+                <p className="m-0 w-full text-[0.8125rem] leading-snug text-[var(--text-muted)] @max-[22em]/strip:order-last">
                     {caption}
-                </span>
+                </p>
             ) : null}
         </>
     )

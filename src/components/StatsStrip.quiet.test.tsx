@@ -45,3 +45,14 @@ describe('StatsStrip variant="quiet" (2026-11-07)', () => {
         expect(container.querySelector('.stat-tile-figure')!.className).toContain('font-black')
     })
 })
+
+describe('StatsStrip quiet, as QA reads it', () => {
+    it('keeps the label and the figure as paragraphs, the label two levels under the cell wrapper text', () => {
+        render(<StatsStrip variant="quiet" stats={[{ label: 'Reviews', value: '60' }, { label: 'Average', value: '3.2' }]} />)
+        const label = screen.getByText('Reviews')
+        expect(label.tagName).toBe('P')
+        // autara-web-automation ReviewsPage: the label <p>, then `../..`.
+        const tile = label.parentElement!.parentElement!
+        expect(tile.textContent).toBe('Reviews60')
+    })
+})
