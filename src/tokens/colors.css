@@ -191,6 +191,9 @@
     --on-strong: #ffffff;
     --selected: #2e1070;
     --on-selected: #ffffff;
+    /* A secondary switch's selection (TabsList tone="secondary"): paper on
+       the band track in light. */
+    --selected-quiet: #ffffff;
     --brand: #4e1bbd;
     --on-brand: #ffffff;
     --brand-deep: #2e1070;
@@ -397,6 +400,8 @@
     /* #8f6bff takes ink, not white: white on it is 3.67:1, ink 5.31:1. */
     --selected: #8f6bff;
     --on-selected: #0e0a1a;
+    /* A step above the band in dark, as the pressed band is. */
+    --selected-quiet: #262036;
     --brand: #4e1bbd;
     --on-brand: #ffffff;
     --brand-deep: #2e1070;

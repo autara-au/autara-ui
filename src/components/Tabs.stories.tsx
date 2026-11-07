@@ -338,3 +338,39 @@ export const SlidingPillDark: Story = {
     globals: { theme: 'dark' },
     render: () => <Sliding />,
 }
+
+/* ─── 2026-11-07: a secondary switch ─────────────────────────────────────
+ *
+ * `<TabsList tone="secondary">`: a paper pill and an ink label on the band
+ * track, for a switch under a primary one (Bookings' Upcoming / Past under
+ * the view switcher), so a screen carries one purple selection, not two. */
+const Secondary = () => (
+    <div className="flex flex-col items-start gap-3">
+        <Tabs defaultValue="List">
+            <TabsList slide>
+                {['Day', 'Week', 'Month', 'List'].map((v) => (
+                    <TabsTrigger key={v} value={v}>
+                        {v}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
+        <Tabs defaultValue="upcoming">
+            <TabsList slide tone="secondary" aria-label="Upcoming or past bookings">
+                <TabsTrigger value="upcoming">Upcoming · 15</TabsTrigger>
+                <TabsTrigger value="past">Past · 48</TabsTrigger>
+            </TabsList>
+        </Tabs>
+    </div>
+)
+
+export const SecondaryTone: Story = {
+    name: 'Secondary tone (2026-11-07)',
+    render: () => <Secondary />,
+}
+
+export const SecondaryToneDark: Story = {
+    name: 'Secondary tone, dark',
+    globals: { theme: 'dark' },
+    render: () => <Secondary />,
+}

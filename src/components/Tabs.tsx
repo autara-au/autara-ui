@@ -192,10 +192,18 @@ export interface TabsListProps extends React.ComponentPropsWithoutRef<typeof Tab
      * jumping. Off by default so no consumer changes until it asks.
      */
     slide?: boolean
+    /**
+     * `primary` (default): the selected tab is the Selected fill (purple).
+     * `secondary` (Don, 2026-11-07, the merchant app's quiet pass): a paper
+     * pill and an ink label on the band track, for a switch that sits under
+     * a primary one (Bookings' Upcoming / Past under Day / Week / Month /
+     * List), so a screen carries one purple selection, not two.
+     */
+    tone?: 'primary' | 'secondary'
 }
 
 const TabsList = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>, TabsListProps>(
-    ({ className, slide = false, children, ...props }, ref) => {
+    ({ className, slide = false, tone = 'primary', children, ...props }, ref) => {
         return (
             <TabsPrimitive.List
                 ref={ref}
@@ -208,8 +216,12 @@ const TabsList = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>,
                      * text scale a fixed height clips the label. */
                     'inline-flex min-h-12 items-center justify-center gap-1 rounded-full bg-[var(--band)] p-1 text-[var(--text-muted)]',
                     slide && 'relative',
+                    // The pill and the trigger read --selected / --on-selected,
+                    // so the tone is those two, scoped to this list.
+                    tone === 'secondary' && '[--selected:var(--selected-quiet)] [--on-selected:var(--text-strong)]',
                     className
                 )}
+                data-tone={tone}
                 {...props}
             >
                 {slide ? <SlidingPill /> : null}
