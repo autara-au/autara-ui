@@ -45,6 +45,64 @@ describe('AutaraSplash', () => {
         expect(container.querySelectorAll('.autara-splash-ring')).toHaveLength(1)
     })
 
+    // AUTM-2042 (2026-11-08): an animation on an SVG child runs on the main
+    // thread, so a cold start's long task froze the rays mid-flight.
+    it('draws every moving part as an HTML layer, never an SVG child', () => {
+        const { container } = render(<AutaraSplash decorative />)
+        const moving = container.querySelectorAll(
+            '.autara-splash-rays, .autara-splash-ray, .autara-splash-ray-drift, .autara-splash-ray-base, .autara-splash-ray-lit, .autara-splash-ring'
+        )
+        expect(moving).toHaveLength(1 + 8 * 4 + 1)
+        for (const el of moving) expect(el.tagName, el.className).toBe('SPAN')
+        expect(container.querySelectorAll('svg [class]')).toHaveLength(0)
+        // The turn is the subtree's first animation, before any ray's.
+        expect(container.querySelector('.autara-splash-frame')?.firstElementChild).toHaveClass('autara-splash-rays')
+    })
+
+    it('names each ray by the way it drifts, clockwise from the top', () => {
+        const { container } = render(<AutaraSplash decorative />)
+        const rays = [...container.querySelectorAll<HTMLElement>('.autara-splash-ray')]
+        expect(rays.map((r) => r.dataset.ray)).toEqual(['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'])
+        expect(rays.map((r) => r.style.getPropertyValue('--i'))).toEqual(['0', '1', '2', '3', '4', '5', '6', '7'])
+    })
+
+    it('places its layers from its own stylesheet, so it draws without Tailwind', () => {
+        expect(CODE).toMatch(/\.autara-splash\s*\{[^}]*display:\s*inline-flex/)
+        expect(CODE).toMatch(/\.autara-splash-frame\s*\{[^}]*position:\s*relative[^}]*width:\s*100%[^}]*height:\s*100%/)
+        expect(CODE).toMatch(/\.autara-splash-ray-lit,\s*\.autara-splash-ring\s*\{[^}]*position:\s*absolute[^}]*inset:\s*0/)
+        expect(CODE).toMatch(/\.autara-splash-frame svg\s*\{[^}]*width:\s*100%[^}]*height:\s*100%/)
+    })
+
+    it('keeps every keyframe free of var(), and every ray moves along its own direction', () => {
+        const keyframes = CODE.match(/@keyframes[^{]+\{[\s\S]*?\n\}/g) ?? []
+        for (const k of keyframes) expect(k).not.toContain('var(')
+        // 94 of the 500 units for the settle, 12.5 for the drift; 0.7071 each way on a diagonal.
+        const D = 0.7071
+        const dirs: Record<string, [number, number]> = {
+            n: [0, -1], ne: [D, -D], e: [1, 0], se: [D, D], s: [0, 1], sw: [-D, D], w: [-1, 0], nw: [-D, -D],
+        }
+        const vector = (name: string) => {
+            const body = keyframes.find((k) => k.startsWith(`@keyframes ${name} `))
+            expect(body, name).toBeDefined()
+            const m = body!.match(/translate\((-?[\d.]+)%,\s*(-?[\d.]+)%\)/)
+            return [Number(m![1]) * 5, Number(m![2]) * 5]
+        }
+        for (const [dir, [ux, uy]] of Object.entries(dirs)) {
+            const [sx, sy] = vector(`autara-splash-settle-${dir}`)
+            expect(sx).toBeCloseTo(ux * 94, 2)
+            expect(sy).toBeCloseTo(uy * 94, 2)
+            const [dx, dy] = vector(`autara-splash-drift-${dir}`)
+            expect(dx).toBeCloseTo(ux * 12.5, 2)
+            expect(dy).toBeCloseTo(uy * 12.5, 2)
+            if (dir !== 'n') {
+                expect(CODE).toContain(`.autara-splash-ray[data-ray='${dir}'] {\n        animation-name: autara-splash-settle-${dir};`)
+                expect(CODE).toContain(
+                    `.autara-splash-ray[data-ray='${dir}'] > .autara-splash-ray-drift {\n        animation-name: autara-splash-drift-${dir};`
+                )
+            }
+        }
+    })
+
     it('sizes in rem and defaults to the deep ground', () => {
         const { container } = render(<AutaraSplash decorative size={112} />)
         const root = container.firstElementChild as HTMLElement

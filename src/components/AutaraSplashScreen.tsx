@@ -47,8 +47,17 @@ const splashRun = { origin: null as number | null, mounted: 0, leftAt: -Infinity
 const HANDOVER_MS = 250
 const noSubscription = () => () => {}
 
+/* The clock is the glow, read by name (AUTM-2042, 2026-11-08). It loops
+ * forever, so its `currentTime` keeps counting; the first animation in the
+ * subtree is the rays' 900ms turn, and a finished animation holds its
+ * `currentTime` at its end, so a hand-off after the arrival read 900ms however
+ * long the shell had been up, and the rays brightened and dimmed again. Every
+ * part's animation starts together, so any running one tells the same time:
+ * the first is the fallback. */
 function playedSoFar(el: HTMLElement | null | undefined): number | null {
-    const anim = el?.getAnimations?.({ subtree: true })[0]
+    const anims = el?.getAnimations?.({ subtree: true }) ?? []
+    const anim =
+        anims.find((a) => (a as Partial<CSSAnimation>).animationName === 'autara-splash-glow') ?? anims[0]
     if (!el || typeof anim?.currentTime !== 'number') return null
     const shift = -parseFloat(el.style.getPropertyValue('--autara-splash-t0')) || 0
     return anim.currentTime + shift
