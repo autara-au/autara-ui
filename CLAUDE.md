@@ -68,6 +68,7 @@ src/
 │   └── index.css
 ├── preset/index.mjs        # Tailwind v4 preset (consumers import this)
 ├── lib/cn.ts               # clsx + tailwind-merge helper
+├── icons/                  # AUTM-2114: Autara's own icon set (also the `/icons` subpath)
 └── index.ts                # public package surface
 
 .storybook/
@@ -346,6 +347,20 @@ docs/
   `VehicleMakeMark`). Simple Icons is deliberately not a dependency (3,400
   icons for 23), and the marks are never hotlinked. Its data is CC0; the marks
   are their makers' trademarks, shown only to name the customer's car.
+- **Autara icons (AUTM-2114) are function declarations, never `icon(...)`
+  factory calls, and never pick a colour.** The set Don approved in
+  merchant-mobile was built with `export const X = icon(name, <>...</>)`;
+  that top-level call breaks the AUTM-1688 contract (`side-effects.test.ts`)
+  and a bundler cannot drop it, so each glyph here is `export function XIcon`
+  over the internal `AutaraIcon` svg, same output. The body is `currentColor`
+  at `--icon-body` (0.16, `active` 0.3): a fixed lavender body and a lime
+  active fill were turned down on 2026-11-08 ("not compatible when dark and
+  light"), so a glyph never names `--accent`, `--lime` or a hex, and
+  `AutaraIcons.test.tsx` fails if one does. The caller colours the current
+  item. `--icon-body: 1` gives a solid body (a rated star). Utility glyphs
+  are line only. A Solar name merchant-mobile starts using goes into
+  `solar-map.ts` (and the test's list) in the same change. Never JSX at a
+  module's top level here: it compiles to an import-time `_jsx()` call.
 - **Never put type or colour classes on an `h1` to `h6`; put them on an
   element inside it.** merchant-mobile (`src/main.css`) and customer-web
   (`src/app/globals.css`) both style headings with an UNLAYERED rule (colour
