@@ -98,8 +98,8 @@ function Demo({
                         alt="cropped"
                         className={
                             cropShape === 'round'
-                                ? 'h-28 w-28 rounded-full border border-[var(--border-subtle)] object-cover'
-                                : 'w-[360px] rounded-xl border border-[var(--border-subtle)] object-cover'
+                                ? 'h-28 w-28 rounded-full object-cover'
+                                : 'w-[360px] rounded-xl object-cover'
                         }
                     />
                 </figure>

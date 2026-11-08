@@ -12,7 +12,8 @@ import { useReturnFocus } from '../lib/use-return-focus'
  * Single light treatment (a dark companion for photo/ink surfaces is
  * deferred to a future PR). Honors the Autara house rules:
  *   - `--surface` (white) fill, `--text-strong` ink text
- *   - Hairline `--border-subtle` ring instead of any drop shadow
+ *   - No edge and no drop shadow: the panel is set apart by its fill on
+ *     the scrim (AUTM-2042: no hairlines)
  *   - Ink overlay at 50% opacity (no backdrop blur — flat
  *     editorial scrim)
  *   - CloseButton (AUTM-1756) at the top-right: a filled disc, not a bare cross
@@ -103,8 +104,8 @@ export type DialogSize = 'md' | 'lg'
 
 /**
  * What the parts inside a `DialogContent` need to know about it: which layout
- * they are in, whether the body has scrolled (the header draws its hairline
- * only then, so a dialog that fits has no line under its title), and whether
+ * they are in, whether the body has scrolled (the header is marked
+ * `data-scrolled` then; AUTM-2042 took away the hairline it drew), and whether
  * the panel is cramped (see `CRAMPED_SHARE`).
  */
 interface DialogLayoutState {
@@ -322,12 +323,10 @@ const DialogHeader = ({
                     // close disc; the description under it takes the full
                     // width, as Fresha's sheets set it.
                     'relative flex shrink-0 flex-col gap-1.5 px-5 pb-3 pt-6 text-left sm:px-6 [&>:first-child]:pr-11',
-                    // The hairline appears once the body has scrolled, so the
-                    // edge is only drawn when something is passing under it.
-                    // Opacity on the panel token: transform and opacity only.
-                    "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-[var(--hairline)] after:opacity-0 after:content-['']",
-                    'after:transition-opacity after:duration-[var(--motion-panel-in)] after:ease-[var(--motion-ease-out)]',
-                    'data-[scrolled]:after:opacity-100',
+                    // AUTM-2042 (Don, 2026-11-08: no hairlines): no rule
+                    // under the header, even once the body has scrolled; the
+                    // body simply passes under it. `data-scrolled` stays, as
+                    // a hook.
                     className
                 )}
                 {...props}
@@ -398,10 +397,11 @@ const DialogFooter = ({
             <div
                 data-dialog-footer=""
                 className={cn(
-                    // Pinned on a hairline, as Fresha, Airbnb and merchant-web's
-                    // address dialog draw it. It holds the home-indicator inset
-                    // (0 on a desktop browser).
-                    'flex shrink-0 flex-row flex-wrap-reverse gap-2.5 border-t border-[var(--hairline)] bg-[var(--paper)] px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:justify-end sm:px-6',
+                    // Pinned at the foot on the panel's own paper, with no rule
+                    // above it (AUTM-2042: no hairlines; Fresha and Airbnb draw
+                    // one). It holds the home-indicator inset (0 on a desktop
+                    // browser).
+                    'flex shrink-0 flex-row flex-wrap-reverse gap-2.5 bg-[var(--paper)] px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:justify-end sm:px-6',
                     // Cramped: the panel scrolls, and the actions stick to its foot.
                     cramped && 'sticky bottom-0 z-10',
                     // Side by side and sharing the width on a phone while both

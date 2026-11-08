@@ -236,7 +236,7 @@ export const InCardContext: Story = {
     name: 'In context — marketplace card',
     parameters: { layout: 'padded' },
     render: () => (
-        <div className="max-w-sm rounded-autara-lg border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <div className="max-w-sm rounded-[1.5rem] bg-[var(--band)] p-5">
             <div className="mb-3 flex items-start justify-between gap-3">
                 <h3 className="text-[0.9375rem] font-bold text-[var(--text-strong)]">
                     Northside Mobile Car Care

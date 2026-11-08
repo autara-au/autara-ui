@@ -13,10 +13,10 @@ import { cn } from "../lib/cn";
  * (Shift+Enter inserts a newline).
  *
  * Grammar:
- *   - Full-width dock — a hairline top border on the page surface, so it
- *     reads as one continuous edge across the screen while its content
- *     stays centered to the thread measure (`measureClassName`, shared with
- *     MessageThread).
+ *   - Full-width dock on the page surface, its content centered to the
+ *     thread measure (`measureClassName`, shared with MessageThread). No
+ *     rule above it (AUTM-2042, Don 2026-11-08: no hairlines): the field's
+ *     own edge marks it.
  *   - Field uses the canonical `.field-textarea` focus signature (warm-cream
  *     tint + solid brand-purple border, no halo) via `Textarea`, forced to a
  *     compact single-row min height that grows to a cap.
@@ -81,7 +81,7 @@ export interface MessageComposerProps {
   measureClassName?: string;
   /**
    * AUTM-1878: `dock` (default) is the field with Send beside it on a
-   * hairline-topped strip. `inset` is one full-width field with `leading`
+   * full-width strip. `inset` is one full-width field with `leading`
    * and Send inside it, growing to about four lines.
    */
   layout?: "dock" | "inset";
@@ -230,7 +230,7 @@ export function MessageComposer({
   return (
     <div
       className={cn(
-        "border-t border-[var(--border-subtle)] bg-[var(--surface)] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)]",
+        "bg-[var(--surface)] px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)]",
         className,
       )}
     >

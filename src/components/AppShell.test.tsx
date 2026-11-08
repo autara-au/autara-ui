@@ -351,7 +351,8 @@ describe('ActionBar 8.5 contract: one primary, two icons or one secondary (AUTM-
 })
 
 describe('ListSection plain variant and link rows (AUTM-1781)', () => {
-    it('plain: a 17px Bold title, hairline rows, no band box', () => {
+    // AUTM-2042 (Don, 2026-11-08: no hairlines): the rows part by space.
+    it('plain: a 17px Bold title, rows apart by space, no rule and no band box', () => {
         render(
             <ListSection variant="plain" title="When and where" titleId="when-where">
                 <ListSectionRow label="Thu 9 Oct" description="10:00 am AEDT" />
@@ -362,7 +363,8 @@ describe('ListSection plain variant and link rows (AUTM-1781)', () => {
         expect(heading.className).toContain('font-bold')
         expect(screen.getByRole('region', { name: 'When and where' })).toBeInTheDocument()
         const box = heading.parentElement!.querySelector('div')!
-        expect(box.className).toContain('divide-y')
+        expect(box.className).toContain('gap-1')
+        expect(box.className).not.toContain('divide-')
         expect(box.className).not.toContain('bg-[var(--band)]')
     })
 

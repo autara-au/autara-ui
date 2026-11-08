@@ -136,7 +136,7 @@ function Harness({
             </Button>
 
             {saved ? (
-                <pre className="overflow-x-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3 text-xs text-[var(--text-muted)]">
+                <pre className="overflow-x-auto rounded-xl bg-[var(--band)] p-3 text-xs text-[var(--text-muted)]">
                     {JSON.stringify(saved, null, 2)}
                 </pre>
             ) : (
@@ -255,7 +255,7 @@ export const InMerchantBusinessProfile: Story = {
         })
 
         return (
-            <div className="w-full max-w-[420px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+            <div className="w-full max-w-[420px] rounded-[1.5rem] bg-[var(--band)] p-5">
                 <p className="text-[0.8125rem] font-medium text-[var(--text-subtle)]">
                     Business profile
                 </p>
@@ -266,7 +266,7 @@ export const InMerchantBusinessProfile: Story = {
                 <button
                     type="button"
                     onClick={() => setOpen(true)}
-                    className="mt-4 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-2xl border border-[var(--border-subtle)] px-4 py-3 text-left transition-colors hover:border-autara-purple/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-autara-purple/35 focus-visible:ring-offset-2"
+                    className="mt-4 flex min-h-[44px] w-full items-center justify-between gap-3 rounded-2xl bg-[var(--raised)] px-4 py-3 text-left transition-colors hover:bg-[var(--band-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-autara-purple/35 focus-visible:ring-offset-2"
                 >
                     <span className="min-w-0">
                         <span className="block truncate text-sm font-medium text-[var(--text-strong)]">
