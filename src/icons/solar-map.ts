@@ -18,12 +18,18 @@ export type AutaraIconName = keyof typeof ObjectGlyphs | keyof typeof UtilityGly
  * - `Export` is only ever the Share action, so it is ShareIcon (the same tray
  *   and arrow; a second, near-identical glyph would drift).
  *
+ * `UserBlock` (the No-show action) and `UserCross` (the no-show recorded)
+ * are one event, so both are NoShowIcon. The ringed Solar glyphs map to the
+ * ringed Autara ones (CloseCircle to CloseCircleIcon...); where a site is a
+ * dismiss, an inline tick or a stepper in its own disc, the migration picks
+ * the bare CloseIcon, CheckIcon, AddIcon or RemoveIcon instead.
+ *
  * `weight="Bold"` has no direct equivalent. Where Bold marked a state (a
  * rated star, "copied", the chosen option) pass `active`, or set
  * `style={{ '--icon-body': 1 }}` for a solid body.
  */
 export const SOLAR_TO_AUTARA = {
-    AddCircle: 'AddIcon',
+    AddCircle: 'AddCircleIcon',
     AltArrowDown: 'ChevronDownIcon',
     AltArrowLeft: 'ChevronLeftIcon',
     AltArrowRight: 'ChevronRightIcon',
@@ -46,11 +52,11 @@ export const SOLAR_TO_AUTARA = {
     ChatRound: 'ChatIcon',
     ChatRoundDots: 'ChatIcon',
     ChatRoundLine: 'ChatIcon',
-    CheckCircle: 'CheckIcon',
+    CheckCircle: 'CheckCircleIcon',
     CheckRead: 'ReadReceiptIcon',
     ClipboardList: 'ChecklistIcon',
     ClockCircle: 'ClockIcon',
-    CloseCircle: 'CloseIcon',
+    CloseCircle: 'CloseCircleIcon',
     Copy: 'CopyIcon',
     DangerCircle: 'ErrorIcon',
     DangerTriangle: 'WarningIcon',
@@ -79,7 +85,7 @@ export const SOLAR_TO_AUTARA = {
     Magnifer: 'SearchIcon',
     MapPoint: 'LocationIcon',
     MenuDots: 'MoreIcon',
-    MinusCircle: 'RemoveIcon',
+    MinusCircle: 'RemoveCircleIcon',
     MonitorSmartphone: 'DevicesIcon',
     MoonStars: 'AppearanceIcon',
     Notes: 'NotesIcon',
@@ -102,9 +108,9 @@ export const SOLAR_TO_AUTARA = {
     Star: 'StarIcon',
     TrashBinMinimalistic: 'DeleteIcon',
     Tuning: 'FiltersIcon',
-    UserBlock: 'UserBlockIcon',
+    UserBlock: 'NoShowIcon',
     UserCircle: 'AccountIcon',
-    UserCross: 'UserRemoveIcon',
+    UserCross: 'NoShowIcon',
     UserRounded: 'AccountIcon',
     UsersGroupRounded: 'CustomersIcon',
     VerifiedCheck: 'VerifiedIcon',

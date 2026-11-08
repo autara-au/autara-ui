@@ -38,7 +38,7 @@ const SOLAR_USED = [
 describe('Autara icons (AUTM-2114)', () => {
     it('exports the whole set, including every approved glyph', () => {
         expect(all.length).toBe(Object.keys(ObjectGlyphs).length + Object.keys(UtilityGlyphs).length)
-        expect(all.length).toBeGreaterThanOrEqual(75)
+        expect(all.length).toBeGreaterThanOrEqual(78)
         for (const name of APPROVED) expect(Icons).toHaveProperty(name)
     })
 
@@ -110,6 +110,22 @@ describe('Autara icons (AUTM-2114)', () => {
         expect(svg.style.color).toBe('red')
     })
 
+    it('draws Close, Check, Add and Remove bare, and again in a ring for a state', () => {
+        const ring = '<circle cx="12" cy="12" r="8.6"'
+        for (const name of ['CloseIcon', 'CheckIcon', 'AddIcon', 'RemoveIcon'] as const) {
+            const Bare = Icons[name]
+            const Ringed = Icons[name.replace(/Icon$/, 'CircleIcon') as 'CloseCircleIcon']
+            expect(renderToStaticMarkup(<Bare />)).not.toContain('<circle')
+            expect(renderToStaticMarkup(<Ringed />)).toContain(ring)
+        }
+    })
+
+    it('has one no-show glyph, not two', () => {
+        expect(Icons).toHaveProperty('NoShowIcon')
+        expect(Icons).not.toHaveProperty('UserBlockIcon')
+        expect(Icons).not.toHaveProperty('UserRemoveIcon')
+    })
+
     it('draws the duotone body in currentColor at --icon-body, 16% by default', () => {
         expect(renderToStaticMarkup(<Icons.BookingsIcon />)).toContain(
             'fill:currentColor;fill-opacity:var(--icon-body, 0.16)',
@@ -129,8 +145,18 @@ describe('SOLAR_TO_AUTARA', () => {
         }
     })
 
-    it('keeps the two by-meaning mappings', () => {
+    it('keeps the by-meaning mappings', () => {
         expect(SOLAR_TO_AUTARA.InboxIn).toBe('CalendarAddIcon')
         expect(SOLAR_TO_AUTARA.Export).toBe('ShareIcon')
+        // One event, two Solar glyphs in the app (Don, 2026-11-08).
+        expect(SOLAR_TO_AUTARA.UserBlock).toBe('NoShowIcon')
+        expect(SOLAR_TO_AUTARA.UserCross).toBe('NoShowIcon')
+    })
+
+    it('maps the ringed Solar glyphs to the ringed Autara ones', () => {
+        expect(SOLAR_TO_AUTARA.CloseCircle).toBe('CloseCircleIcon')
+        expect(SOLAR_TO_AUTARA.CheckCircle).toBe('CheckCircleIcon')
+        expect(SOLAR_TO_AUTARA.AddCircle).toBe('AddCircleIcon')
+        expect(SOLAR_TO_AUTARA.MinusCircle).toBe('RemoveCircleIcon')
     })
 })

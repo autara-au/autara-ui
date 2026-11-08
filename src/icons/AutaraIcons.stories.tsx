@@ -31,7 +31,19 @@ import {
     VehicleIcon,
     WorkshopIcon,
 } from './object-glyphs'
-import { AddIcon, ChevronRightIcon, CopyIcon, DownloadIcon, ErrorIcon, MoreIcon, RemoveIcon } from './utility-glyphs'
+import {
+    AddIcon,
+    CheckCircleIcon,
+    CheckIcon,
+    ChevronRightIcon,
+    CloseCircleIcon,
+    CloseIcon,
+    CopyIcon,
+    DownloadIcon,
+    ErrorIcon,
+    MoreIcon,
+    RemoveIcon,
+} from './utility-glyphs'
 import { SOLAR_TO_AUTARA } from './solar-map'
 
 /**
@@ -231,7 +243,8 @@ export const Detail: Story = {
 /**
  * Edge cases: an icon at `1.25em` grows with its label (and with 200% text);
  * `--icon-body: 1` fills a rated star; a status colour comes from the caller;
- * a standalone icon is named by its button, never by the svg.
+ * the bare marks (a dismiss, an inline tick, a stepper) against the ringed
+ * ones (a state); a standalone icon is named by its button, never by the svg.
  */
 export const EdgeCases: Story = {
     render: () => (
@@ -261,7 +274,19 @@ export const EdgeCases: Story = {
             <p className="flex items-center gap-2 text-sm" style={{ color: 'var(--danger)' }}>
                 <ErrorIcon size="1.25em" /> The payout did not go through.
             </p>
+            <div className="space-y-2 text-sm">
+                <p className="flex items-center gap-2">
+                    <CheckIcon size="1.25em" style={{ color: 'var(--intent-success-text)' }} /> Copied
+                </p>
+                <p className="flex items-center gap-2">
+                    <CheckCircleIcon size="1.25em" /> Booking confirmed
+                </p>
+                <p className="flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
+                    <CloseCircleIcon size="1.25em" /> Cancelled by the customer
+                </p>
+            </div>
             <div className="flex items-center gap-3">
+                <IconButton icon={<CloseIcon size={20} />} label="Dismiss" />
                 <IconButton icon={<RemoveIcon size={20} />} label="One fewer concurrent job" />
                 <span className="text-sm font-bold">2</span>
                 <IconButton icon={<AddIcon size={20} />} label="One more concurrent job" />

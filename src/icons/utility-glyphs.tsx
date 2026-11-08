@@ -5,11 +5,12 @@ import { AutaraIcon, type AutaraIconProps } from './AutaraIcon'
  * and runs of text, where a body would read as a second control. Same 1.7
  * stroke, round caps and 3 radii as the object icons.
  *
- * Close, Check, Add, Remove, Pause and Error are drawn in a ring because every
- * place merchant-mobile used them (Solar's CloseCircle, CheckCircle, AddCircle,
- * MinusCircle, PauseCircle, DangerCircle) meant a state or a stepper, not a
- * bare dismiss. A sheet's close button is `CloseButton`, which has its own
- * glyph.
+ * Close, Check, Add and Remove come twice (Don, 2026-11-08): bare, for a
+ * dismiss button, an inline tick and a stepper inside its own disc; and in a
+ * ring (`CloseCircleIcon`, `CheckCircleIcon`, `AddCircleIcon`,
+ * `RemoveCircleIcon`) for a state that stands on its own: cancelled, done,
+ * inactive. Pause and Error are ringed only. A sheet's close button is
+ * `CloseButton`, which has its own glyph.
  */
 
 /** The ring the state glyphs sit in (a component, so nothing is built at import). */
@@ -90,42 +91,80 @@ export function RefreshIcon(props: AutaraIconProps) {
     )
 }
 
-/* ─── States and steppers (in a ring) ───────────────────────────────────── */
+/* ─── Bare marks: a dismiss, an inline tick, a stepper ─────────────────── */
 
-/** Cancel, cancelled, declined. */
+/** Dismiss, clear. */
 export function CloseIcon(props: AutaraIconProps) {
     return (
         <AutaraIcon glyph="close" {...props}>
+            <path d="m6.4 6.4 11.2 11.2M17.6 6.4 6.4 17.6" />
+        </AutaraIcon>
+    )
+}
+
+/** A tick inline: copied, chosen, included. */
+export function CheckIcon(props: AutaraIconProps) {
+    return (
+        <AutaraIcon glyph="check" {...props}>
+            <path d="m4.8 12.6 4.6 4.6 9.8-9.8" />
+        </AutaraIcon>
+    )
+}
+
+/** Add, one more. */
+export function AddIcon(props: AutaraIconProps) {
+    return (
+        <AutaraIcon glyph="add" {...props}>
+            <path d="M12 5.4v13.2M5.4 12h13.2" />
+        </AutaraIcon>
+    )
+}
+
+/** One fewer. */
+export function RemoveIcon(props: AutaraIconProps) {
+    return (
+        <AutaraIcon glyph="remove" {...props}>
+            <path d="M5.4 12h13.2" />
+        </AutaraIcon>
+    )
+}
+
+/* ─── States (in a ring) ────────────────────────────────────────────────── */
+
+/** Cancelled, declined. */
+export function CloseCircleIcon(props: AutaraIconProps) {
+    return (
+        <AutaraIcon glyph="close-circle" {...props}>
             <Ring />
             <path d="m9.4 9.4 5.2 5.2M14.6 9.4l-5.2 5.2" />
         </AutaraIcon>
     )
 }
 
-/** Done, confirmed, copied, chosen. */
-export function CheckIcon(props: AutaraIconProps) {
+/** Done, confirmed, a step complete. */
+export function CheckCircleIcon(props: AutaraIconProps) {
     return (
-        <AutaraIcon glyph="check" {...props}>
+        <AutaraIcon glyph="check-circle" {...props}>
             <Ring />
             <path d="m8.4 12.2 2.5 2.5 4.7-4.8" />
         </AutaraIcon>
     )
 }
 
-/** Add one, more. */
-export function AddIcon(props: AutaraIconProps) {
+/** Add, standing on its own. */
+export function AddCircleIcon(props: AutaraIconProps) {
     return (
-        <AutaraIcon glyph="add" {...props}>
+        <AutaraIcon glyph="add-circle" {...props}>
             <Ring />
             <path d="M12 8.4v7.2M8.4 12h7.2" />
         </AutaraIcon>
     )
 }
 
-/** One fewer, inactive. */
-export function RemoveIcon(props: AutaraIconProps) {
+/** Inactive; one fewer, standing on its own. */
+export function RemoveCircleIcon(props: AutaraIconProps) {
     return (
-        <AutaraIcon glyph="remove" {...props}>
+        <AutaraIcon glyph="remove-circle" {...props}>
             <Ring />
             <path d="M8.4 12h7.2" />
         </AutaraIcon>

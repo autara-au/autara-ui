@@ -5,7 +5,8 @@ import { AutaraIcon, BODY, DETAIL, type AutaraIconProps } from './AutaraIcon'
  * `--icon-body` behind 1.7 line art (see AutaraIcon.tsx for the grammar).
  *
  * The first block is the set Don approved in merchant-mobile on 2026-11-08
- * (AUTM-2042), ported unchanged: Today is a small Autara mark (the ring and
+ * (AUTM-2042), ported with the same drawings (Earnings' body made one fill so
+ * the translucent body does not double at the coin top): Today is a small Autara mark (the ring and
  * its eight rays), Settings a mechanic's hex nut, Services a car care spray
  * bottle, Packages a tied gift box. Everything after it is drawn to match.
  *
@@ -101,8 +102,11 @@ export function PackagesIcon(props: AutaraIconProps) {
 export function EarningsIcon(props: AutaraIconProps) {
     return (
         <AutaraIcon glyph="earnings" {...props}>
-            <path d="M3.8 7.4v9.2c0 1.3 2.5 2.4 5.6 2.4s5.6-1.1 5.6-2.4V7.4" style={BODY} />
-            <ellipse cx="9.4" cy="7.4" rx="5.6" ry="2.4" style={BODY} />
+            {/* The stack's silhouette is ONE body, the top rim drawn over it as
+                line only: two translucent bodies overlapped at the coin top and
+                showed a darker band there (AUTM-2114). */}
+            <path d="M3.8 7.4a5.6 2.4 0 0 1 11.2 0v9.2c0 1.3-2.5 2.4-5.6 2.4s-5.6-1.1-5.6-2.4z" style={BODY} />
+            <ellipse cx="9.4" cy="7.4" rx="5.6" ry="2.4" />
             <path d="M3.8 12c0 1.3 2.5 2.4 5.6 2.4s5.6-1.1 5.6-2.4" />
             <path d="M18.8 13.6V5.2M16 8l2.8-2.8L21.6 8" />
         </AutaraIcon>
@@ -428,25 +432,17 @@ export function PayoutIcon(props: AutaraIconProps) {
 const PERSON_HEAD = { cx: 9.4, cy: 8.4, r: 3.4 }
 const PERSON_SHOULDERS = 'M12.6 19.6H3.4c.6-3.2 3-5.2 6-5.2 1.3 0 2.5.3 3.5.9'
 
-/** A person struck off: a no-show recorded, someone removed. */
-export function UserRemoveIcon(props: AutaraIconProps) {
+/**
+ * A person struck off: a no-show, marked by the merchant or recorded. One
+ * glyph for both (Don, 2026-11-08): merchant-mobile drew the action with
+ * Solar's UserBlock and the notification with UserCross, for the same event.
+ */
+export function NoShowIcon(props: AutaraIconProps) {
     return (
-        <AutaraIcon glyph="user-remove" {...props}>
+        <AutaraIcon glyph="no-show" {...props}>
             <circle {...PERSON_HEAD} style={BODY} />
             <path d={PERSON_SHOULDERS} style={BODY} />
             <path d="m15.6 15.6 3.6 3.6M19.2 15.6l-3.6 3.6" />
-        </AutaraIcon>
-    )
-}
-
-/** A person and a no-entry sign: mark a no-show, block. */
-export function UserBlockIcon(props: AutaraIconProps) {
-    return (
-        <AutaraIcon glyph="user-block" {...props}>
-            <circle {...PERSON_HEAD} style={BODY} />
-            <path d={PERSON_SHOULDERS} style={BODY} />
-            <circle cx="17.4" cy="17.2" r="3.2" />
-            <path d="m15.1 19.5 4.6-4.6" />
         </AutaraIcon>
     )
 }
