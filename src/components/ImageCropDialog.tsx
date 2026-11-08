@@ -135,7 +135,7 @@ export function ImageCropDialog({
                     screen — that was the fixed height's real job. */}
                 <div
                     style={{ aspectRatio: String(aspect) }}
-                    className="relative mt-2 max-h-[clamp(220px,52vh,420px)] w-full overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--ink,#0c0a14)]">
+                    className="relative mt-2 max-h-[clamp(220px,52vh,420px)] w-full overflow-hidden rounded-xl bg-[var(--ink,#0c0a14)]">
                     {src ? (
                         <Cropper
                             image={src}

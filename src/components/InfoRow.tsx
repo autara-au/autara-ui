@@ -6,9 +6,8 @@ import { cn } from '../lib/cn'
  *
  * Used wherever a row of metadata reads as "label: value" — booking
  * detail summaries, customer profile cards, payment breakdowns,
- * invoice previews. Pair with a hairline-divided `<div>` parent for
- * the stacked-rows look (the parent owns the `divide-y` class so
- * InfoRow itself stays bare).
+ * invoice previews. Stack them in a plain `<div>`: rows read as separate
+ * by their padding, never by a rule between them.
  *
  * Aesthetic:
  *   - Label muted ink, value strong ink
@@ -26,15 +25,17 @@ export interface InfoRowProps {
 }
 
 /*
- * AUTM-1594 — canvas v44 "Info row": 12px in, a hairline above and below,
- * 15px. A run of rows shares its rules (each draws the one below it, the
- * first also the one above), so the lines never double.
+ * AUTM-1594 — canvas v44 "Info row": 12px in, 15px.
+ * AUTM-2042 (Don, 2026-11-08: "no hairlines throughout the app as we
+ * decided"): the rule above and below each row is gone. A run of rows is
+ * set apart by space alone: 12px above and below each, muted label against
+ * strong value.
  */
 export function InfoRow({ label, value, emphasised = false, className }: InfoRowProps) {
     return (
         <div
             className={cn(
-                'flex items-start justify-between gap-3 border-b border-[var(--hairline)] py-3 first:border-t',
+                'flex items-start justify-between gap-3 py-3',
                 className,
             )}
         >

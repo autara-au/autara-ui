@@ -18,7 +18,8 @@ import { InlineAlert } from './InlineAlert'
 /**
  * Dialog — Radix dialog on the cream canvas.
  *
- * - `--surface` (white) fill, `--text-strong` ink, hairline ring.
+ * - `--surface` (white) fill, `--text-strong` ink, no edge and no rules
+ *   (AUTM-2042, Don 2026-11-08: no hairlines).
  * - Ink overlay at 55% opacity, no backdrop blur — flat editorial scrim.
  * - Solar Bold close at the top-right.
  *
@@ -243,7 +244,7 @@ function AddressDialog({
 /**
  * In context: merchant-web's Business address dialog, the pattern this layout
  * graduates. A form and a map, taller than a phone. On a phone the body
- * scrolls under the title and the hairline appears under it once it does.
+ * scrolls under the title, with no rule drawn (AUTM-2042).
  */
 export const Responsive: Story = {
     name: 'Responsive, Business address in context',
@@ -274,7 +275,7 @@ export const ResponsiveDark: Story = {
 
 /**
  * A dialog that fits. Short content sizes the panel to itself: no empty
- * space, and no hairline under the title because nothing scrolls under it.
+ * space, and nothing between the title, the body and the actions but space.
  */
 export const ResponsiveShort: Story = {
     name: 'Responsive, content that fits',
@@ -312,7 +313,8 @@ const SUBURBS = [
 
 /**
  * Edge: a long list. Only the body scrolls; the title and both actions stay
- * on screen at every height. Scroll it to see the header's hairline arrive.
+ * on screen at every height. The rows part by space, with no rule between
+ * them, and none under the header once it scrolls (AUTM-2042).
  */
 export const ResponsiveLongList: Story = {
     name: 'Responsive, long list',
@@ -329,7 +331,7 @@ export const ResponsiveLongList: Story = {
                     <ul className="m-0 flex list-none flex-col p-0">
                         {SUBURBS.map((name, i) => (
                             <li key={name}>
-                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 border-b border-[var(--hairline)] py-2 text-base">
+                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 py-2 text-base">
                                     {name}
                                     <input type="checkbox" defaultChecked={i % 3 === 0} className="size-5 accent-[var(--accent-fill)]" />
                                 </label>

@@ -23,7 +23,7 @@ export const CheckoutReview: Story = {
         note: 'GST included. The balance is charged when the pro marks the job complete.',
     },
     render: (args) => (
-        <div className="max-w-sm rounded-autara-lg border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <div className="max-w-sm rounded-[1.5rem] bg-[var(--band)] p-5">
             <MoneyBreakdown {...args} />
         </div>
     ),

@@ -182,7 +182,7 @@ export const Press: Story = {
 
 /**
  * AUTM-1781: `variant="plain"`, the grouped list on the page's white ground,
- * hairlines between rows instead of a cream box. A row can be a link (here an
+ * rows apart by space instead of a cream box (AUTM-2042: no hairlines). A row can be a link (here an
  * external one, with its arrow), carry an avatar as `leading`, and wrap.
  */
 export const Plain: Story = {
