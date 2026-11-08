@@ -146,7 +146,7 @@ export function CommandMenu({
                     )}
                 >
                     <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
-                    <div className="flex items-center gap-3 border-b border-[var(--hairline)] px-4 text-[var(--text-muted)]">
+                    <div className="flex items-center gap-3 px-4 text-[var(--text-muted)]">
                         <SearchGlyph />
                         <input
                             data-testid={testId ? `${testId}-input` : undefined}
@@ -219,7 +219,8 @@ export function CommandMenu({
                         )}
                     </div>
 
-                    <div aria-hidden className="hidden items-center gap-4 border-t border-[var(--hairline)] px-4 py-2.5 text-xs text-[var(--text-subtle)] sm:flex">
+                    {/* AUTM-2042: a band strip at the foot, set apart by its fill, not a rule. */}
+                    <div aria-hidden className="hidden items-center gap-4 bg-[var(--band)] px-4 py-2.5 text-xs text-[var(--text-subtle)] sm:flex">
                         <span>↑ ↓ to move</span>
                         <span>↵ to open</span>
                         <span>esc to close</span>

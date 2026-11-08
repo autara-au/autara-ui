@@ -17,7 +17,7 @@ import { cn } from '../lib/cn'
  *   off      the customer's Cancelled: band with danger text
  *
  * Counts are the `count` variants: a 22px disc that widens with the number,
- * 12px Bold. Purple in navigation, paper with a hairline when quiet, red on
+ * 12px Bold. Purple in navigation, a solid neutral disc when quiet, red on
  * the bell and the dock (`count-alert`), and lime with ink on an ACTIVE or
  * SELECTED row (`count-selected`: the current rail item, the chosen filter
  * chip). AUTM-1753, Don 2026-10-09: `count-quiet` on the selected fill drew
@@ -116,7 +116,11 @@ const TONES: Record<SheetTone, string> = {
     // themes, so on dark paper the quiet count measured about 1.4:1 (the
     // portal's Services filter chips in dark mode). Text-grade purple is
     // --accent: 9.5:1 on paper in light, 10.3:1 in dark (Badge.contrast.test).
-    'count-quiet': `${COUNT} bg-[var(--paper)] text-[var(--accent)] shadow-[inset_0_0_0_1px_var(--hairline)]`,
+    // AUTM-2042 (Don, 2026-11-08: no hairlines): it was paper ringed by a 1px
+    // hairline, white on a white page or on the near-white band chip, the
+    // ring all that set it apart. Solid badges: the neutral disc fill, which
+    // stands off paper and band alike in both themes.
+    'count-quiet': `${COUNT} bg-[var(--icon-disc)] text-[var(--accent)]`,
     'count-alert': `${COUNT} bg-[var(--alert)] text-[var(--on-alert)]`,
     'count-selected': `${COUNT} bg-[var(--lime)] text-[var(--on-lime)]`,
 }

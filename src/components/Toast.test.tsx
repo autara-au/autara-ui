@@ -122,10 +122,14 @@ describe("Toast (AUTM-1871): the new look", () => {
         expect(disc).toHaveAttribute("aria-hidden", "true");
     });
 
-    it("is the raised token surface, not the ink capsule", async () => {
+    // AUTM-2042 (Don, 2026-11-08: no hairlines): set apart by its fill and
+    // the lift, never a 1px edge.
+    it("is the band capsule with the lift, no edge and not the ink capsule", async () => {
         await show(() => toast("Synced"));
         const c = capsules()[0];
-        expect(c.className).toContain("bg-[var(--raised)]");
+        expect(c.className).toContain("bg-[var(--band)]");
+        expect(c.className).toContain("shadow-float");
+        expect(c.className).not.toMatch(/(^|\s)border(\s|-)/);
         expect(c.className).not.toContain("surface-inverse");
     });
 

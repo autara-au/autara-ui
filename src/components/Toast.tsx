@@ -11,8 +11,10 @@ import { CloseButton } from './IconButton'
  * next step beside it.
  *
  * AUTM-1871 (Don, 2026-10-14): toasts follow the new UI. The ink capsule with
- * a status dot is gone: a toast is the raised token surface (white in light,
- * the raised violet in dark) with a hairline and the float lift, in Satoshi,
+ * a status dot is gone: a toast is a filled capsule with the float lift, in
+ * Satoshi (AUTM-2042, Don 2026-11-08: no hairlines; it was the raised
+ * surface, white on a white page, with a 1px edge, and is now the band
+ * fill, apart from the page by its fill and the lift),
  * with
  *  - a TYPE ICON on a filled disc in the brand's meaning colours: purple to
  *    act, lime for money in (and done), red for a problem, neutral otherwise;
@@ -258,7 +260,9 @@ const TONE: Record<ToastTone | 'caution', string> = {
     act: 'bg-[var(--accent-fill)] text-[var(--on-accent)]',
     money: 'bg-[var(--lime)] text-[var(--on-lime)]',
     problem: 'bg-[var(--danger-fill)] text-[var(--on-danger-fill)]',
-    info: 'bg-[var(--band)] text-[var(--text-strong)]',
+    // On the band capsule (AUTM-2042) the neutral disc is raised, as
+    // EmptyState's is on its band card.
+    info: 'bg-[var(--raised)] text-[var(--text-strong)]',
     caution: 'bg-[var(--caution)] text-white',
 }
 
@@ -577,7 +581,7 @@ function ToastItem({
             }}
             className={cn(
                 'pointer-events-auto relative flex w-full max-w-[30rem] touch-none select-none items-center gap-3 rounded-2xl',
-                'border border-[var(--hairline)] bg-[var(--raised)] py-1.5 pl-2.5 pr-1.5 text-[var(--text-strong)] shadow-float',
+                'bg-[var(--band)] py-1.5 pl-2.5 pr-1.5 text-[var(--text-strong)] shadow-float',
                 'font-[family-name:var(--font-brand)]',
                 /* Transform and opacity only, on the panel tokens (AUTM-1843):
                    in on the house ease-out, out on the quicker panel-out.
@@ -644,14 +648,14 @@ function ToastItem({
                         /* A quiet accent text button with a 44px target: the
                            next step, never a black button (Don, 2026-10-14). */
                         'motion-press -my-1 inline-flex h-11 shrink-0 items-center rounded-full px-3 text-[0.9375rem] font-medium text-[var(--accent)]',
-                        'transition-colors hover:bg-[var(--band)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--raised)]'
+                        'transition-colors hover:bg-[var(--band-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]'
                     )}
                 >
                     {t.action.label}
                 </button>
             ) : null}
             {/* AUTM-1756: the library's one Close, at its large size (44px,
-                48 to a finger), the neutral disc on the raised surface. */}
+                48 to a finger), the neutral disc on the band. */}
             <CloseButton label="Dismiss notification" onClick={() => leave()} size="md" tone="neutral" className="shrink-0" />
             <style>{`
                 .autara-toast-content { animation: autaraToastMorph var(--motion-crossfade, 160ms) var(--motion-ease-out, ease-out); }

@@ -50,7 +50,7 @@ const SERVICES: PickerOption<Service>[] = [
 function ServiceRow({ name, price, duration }: Service) {
     return (
         <span className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-warm,#F5F2EA)] text-sm font-medium text-[var(--text-strong)]">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[var(--band)] text-sm font-medium text-[var(--text-strong)]">
                 {name.charAt(0)}
             </span>
             <span className="flex min-w-0 flex-col">
