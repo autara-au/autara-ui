@@ -31,6 +31,35 @@ import { cn } from '../lib/cn'
  * Transform and opacity only. The lit ray is a second path over the ray
  * whose opacity moves, so no colour is ever animated.
  *
+ * ─── Why every moving part is an HTML layer (AUTM-2042, 2026-11-08) ────────
+ *
+ * Don: "intial loading spin still feels like lagging". On a cold start the
+ * bundle blocks the main thread for 650ms inside the one-second arrival, and
+ * browsers run an animation on an SVG child (`<g>`, `<path>`, `<circle>`) on
+ * the main thread, so the rays froze mid-flight and then snapped to rest. Only
+ * transform and opacity on an HTML element run on the compositor (Chrome, and
+ * Safari and WKWebView, which the iPad app is). So each moving part here is a
+ * `<span>` holding a whole-mark `<svg>` with just its own shape, and the
+ * stylesheet animates the spans; nothing inside an SVG has a class the motion
+ * reads. The layers are placed by `utilities/splash.css` alone (no Tailwind),
+ * because the merchant app's pre-JS shell draws this from static HTML with
+ * only that stylesheet inlined.
+ *
+ *   .autara-splash            the box (the stylesheet sets its display)
+ *     .autara-splash-frame    every layer is absolute inside it
+ *       .autara-splash-rays   the 36 degree turn
+ *         .autara-splash-ray[data-ray]     the settle, per direction
+ *           .autara-splash-ray-drift       the hold's drift
+ *             .autara-splash-ray-base      half light
+ *             .autara-splash-ray-lit       the glow
+ *       .autara-splash-ring   the ring landing
+ *
+ * Each ray keeps its own path from the logo: they are rotations of the top
+ * ray only to within 0.23 units (the logo's one-decimal rounding), and a ray
+ * drawn upright in a layer turned 45 degrees would be resampled by the
+ * compositor on every diagonal. The settle and the drift are on two spans so
+ * no element runs two transform animations at once.
+ *
  * ─── Colour, by what it sits on (`on`) ─────────────────────────────────
  *
  *   deep    (default) the business deep purple: a white mark, the lit ray LIME
@@ -58,17 +87,25 @@ import { cn } from '../lib/cn'
 export type AutaraSplashSize = 64 | 80 | 96 | 112 | 128
 export type AutaraSplashOn = 'deep' | 'dark' | 'paper' | 'theme'
 
-/** `logo-mark.svg`'s eight rays, clockwise from the top, as AutaraLoader draws them. */
-const RAYS: { d: string; ux: number; uy: number }[] = [
-    { d: 'M176.3 15h147.8l-73.9 76.4z', ux: 0, uy: -1 },
-    { d: 'M364.3 31.7l104.5 104.5-106.3 1.8z', ux: 0.7071, uy: -0.7071 },
-    { d: 'M485.4 176.3v147.8l-76.4-73.9z', ux: 1, uy: 0 },
-    { d: 'M468.8 364.3l-104.5 104.5-1.8-106.3z', ux: 0.7071, uy: 0.7071 },
-    { d: 'M324.2 485.5H176.4l73.9-76.4z', ux: 0, uy: 1 },
-    { d: 'M136.2 468.8L31.7 364.3l106.3-1.8z', ux: -0.7071, uy: 0.7071 },
-    { d: 'M15 324.2V176.4l76.4 73.9z', ux: -1, uy: 0 },
-    { d: 'M31.6 136.2L136.2 31.7l1.8 106.3z', ux: -0.7071, uy: -0.7071 },
+/**
+ * `logo-mark.svg`'s eight rays, clockwise from the top, as AutaraLoader draws
+ * them. `dir` names the way each one drifts out (the stylesheet's keyframes
+ * carry the vector, since a `var()` in a keyframe can keep an animation off
+ * the compositor).
+ */
+const RAYS: { d: string; dir: 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw' }[] = [
+    { d: 'M176.3 15h147.8l-73.9 76.4z', dir: 'n' },
+    { d: 'M364.3 31.7l104.5 104.5-106.3 1.8z', dir: 'ne' },
+    { d: 'M485.4 176.3v147.8l-76.4-73.9z', dir: 'e' },
+    { d: 'M468.8 364.3l-104.5 104.5-1.8-106.3z', dir: 'se' },
+    { d: 'M324.2 485.5H176.4l73.9-76.4z', dir: 's' },
+    { d: 'M136.2 468.8L31.7 364.3l106.3-1.8z', dir: 'sw' },
+    { d: 'M15 324.2V176.4l76.4 73.9z', dir: 'w' },
+    { d: 'M31.6 136.2L136.2 31.7l1.8 106.3z', dir: 'nw' },
 ]
+
+/** The mark's 500 unit box; its centre (250.2, 250.3) is exactly 50% 50%. */
+const VIEW_BOX = '0.2 0.3 500 500'
 
 /** Where the hold begins on the timeline: the intro has settled by then. */
 const HOLD_AT_MS = 1000
@@ -110,34 +147,43 @@ export const AutaraSplash = React.forwardRef<HTMLSpanElement, AutaraSplashProps>
             ref={ref}
             data-size={size}
             data-on={on}
-            className={cn('autara-splash inline-flex shrink-0 items-center justify-center', className)}
+            className={cn('autara-splash', className)}
             style={{ width: rem, height: rem, ['--autara-splash-t0' as string]: `${-Math.round(offset)}ms`, ...style }}
             {...(decorative ? { 'aria-hidden': true } : { role: 'status', 'aria-labelledby': labelId })}
             {...props}
         >
-            <svg aria-hidden focusable="false" viewBox="0.2 0.3 500 500" className="block size-full overflow-visible">
-                <g className="autara-splash-rays">
+            <span aria-hidden className="autara-splash-frame">
+                <span className="autara-splash-rays">
                     {RAYS.map((r, i) => (
-                        <g
-                            key={i}
+                        <span
+                            key={r.dir}
                             className="autara-splash-ray"
-                            style={
-                                {
-                                    '--i': i,
-                                    '--ux': r.ux,
-                                    '--uy': r.uy,
-                                } as React.CSSProperties
-                            }
+                            data-ray={r.dir}
+                            style={{ '--i': i } as React.CSSProperties}
                         >
-                            <path className="autara-splash-ray-base" d={r.d} />
-                            <path className="autara-splash-ray-lit" d={r.d} />
-                        </g>
+                            <span className="autara-splash-ray-drift">
+                                <span className="autara-splash-ray-base">
+                                    <svg focusable="false" viewBox={VIEW_BOX}>
+                                        <path d={r.d} />
+                                    </svg>
+                                </span>
+                                <span className="autara-splash-ray-lit">
+                                    <svg focusable="false" viewBox={VIEW_BOX}>
+                                        <path d={r.d} />
+                                    </svg>
+                                </span>
+                            </span>
+                        </span>
                     ))}
-                </g>
-                <circle className="autara-splash-ring" cx="250.2" cy="250.3" r="100.6" fill="none" strokeWidth="67.1" />
-            </svg>
+                </span>
+                <span className="autara-splash-ring">
+                    <svg focusable="false" viewBox={VIEW_BOX}>
+                        <circle cx="250.2" cy="250.3" r="100.6" fill="none" strokeWidth="67.1" />
+                    </svg>
+                </span>
+            </span>
             {decorative ? null : (
-                <span id={labelId} className="sr-only">
+                <span id={labelId} className="autara-splash-label sr-only">
                     {label}
                 </span>
             )}

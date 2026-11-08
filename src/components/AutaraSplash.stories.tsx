@@ -15,6 +15,10 @@ import { Button } from './Button'
  *
  * To see the reduced-motion form for real: DevTools, Rendering, emulate
  * `prefers-reduced-motion: reduce`, then press Replay.
+ *
+ * Every moving part is an HTML layer, so the motion runs on the compositor
+ * and keeps going while the page's main thread is busy (AUTM-2042): see
+ * "Main thread busy".
  */
 const meta = {
     title: 'Atoms/AutaraSplash',
@@ -65,6 +69,59 @@ export const Dark: Story = {
 export const Paper: Story = {
     name: 'On paper (no lime)',
     render: (args) => <Stage on="paper">{(k) => <AutaraSplash key={k} {...args} on="paper" />}</Stage>,
+}
+
+/** `on="theme"`: the accent mark on paper in the light theme, white and lime in the dark one. Switch the toolbar's Theme. */
+export const Theme: Story = {
+    name: 'Follows the theme',
+    render: (args) => <Stage on="theme">{(k) => <AutaraSplash key={k} {...args} on="theme" />}</Stage>,
+}
+
+/** Blocks the main thread for `ms` right after the mark has painted, as an app's bundle does on a cold start. */
+function BusyStage(props: React.ComponentProps<typeof AutaraSplash>) {
+    const [key, setKey] = React.useState(0)
+    const [busy, setBusy] = React.useState(false)
+    React.useEffect(() => {
+        if (!busy) return
+        // Two frames, so the new mark has painted and its layers exist, as the pre-JS shell has.
+        requestAnimationFrame(() =>
+            requestAnimationFrame(() => {
+                const end = performance.now() + 3000
+                while (performance.now() < end) {
+                    /* the page's main thread, blocked */
+                }
+                setBusy(false)
+            })
+        )
+    }, [busy, key])
+    return (
+        <div className={`relative grid min-h-[28rem] place-items-center ${GROUND.deep}`}>
+            <AutaraSplash key={key} {...props} on="deep" />
+            <p className="absolute left-4 top-4 max-w-[24rem] text-sm">
+                Press the button: the mark replays and the page's main thread is blocked for 3 seconds. The arrival and the
+                light keep moving.
+            </p>
+            <div className="absolute bottom-4 right-4">
+                <Button
+                    variant="quiet"
+                    size="sm"
+                    data-testid="splash-story-busy-replay"
+                    onClick={() => {
+                        setKey((k) => k + 1)
+                        setBusy(true)
+                    }}
+                >
+                    Replay with a busy page
+                </Button>
+            </div>
+        </div>
+    )
+}
+
+/** The cold start of AUTM-2042: 3 seconds of main-thread work inside the arrival. Nothing freezes. */
+export const BusyMainThread: Story = {
+    name: 'Main thread busy (cold start)',
+    render: (args) => <BusyStage {...args} />,
 }
 
 /** What a boot screen draws: the mark at the centre and the caption hanging below it, out of flow. */
