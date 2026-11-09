@@ -22,6 +22,10 @@
     "./cn": {
       "types": "./dist/lib/cn.d.ts",
       "default": "./dist/lib/cn.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "default": "./dist/icons/index.js"
     }
   },
   "files": [

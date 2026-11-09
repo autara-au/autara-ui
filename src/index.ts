@@ -196,6 +196,9 @@ export {
 } from './components'
 export { SocialButton, type SocialButtonProps, type SocialButtonProvider } from './components/SocialButton'
 
+/* AUTM-2114: Autara's own icon set, replacing Solar (also the `/icons` subpath). */
+export * from './icons'
+
 // Utilities
 export { cn } from './lib/cn'
 /* AUTM-1018 — the offset a `position: fixed` element uses to clear EVERY
