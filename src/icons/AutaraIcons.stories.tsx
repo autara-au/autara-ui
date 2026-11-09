@@ -47,10 +47,13 @@ import {
 import { SOLAR_TO_AUTARA } from './solar-map'
 
 /**
- * AUTM-2114: Autara's own icon set. Object icons are duotone (a body in the
- * icon's own colour at 16%, 30% when `active`); utility glyphs are line only.
- * The icon never picks a brand colour: the caller colours it, and the current
- * item takes the accent.
+ * AUTM-2114: Autara's own icon set, drawn in Solar's grammar (Don,
+ * 2026-11-09). Linear at rest (1.5 strokes); `active` draws the Bold twin,
+ * one filled path with the details knocked out. Every object icon has a Bold
+ * twin; of the utility glyphs only the closed ones do (the ringed set, error,
+ * warning, blocked, play, pause, lock, more), the open ones stay line. The
+ * icon never picks a colour: the caller colours it, and the current item
+ * takes the accent.
  */
 const meta: Meta = {
     title: 'Foundations/Icons',
@@ -60,16 +63,27 @@ export default meta
 
 type Story = StoryObj
 
-type Entry = { name: string; Icon: AutaraIconComponent; kind: 'object' | 'utility'; solar: string[] }
+type Entry = { name: string; Icon: AutaraIconComponent; kind: 'object' | 'utility'; solar: string[]; bold: boolean }
 
 const solarFor = (name: string) =>
     Object.entries(SOLAR_TO_AUTARA)
         .filter(([, autara]) => autara === name)
         .map(([solar]) => solar)
 
+/** Whether the glyph hands AutaraIcon a Bold twin. Glyphs use no hooks, so calling one outside render is safe. */
+const hasBold = (Icon: AutaraIconComponent) => Icon({}).props.bold != null
+
+const entry = (kind: Entry['kind']) => ([name, Icon]: [string, AutaraIconComponent]): Entry => ({
+    name,
+    Icon,
+    kind,
+    solar: solarFor(name),
+    bold: hasBold(Icon),
+})
+
 const ENTRIES: Entry[] = [
-    ...Object.entries(ObjectGlyphs).map(([name, Icon]) => ({ name, Icon, kind: 'object' as const, solar: solarFor(name) })),
-    ...Object.entries(UtilityGlyphs).map(([name, Icon]) => ({ name, Icon, kind: 'utility' as const, solar: solarFor(name) })),
+    ...Object.entries(ObjectGlyphs).map(entry('object')),
+    ...Object.entries(UtilityGlyphs).map(entry('utility')),
 ]
 
 const SIZES = [16, 20, 22, 32] as const
@@ -85,7 +99,7 @@ const surfaceStyle = (ground: string): CSSProperties => ({
     color: 'var(--text-strong)',
 })
 
-/** One glyph at the four sizes, in the line colour at rest and the accent active. */
+/** One glyph at the four sizes, Linear in the text colour at rest, then active (Bold, where it has a twin) in the accent. */
 function SizeRun({ Icon }: { Icon: AutaraIconComponent }) {
     return (
         <div className="flex items-center gap-5">
@@ -113,8 +127,8 @@ function IconSheet({ initialQuery = '' }: { initialQuery?: string }) {
     const [query, setQuery] = useState(initialQuery)
     const shown = useMemo(() => ENTRIES.filter((e) => matches(e, query)), [query])
     const groups = [
-        { kind: 'object', title: 'Objects, duotone' },
-        { kind: 'utility', title: 'Utility, line only' },
+        { kind: 'object', title: 'Objects, Linear and Bold' },
+        { kind: 'utility', title: 'Utility, Linear (the closed ones have a Bold twin)' },
     ] as const
 
     return (
@@ -123,7 +137,8 @@ function IconSheet({ initialQuery = '' }: { initialQuery?: string }) {
                 <div>
                     <h1 className="text-2xl font-bold">Autara icons</h1>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">
-                        {ENTRIES.length} glyphs. Each row: 16, 20, 22 and 32 at rest, then active in the accent.
+                        {ENTRIES.length} glyphs. Each row: 16, 20, 22 and 32 Linear at rest, then active (Bold
+                        where the glyph has a twin) in the accent.
                     </p>
                 </div>
                 <div className="w-full max-w-xs">
@@ -205,6 +220,55 @@ export const SearchNoMatch: Story = {
     render: () => <IconSheet initialQuery="zzz" />,
 }
 
+/**
+ * Every glyph Linear (at rest, the text colour) beside its Bold twin (`active`,
+ * the accent), in light and dark. The open utility glyphs have no twin, so
+ * `active` keeps their line; they are marked "Line only".
+ */
+export const LinearAndBold: Story = {
+    render: () => (
+        <div className="grid gap-6 p-6 lg:grid-cols-2">
+            {(['light', 'dark'] as const).map((theme) => (
+                <section
+                    key={theme}
+                    data-theme={theme}
+                    data-testid={`icon-weights-${theme}`}
+                    className="rounded-2xl p-5"
+                    style={surfaceStyle('paper')}
+                >
+                    <h2>
+                        <span className="text-sm font-bold">{theme === 'light' ? 'Light' : 'Dark'}</span>
+                    </h2>
+                    {(['object', 'utility'] as const).map((kind) => (
+                        <div key={kind} className="mt-4">
+                            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                                {kind === 'object' ? 'Objects' : 'Utility'}
+                            </p>
+                            <div
+                                className="grid gap-x-2 gap-y-4"
+                                style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(6.5rem, 1fr))' }}
+                            >
+                                {ENTRIES.filter((e) => e.kind === kind).map(({ name, Icon, bold }) => (
+                                    <figure key={name} className="flex flex-col items-center gap-1.5">
+                                        <span className="flex items-center gap-3">
+                                            <Icon size={28} />
+                                            <Icon size={28} active style={{ color: 'var(--accent)' }} />
+                                        </span>
+                                        <figcaption className="text-center text-xs leading-tight">
+                                            {name.replace(/Icon$/, '')}
+                                            {!bold && <span className="block text-[var(--text-muted)]">Line only</span>}
+                                        </figcaption>
+                                    </figure>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </section>
+            ))}
+        </div>
+    ),
+}
+
 /** The family side by side at the size the rail draws (22), so an off-family glyph stands out. */
 export const Family: Story = {
     render: () => (
@@ -242,7 +306,7 @@ export const Detail: Story = {
 
 /**
  * Edge cases: an icon at `1.25em` grows with its label (and with 200% text);
- * `--icon-body: 1` fills a rated star; a status colour comes from the caller;
+ * `active` fills a rated star (its Bold twin); a status colour comes from the caller;
  * the bare marks (a dismiss, an inline tick, a stepper) against the ringed
  * ones (a state); a standalone icon is named by its button, never by the svg.
  */
@@ -262,11 +326,8 @@ export const EdgeCases: Story = {
                     <StarIcon
                         key={i}
                         size={20}
-                        style={
-                            i <= 4
-                                ? ({ color: 'var(--accent)', '--icon-body': 1 } as CSSProperties)
-                                : { color: 'var(--text-subtle)' }
-                        }
+                        active={i <= 4}
+                        style={{ color: i <= 4 ? 'var(--accent)' : 'var(--text-subtle)' }}
                     />
                 ))}
                 <span className="ml-1 text-sm font-bold">4/5</span>

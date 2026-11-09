@@ -352,13 +352,21 @@ docs/
   merchant-mobile was built with `export const X = icon(name, <>...</>)`;
   that top-level call breaks the AUTM-1688 contract (`side-effects.test.ts`)
   and a bundler cannot drop it, so each glyph here is `export function XIcon`
-  over the internal `AutaraIcon` svg, same output. The body is `currentColor`
-  at `--icon-body` (0.16, `active` 0.3): a fixed lavender body and a lime
-  active fill were turned down on 2026-11-08 ("not compatible when dark and
-  light"), so a glyph never names `--accent`, `--lime` or a hex, and
+  over the internal `AutaraIcon` svg, same output. Since 2026-11-09 the
+  set is drawn in Solar's grammar (Don rejected the duotone set): Linear at
+  rest, 1.5 strokes, and `active` draws the glyph's Bold twin, one evenodd
+  path filled `currentColor` with no stroke (`data-weight="bold"`). Every
+  object icon has a twin; of the utility glyphs only the closed ones do
+  (the ringed set, error, warning, blocked, play, pause, lock, more), so
+  `active` on a chevron keeps the line. The glyph paths come from
+  merchant-mobile's `src/components/icons/autara/` (made by the generator in
+  the workspace, `.design-proofs/icons-solar-style-2026-11-09/`), so a
+  redraw is ported by copying those files. The duotone body and its
+  `--icon-body` knob are gone. A fixed lavender body and a lime active fill
+  were turned down on 2026-11-08 ("not compatible when dark and light"), so
+  a glyph never names `--accent`, `--lime` or a hex, and
   `AutaraIcons.test.tsx` fails if one does. The caller colours the current
-  item. `--icon-body: 1` gives a solid body (a rated star). Utility glyphs
-  are line only. A Solar name merchant-mobile starts using goes into
+  item. A Solar name merchant-mobile starts using goes into
   `solar-map.ts` (and the test's list) in the same change. Never JSX at a
   module's top level here: it compiles to an import-time `_jsx()` call.
 - **Never put type or colour classes on an `h1` to `h6`; put them on an
