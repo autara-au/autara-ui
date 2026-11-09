@@ -139,8 +139,9 @@ export function VehicleProfile({
                                 </>
                             )
                             const rowCls = cn(
+                                // AUTM-2042: no rule between jobs; the band
+                                // holds them, and each row's 12px apart.
                                 'flex min-h-11 w-full items-start gap-3 px-4 py-3 text-left',
-                                i > 0 && 'border-t border-[var(--hairline)]',
                             )
                             return (
                                 <li key={job.id}>

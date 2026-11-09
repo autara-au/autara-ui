@@ -38,7 +38,7 @@ export default meta
 type Story = StoryObj
 
 const Panel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="space-y-3 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+    <div className="space-y-3 rounded-2xl bg-[var(--band)] p-5">
         <div className="text-[0.75rem] font-medium text-[var(--text-muted)]">Trigger</div>
         <div className="flex flex-wrap gap-2">{children}</div>
     </div>
@@ -297,7 +297,7 @@ const POSITIONS: ToastPosition[] = ['auto', 'top-left', 'top-center', 'top-right
 const PositionTile: React.FC<{ pos: ToastPosition }> = ({ pos }) => {
     const { addToast } = useToast()
     return (
-        <div className="space-y-2 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-4">
+        <div className="space-y-2 rounded-2xl bg-[var(--band)] p-4">
             <div className="text-[0.75rem] font-medium text-[var(--text-muted)]">{pos}</div>
             <Button variant="outline" size="sm" onClick={() => addToast({ type: 'success', description: `Fired from ${pos}` })}>
                 Fire toast

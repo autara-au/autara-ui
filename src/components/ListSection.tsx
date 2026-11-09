@@ -59,8 +59,9 @@ import { cn } from '../lib/cn'
  * 2026-10-09, on the customer booking page: "only cream colour boxes, feels
  * empty". The card variant puts every group in a band box; a page of them is
  * a stack of cream. `plain` keeps the grouping and drops the box: a 17px Bold
- * title, then rows divided by hairlines on the page's own paper (Airbnb's
- * trip page, Fresha's appointment page). Cream is then free to mean "these
+ * title, then rows on the page's own paper, set apart by space (AUTM-2042,
+ * Don 2026-11-08: no hairlines; they were divided by rules, as Airbnb's
+ * trip page and Fresha's appointment page draw them). Cream is then free to mean "these
  * belong together" where a caller still wants a card.
  *
  * Rows also gained what a detail page needs and a settings page did not:
@@ -83,8 +84,8 @@ export interface ListSectionProps {
     children: ReactNode
     className?: string
     /**
-     * @default 'card' (the band box of white row cards). `plain`: hairline rows on
-     * the page's paper. `quiet`: one band surface, the rows on it with no card of
+     * @default 'card' (the band box of white row cards). `plain`: rows on the
+     * page's paper, apart by space. `quiet`: one band surface, the rows on it with no card of
      * their own (Don, 2026-11-07), for a settings screen of several groups.
      */
     variant?: ListVariant
@@ -137,7 +138,7 @@ export function ListSection({
                 <div
                     className={
                         plain
-                            ? 'flex flex-col divide-y divide-[var(--hairline)]'
+                            ? 'flex flex-col gap-1'
                             : variant === 'quiet'
                               ? 'flex flex-col gap-0.5 rounded-[1.5rem] bg-[var(--band)] p-1.5'
                               : 'flex flex-col gap-2.5 rounded-[1.5rem] bg-[var(--band)] p-3.5'

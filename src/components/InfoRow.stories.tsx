@@ -24,11 +24,12 @@ export const TextValue: Story = {
 export const InPaymentSummary: Story = {
     name: 'In context — payment summary card',
     render: () => (
-        <div className="w-[420px] rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        // AUTM-2042 (Don, 2026-11-08: no hairlines): a band card, rows apart by space.
+        <div className="w-[420px] rounded-[1.5rem] bg-[var(--band)] p-5">
             <p className="text-[0.75rem] font-medium text-[var(--text-subtle)]">
                 Payment
             </p>
-            <div className="mt-2 divide-y divide-[var(--border-subtle)]">
+            <div className="mt-2">
                 <InfoRow label="Subtotal" value="$230.00" />
                 <InfoRow label="Deposit captured" value="$50.00" />
                 <InfoRow label="Add-on — interior" value="$45.00" />

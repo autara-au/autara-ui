@@ -13,12 +13,14 @@ import { MoneyFigure } from './MoneyFigure'
  *
  * A `<dl>`, because a label/value list is what it is: screen readers read
  * "Deposit paid, 54 dollars" as a pair. Values are right-aligned on tabular
- * figures so amounts line up. `total` sits under a hairline and carries
- * the weight; `note` is the small print under it ("within 5 to 10 business
+ * figures so amounts line up. `total` stands apart by space and weight
+ * (AUTM-2042: no hairline); `note` is the small print under it ("within 5 to 10 business
  * days", "GST included").
  *
  * AUTM-1594 — canvas v44 "Money breakdown": 15px rows in ink with the
- * amount in Bold, 10px apart; the total at 16px under a hairline. `title`
+ * amount in Bold, 10px apart; the total at 16px, label and amount Bold,
+ * 12px further down (AUTM-2042, Don 2026-11-08: no hairlines; it sat under
+ * one). `title`
  * and `card` draw the sheet's specimen whole (a band card, 24px, 20px in,
  * a 16px Bold title); leave them off where the page already supplies the
  * card. Amounts come from the server and are never summed here.
@@ -93,7 +95,7 @@ const STATE_BADGE: Record<MoneyTone, { variant: 'lime' | 'aqua' | 'brand' | 'ban
 
 export interface MoneyBreakdownProps {
     rows: MoneyRow[]
-    /** The line under the hairline, bold. */
+    /** The last line, set apart by space and Bold. */
     total?: MoneyRow
     /** Small print under the total. */
     note?: ReactNode
@@ -157,7 +159,7 @@ function Row({ row, total }: { row: MoneyRow; total?: boolean }) {
             data-testid={row.testId}
             className={cn(
                 'flex items-baseline justify-between gap-4 leading-snug text-[var(--text-strong)]',
-                total ? 'border-t border-[var(--hairline)] pt-2.5 text-base' : 'text-[0.9375rem]',
+                total ? 'pt-3 text-base font-bold' : 'text-[0.9375rem]',
                 row.emphasis && !total && 'font-bold',
                 row.muted && 'text-[var(--text-subtle)]',
             )}
@@ -211,7 +213,7 @@ export function MoneyBreakdown({
                 {rows.map((row, i) => (
                     <Row key={i} row={row} />
                 ))}
-                {/* AUTM-1781: the total row carries its own rule. It was
+                {/* AUTM-1781: the total row carries its own spacing. It was
                     wrapped in a div, which put its dt and dd two levels
                     under the dl (axe definition-list, dlitem). */}
                 {total ? <Row row={total} total /> : null}

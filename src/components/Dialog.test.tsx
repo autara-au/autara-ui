@@ -84,12 +84,16 @@ describe('Dialog layout="responsive"', () => {
         expect(body).toContain('overscroll-contain')
     })
 
-    it('draws the hairline under the header only once the body has scrolled', async () => {
+    // AUTM-2042 (Don, 2026-11-08: no hairlines): the header draws no rule,
+    // scrolled or not; `data-scrolled` stays as a hook.
+    it('marks the header once the body has scrolled, and never draws a rule under it', async () => {
         render(<Responsive />)
         await userEvent.click(screen.getByRole('button', { name: 'Edit business address' }))
         const head = screen.getByTestId('head')
         const body = screen.getByTestId('body')
         expect(head.hasAttribute('data-scrolled')).toBe(false)
+        expect(head.className).not.toContain('hairline')
+        expect(screen.getByTestId('foot').className).not.toMatch(/border-t|hairline/)
         body.scrollTop = 40
         fireEvent.scroll(body)
         expect(head.hasAttribute('data-scrolled')).toBe(true)
