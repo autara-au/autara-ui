@@ -24,9 +24,10 @@ export type AutaraIconName = keyof typeof ObjectGlyphs | keyof typeof UtilityGly
  * dismiss, an inline tick or a stepper in its own disc, the migration picks
  * the bare CloseIcon, CheckIcon, AddIcon or RemoveIcon instead.
  *
- * `weight="Bold"` has no direct equivalent. Where Bold marked a state (a
- * rated star, "copied", the chosen option) pass `active`, or set
- * `style={{ '--icon-body': 1 }}` for a solid body.
+ * `weight="Bold"` becomes `active`. Where Bold marked a state (a rated star,
+ * the chosen option) pass `active`, which draws the glyph's Bold twin. Open
+ * utility glyphs (chevrons, arrows, the bare close, check, add and remove)
+ * have none and stay line.
  */
 export const SOLAR_TO_AUTARA = {
     AddCircle: 'AddCircleIcon',
