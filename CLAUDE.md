@@ -336,8 +336,13 @@ docs/
   ("HiLux", "Mercedes-Benz"), plus a body type per model and the popular
   tiles. The server decides `is_custom_make` / `is_custom_model` from its own
   list (case-insensitive), so a name changed here alone turns picked cars into
-  "custom" ones. Change both lists in the same week; `vehicle-catalog.test.ts`
-  pins the make names. VehiclePicker searches this copy because one box over
+  "custom" ones. Change both lists in the same change: `vehicle-catalog.test.ts`
+  here and customer-api's `vehicleData.test.ts` pin the same fingerprint of
+  every make and model name (AUTM-2005), so a name added to one list fails a
+  test until the other matches. The makes are every make in the Green Vehicle
+  Guide (greenvehicleguide.gov.au) still plausibly on the road, plus the
+  supercar and luxury makes (80 since AUTM-2005); never rename one a saved car
+  carries. VehiclePicker searches this copy because one box over
   make AND model needs every model at once, which the API serves one make at
   a time and without bodies. Its messages keep the old form's words
   byte for byte ("Pick the type that's closest.", ASCII apostrophe): QA's

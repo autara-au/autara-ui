@@ -31,11 +31,11 @@ describe('VehicleMakeMark', () => {
         const slugs = AU_VEHICLE_CATALOG.map((m) => vehicleSlug(m.name))
         for (const key of Object.keys(VEHICLE_MAKE_LOGO_PATHS)) expect(slugs, key).toContain(key)
         const withLogo = AU_VEHICLE_CATALOG.filter((m) => hasVehicleMakeLogo(m.name)).map((m) => m.name)
-        expect(withLogo).toHaveLength(23)
+        expect(withLogo).toHaveLength(Object.keys(VEHICLE_MAKE_LOGO_PATHS).length)
         const monograms = AU_VEHICLE_CATALOG.filter((m) => !hasVehicleMakeLogo(m.name)).map((m) => m.name)
-        expect(monograms.sort()).toEqual(
-            ['Alfa Romeo', 'BYD', 'Chery', 'Cupra', 'GWM', 'Genesis', 'Holden', 'Isuzu', 'Jaguar', 'Land Rover', 'Lexus', 'Mercedes-Benz'].sort()
-        )
+        for (const make of ['BYD', 'GWM', 'Holden', 'Isuzu', 'Land Rover', 'Lexus', 'Mercedes-Benz']) {
+            expect(monograms, make).toContain(make)
+        }
         expect(VEHICLE_MAKE_LOGO_SOURCE).toMatch(/^simple-icons@\d+\.\d+\.\d+$/)
     })
 })
