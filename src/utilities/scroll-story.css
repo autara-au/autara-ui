@@ -18,6 +18,8 @@
  *   --scroll-story-step-compact  the same below 48rem (default 60svh)
  *   --scroll-story-chip-bg / -fg, --scroll-story-chip-active-bg / -fg,
  *   --scroll-story-rail, --scroll-story-fill, --scroll-story-muted
+ *   with indicator="track": --scroll-story-track-bg, --scroll-story-track-fg,
+ *   --scroll-story-track-active-fg, --scroll-story-track-width
  * The defaults are for a brand-deep ground.
  */
 
@@ -132,6 +134,71 @@
 }
 .scroll-story-chip[aria-current='step'] .scroll-story-fill { background: var(--scroll-story-fill-active, var(--brand)); }
 .scroll-story-chip:is([aria-current='step'], [data-done]) .scroll-story-fill { transform: scaleX(1); }
+
+/* ── indicator="track" (AUTM-1683) ────────────────────────────────────────
+ * Don, 2026-10-05: no separate "1 of 3" counter. The chips are one segmented
+ * bar; each chip's rail lies flush along the bar's foot and the rails meet,
+ * so the three or four read as ONE track that fills from left to right as
+ * the page scrolls (each rail is still its own step's scroll-driven fill).
+ * The current step is its label's weight and colour, not a filled chip, and
+ * every fill is one colour, so the track never changes colour mid-way. The
+ * component draws no count and no hint in this mode.
+ * Defaults are for the brand-deep ground; on a light ground set
+ *   --scroll-story-track-bg (the bar, e.g. var(--paper)),
+ *   --scroll-story-track-fg / --scroll-story-track-active-fg (the labels),
+ *   --scroll-story-rail and --scroll-story-fill (the track and its fill). */
+.scroll-story[data-indicator='track'] .scroll-story-chips {
+    flex-wrap: nowrap;
+    gap: 0;
+    width: min(100%, var(--scroll-story-track-width, 36rem));
+    margin-inline: auto;
+    padding: 0.25rem 0.25rem 0;
+    border-radius: 1.25rem;
+    background: var(--scroll-story-track-bg, rgb(255 255 255 / 0.1));
+    overflow: hidden;
+}
+.scroll-story[data-indicator='track'] .scroll-story-chip,
+.scroll-story[data-indicator='track'] .scroll-story-chip[aria-current='step'] {
+    flex: 1 1 0;
+    min-width: 0;
+    border-radius: 1rem 1rem 0 0;
+    padding: 0.625rem 0.5rem 0.9375rem;
+    background: transparent;
+    color: var(--scroll-story-track-fg, var(--on-deep-muted));
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+.scroll-story[data-indicator='track'] .scroll-story-chip[aria-current='step'] {
+    color: var(--scroll-story-track-active-fg, var(--on-deep));
+    font-weight: 700;
+}
+@media (hover: hover) {
+    .scroll-story[data-indicator='track'] .scroll-story-chip:not([aria-current='step']):hover {
+        color: var(--scroll-story-track-active-fg, var(--on-deep));
+    }
+}
+/* Inside the bar, which clips: the ring is drawn inward. */
+.scroll-story[data-indicator='track'] .scroll-story-chip:focus-visible { outline-offset: -3px; }
+.scroll-story[data-indicator='track'] .scroll-story-rail,
+.scroll-story[data-indicator='track'] .scroll-story-chip[aria-current='step'] .scroll-story-rail {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0.25rem;
+    border-radius: 0;
+    background: var(--scroll-story-rail, rgb(255 255 255 / 0.18));
+}
+.scroll-story[data-indicator='track'] .scroll-story-fill,
+.scroll-story[data-indicator='track'] .scroll-story-chip[aria-current='step'] .scroll-story-fill {
+    background: var(--scroll-story-fill, var(--lime));
+}
+@media (max-width: 47.99rem) {
+    .scroll-story[data-indicator='track'] .scroll-story-chip { font-size: 0.875rem; padding-inline: 0.375rem; }
+}
+@media (min-width: 64rem) {
+    .scroll-story[data-indicator='track'] .scroll-story-chip { padding-inline: 0.75rem; }
+}
 
 .scroll-story-count {
     margin: 0;

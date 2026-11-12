@@ -43,6 +43,12 @@ import { cn } from '../lib/cn'
  *     it is current or passed.
  *   - A hint on the first step ("Scroll to see the app", or what you pass)
  *     that fades as the first step's scroll begins.
+ *   - `indicator="track"` (AUTM-1683, Don 2026-10-05: no separate "1 of 3"
+ *     counter, on autara.au and merchants.autara.au alike): the chips become
+ *     one segmented bar whose rails sit flush along its foot and meet, so
+ *     they read as ONE progress track filling left to right as the page
+ *     scrolls. No count and no hint are drawn; `aria-current="step"` on the
+ *     chips still says which step is showing.
  *   - A chip scrolls the page to its step. While that scroll runs, the steps
  *     it passes do not flash by.
  *   - No pin under `prefers-reduced-motion: reduce`, nor on a viewport under
@@ -102,6 +108,13 @@ export interface ScrollStoryProps {
     tilt?: boolean
     /** Mount every step's content on the server and first paint. */
     eager?: boolean
+    /**
+     * `chips` (default): separate chips, each with its own rail, and the count
+     * and hint under them. `track`: one segmented bar whose rails form a
+     * single progress track; no count, no hint (`formatCount` and `hint` are
+     * ignored).
+     */
+    indicator?: 'chips' | 'track'
     className?: string
     style?: CSSProperties
 }
@@ -133,6 +146,7 @@ export function ScrollStory({
     formatCount = defaultCount,
     tilt = false,
     eager = false,
+    indicator = 'chips',
     className,
     style,
 }: ScrollStoryProps) {
@@ -265,6 +279,7 @@ export function ScrollStory({
             className={cn('scroll-story', className)}
             data-testid={testId}
             data-still={still ? 'true' : undefined}
+            data-indicator={indicator}
             style={{ '--scroll-story-steps': steps.length, timelineScope: timelines, ...style } as CSSProperties}
         >
             <Heading className="scroll-story-sr">{label}</Heading>
@@ -291,22 +306,24 @@ export function ScrollStory({
                             </button>
                         ))}
                     </div>
-                    <p className="scroll-story-count" aria-hidden="true" data-testid={testId ? `${testId}-count` : undefined}>
-                        {formatCount(active + 1, steps.length)}
-                        {hint !== null ? (
-                            <span
-                                className="scroll-story-hint"
-                                data-hidden={active > 0 ? 'true' : undefined}
-                                data-testid={testId ? `${testId}-hint` : undefined}
-                            >
-                                {hint}
-                                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                    <path d="M12 5v14" />
-                                    <path d="M6 13l6 6 6-6" />
-                                </svg>
-                            </span>
-                        ) : null}
-                    </p>
+                    {indicator === 'chips' ? (
+                        <p className="scroll-story-count" aria-hidden="true" data-testid={testId ? `${testId}-count` : undefined}>
+                            {formatCount(active + 1, steps.length)}
+                            {hint !== null ? (
+                                <span
+                                    className="scroll-story-hint"
+                                    data-hidden={active > 0 ? 'true' : undefined}
+                                    data-testid={testId ? `${testId}-hint` : undefined}
+                                >
+                                    {hint}
+                                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                        <path d="M12 5v14" />
+                                        <path d="M6 13l6 6 6-6" />
+                                    </svg>
+                                </span>
+                            ) : null}
+                        </p>
+                    ) : null}
                 </div>
                 <div
                     ref={stageRef}
