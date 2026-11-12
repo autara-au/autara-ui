@@ -23,7 +23,7 @@ import {
 /**
  * The catalog's every make and model name, one line per make ("Toyota:86|Aurion|..."),
  * makes and models in plain sort order, hashed. customer-api's
- * `src/functions/vehicles/vehicleData.test.ts` hashes its list (less "Other")
+ * `tests/unit/vehicleData.test.ts` hashes its list (less "Other")
  * the same way and pins the SAME value, so the two lists match name for name
  * (AUTM-2005). Adding a make or model: add it to both lists, then change this
  * value in both tests.

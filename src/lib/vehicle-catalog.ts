@@ -28,7 +28,7 @@
  * API's models are names only). So this is the API's list plus a body per
  * model and an order for the popular tiles. Change both lists in the same
  * change: `vehicle-catalog.test.ts` here and customer-api's
- * `vehicleData.test.ts` pin the same fingerprint of every make and model
+ * `tests/unit/vehicleData.test.ts` pin the same fingerprint of every make and model
  * name, so a name added to one list only fails a test until the other
  * matches it name for name.
  *
