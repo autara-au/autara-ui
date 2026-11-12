@@ -6,6 +6,7 @@ import {
     motionDurations,
     motionEasings,
     motionStaggerDelay,
+    motionTiming,
     motionTokens,
     motionTransition,
     type MotionTransitionName,
@@ -64,7 +65,8 @@ describe('motion tokens match utilities/animations.css', () => {
         // A regex that stopped matching would otherwise pass every check below
         // against an empty list.
         expect(durations.length).toBeGreaterThanOrEqual(10)
-        expect(easings).toHaveLength(2)
+        // out, in and pop. AUTM-1781: one ease-out, so no fourth (soft) curve.
+        expect(easings).toHaveLength(3)
     })
 
     it('every duration in the stylesheet is in motionDurations, at the same value', () => {
@@ -87,7 +89,7 @@ describe('motion tokens match utilities/animations.css', () => {
 
 describe('motionTransition', () => {
     it('gives framer-motion seconds, and the curve the stylesheet pairs', () => {
-        expect(motionTransition('sheetIn')).toEqual({ duration: 0.28, ease: motionEasings.out })
+        expect(motionTransition('sheetIn')).toEqual({ duration: 0.35, ease: motionEasings.out })
         expect(motionTransition('sheetOut')).toEqual({ duration: 0.2, ease: motionEasings.in })
         expect(motionTransition('panelOut')).toEqual({ duration: 0.12, ease: motionEasings.in })
     })
@@ -129,5 +131,16 @@ describe('motionStaggerDelay (AUTM-1678)', () => {
     it('never returns a negative or fractional step', () => {
         expect(motionStaggerDelay(-3)).toBe(0)
         expect(motionStaggerDelay(2.7)).toBe(120)
+    })
+})
+
+describe('motionTiming (AUTM-1781)', () => {
+    it('gives the Web Animations API milliseconds and a CSS curve, paired as motionTransition pairs it', () => {
+        expect(motionTiming('tab')).toEqual({ duration: 450, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+        expect(motionTiming('menuOut')).toEqual({ duration: 150, easing: 'cubic-bezier(0.4, 0, 1, 1)' })
+        for (const name of ['enter', 'row', 'pop', 'count', 'sheetIn', 'modalIn'] as const) {
+            expect(motionTiming(name).duration, name).toBe(motionDurations[name])
+            expect(motionTiming(name).easing, name).toBe(`cubic-bezier(${motionTransition(name).ease.join(', ')})`)
+        }
     })
 })

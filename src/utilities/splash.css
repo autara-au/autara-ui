@@ -1,0 +1,402 @@
+/* ─── AutaraSplash (Don, 2026-11-05) ──────────────────────────────────────
+ *
+ * The arrival: rays drift in from 1.5x A's travel and settle clockwise while
+ * the set turns 36deg into place, then the ring lands; about one second on
+ * one expo ease-out with no overshoot. The hold: rays at half light, one at a
+ * time brightening and drifting a touch outward on a sine ease, 1800ms a lap.
+ * See AutaraSplash.tsx for the why.
+ *
+ * Every moving part is an HTML layer, never an SVG child (AUTM-2042,
+ * 2026-11-08): browsers animate an SVG child on the main thread, so a cold
+ * start's 650ms of bundle work froze the rays mid-flight; transform and
+ * opacity on an HTML element run on the compositor. Each layer is a span the
+ * size of the whole mark with a whole-mark <svg> inside, so every layer turns
+ * and scales about the mark's centre at 50% 50%, and a move of 94 of the 500
+ * units is 18.8% of the box. No keyframe reads a `var()`, which can keep an
+ * animation on the main thread; the settle and the drift carry their vector
+ * per direction instead (`data-ray`), 0.7071 of it each way on a diagonal.
+ *
+ * This file draws the mark on its own, with no Tailwind: the merchant app's
+ * pre-JS shell renders AutaraSplash to static HTML and inlines only this
+ * sheet into <head>. So the root's display, the frame and every layer's
+ * place are set here. The display is the mark's own (unlayered, so it beats
+ * a utility class): to hide the mark, do not render it.
+ *
+ * `--autara-splash-t0` (negative) shifts every delay, so a second copy picks
+ * up the timeline where the first left it. The hold's two animations fill
+ * FORWARDS only: with a backwards fill they would sit on top of the arrival
+ * from the first frame and the rays would never move.
+ *
+ * Colour: the lit ray is a second path over each ray whose opacity moves, so
+ * nothing animates a colour. Lime only on deep and dark. */
+.autara-splash {
+    --autara-splash-mark: #ffffff;
+    --autara-splash-lit: var(--lime, #d4ff4f);
+    --autara-splash-ease: var(--motion-ease-out, cubic-bezier(0.16, 1, 0.3, 1));
+    --autara-splash-sine: cubic-bezier(0.45, 0, 0.55, 1);
+    display: inline-flex;
+    flex-shrink: 0;
+}
+.autara-splash[data-on='paper'],
+.autara-splash[data-on='theme'] {
+    --autara-splash-mark: var(--accent, #4e1bbd);
+    --autara-splash-lit: var(--accent, #4e1bbd);
+}
+[data-theme='dark'] .autara-splash[data-on='theme'],
+:root[data-theme='dark'] .autara-splash[data-on='theme'] {
+    --autara-splash-mark: #ffffff;
+    --autara-splash-lit: var(--lime, #d4ff4f);
+}
+
+/* The frame fills the box whatever its display (inline-flex here, a flex or
+ * grid item, a consumer's own rule); every layer is the whole box inside it. */
+.autara-splash-frame {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 100%;
+    height: 100%;
+}
+.autara-splash-rays,
+.autara-splash-ray,
+.autara-splash-ray-drift,
+.autara-splash-ray-base,
+.autara-splash-ray-lit,
+.autara-splash-ring {
+    position: absolute;
+    inset: 0;
+    display: block;
+    transform-origin: 50% 50%;
+}
+.autara-splash-frame svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+.autara-splash-ray-base {
+    opacity: 0.5;
+}
+.autara-splash-ray-base path {
+    fill: var(--autara-splash-mark);
+}
+.autara-splash-ray-lit {
+    opacity: 0;
+}
+.autara-splash-ray-lit path {
+    fill: var(--autara-splash-lit);
+}
+.autara-splash-ring circle {
+    stroke: var(--autara-splash-mark);
+}
+/* The same as Tailwind's sr-only, for a page without Tailwind. */
+.autara-splash-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+@keyframes autara-splash-turn {
+    from {
+        transform: rotate(-36deg);
+    }
+    to {
+        transform: none;
+    }
+}
+@keyframes autara-splash-ring {
+    from {
+        opacity: 0;
+        transform: scale(0.72);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-dim {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0.5;
+    }
+}
+@keyframes autara-splash-glow {
+    0% {
+        opacity: 0;
+    }
+    16% {
+        opacity: 1;
+    }
+    38%,
+    100% {
+        opacity: 0;
+    }
+}
+
+/* The settle: in from 94 units out (18.8%; 13.2935% each way on a diagonal)
+ * at 60%, to rest. */
+@keyframes autara-splash-settle-n {
+    from {
+        opacity: 0;
+        transform: translate(0%, -18.8%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-ne {
+    from {
+        opacity: 0;
+        transform: translate(13.2935%, -13.2935%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-e {
+    from {
+        opacity: 0;
+        transform: translate(18.8%, 0%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-se {
+    from {
+        opacity: 0;
+        transform: translate(13.2935%, 13.2935%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-s {
+    from {
+        opacity: 0;
+        transform: translate(0%, 18.8%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-sw {
+    from {
+        opacity: 0;
+        transform: translate(-13.2935%, 13.2935%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-w {
+    from {
+        opacity: 0;
+        transform: translate(-18.8%, 0%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes autara-splash-settle-nw {
+    from {
+        opacity: 0;
+        transform: translate(-13.2935%, -13.2935%) scale(0.6);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* The drift: 12.5 units out (2.5%; 1.7678% each way on a diagonal) and back. */
+@keyframes autara-splash-drift-n {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(0%, -2.5%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-ne {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(1.7678%, -1.7678%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-e {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(2.5%, 0%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-se {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(1.7678%, 1.7678%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-s {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(0%, 2.5%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-sw {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(-1.7678%, 1.7678%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-w {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(-2.5%, 0%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+@keyframes autara-splash-drift-nw {
+    0% {
+        transform: none;
+    }
+    16% {
+        transform: translate(-1.7678%, -1.7678%);
+    }
+    38%,
+    100% {
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .autara-splash-rays {
+        animation: autara-splash-turn 900ms var(--autara-splash-ease) var(--autara-splash-t0, 0ms) both;
+    }
+    .autara-splash-ray {
+        animation: autara-splash-settle-n 760ms var(--autara-splash-ease)
+            calc(var(--i) * 30ms + var(--autara-splash-t0, 0ms)) both;
+    }
+    .autara-splash-ray-drift {
+        animation: autara-splash-drift-n 1800ms var(--autara-splash-sine)
+            calc(1420ms + var(--i) * 225ms + var(--autara-splash-t0, 0ms)) infinite forwards;
+    }
+    .autara-splash-ray[data-ray='ne'] {
+        animation-name: autara-splash-settle-ne;
+    }
+    .autara-splash-ray[data-ray='e'] {
+        animation-name: autara-splash-settle-e;
+    }
+    .autara-splash-ray[data-ray='se'] {
+        animation-name: autara-splash-settle-se;
+    }
+    .autara-splash-ray[data-ray='s'] {
+        animation-name: autara-splash-settle-s;
+    }
+    .autara-splash-ray[data-ray='sw'] {
+        animation-name: autara-splash-settle-sw;
+    }
+    .autara-splash-ray[data-ray='w'] {
+        animation-name: autara-splash-settle-w;
+    }
+    .autara-splash-ray[data-ray='nw'] {
+        animation-name: autara-splash-settle-nw;
+    }
+    .autara-splash-ray[data-ray='ne'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-ne;
+    }
+    .autara-splash-ray[data-ray='e'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-e;
+    }
+    .autara-splash-ray[data-ray='se'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-se;
+    }
+    .autara-splash-ray[data-ray='s'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-s;
+    }
+    .autara-splash-ray[data-ray='sw'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-sw;
+    }
+    .autara-splash-ray[data-ray='w'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-w;
+    }
+    .autara-splash-ray[data-ray='nw'] > .autara-splash-ray-drift {
+        animation-name: autara-splash-drift-nw;
+    }
+    .autara-splash-ring {
+        animation: autara-splash-ring 520ms var(--autara-splash-ease) calc(420ms + var(--autara-splash-t0, 0ms)) both;
+    }
+    .autara-splash-ray-base {
+        opacity: 1;
+        animation: autara-splash-dim 420ms var(--autara-splash-ease) calc(1000ms + var(--autara-splash-t0, 0ms)) forwards;
+    }
+    .autara-splash-ray-lit {
+        animation: autara-splash-glow 1800ms var(--autara-splash-sine)
+            calc(1420ms + var(--i) * 225ms + var(--autara-splash-t0, 0ms)) infinite forwards;
+    }
+}
+
+/* Reduced motion: the mark is there, still, at half light, and the light
+ * goes round by opacity alone. The global clamp in animations.css cuts
+ * animations to one 0.01ms frame, so the glow restates its timing with
+ * `!important`, for this one class, as AutaraLoader's breathe does. */
+@media (prefers-reduced-motion: reduce) {
+    .autara-splash .autara-splash-ray-lit {
+        animation: autara-splash-glow 1800ms var(--autara-splash-sine) calc(var(--i) * 225ms) infinite forwards !important;
+        animation-duration: 1800ms !important;
+        animation-iteration-count: infinite !important;
+    }
+}

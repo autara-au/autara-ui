@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../lib/cn";
+import { IconButton } from "./IconButton";
 
 /**
  * CarouselHeader — the eyebrow + heading + arrow-nav + "See all" pattern
@@ -107,30 +108,19 @@ function NavArrow({
   disabled?: boolean;
 }) {
   if (!onClick) return null;
+  /* AUTM-1756: the library's icon disc, filled, 44px (48px to a finger). It
+     was a 40px hairline ring on the surface. Disabled keeps its colour
+     (AUTM-1719); the rail's end is said by aria-disabled. */
   return (
-    <button
-      type="button"
+    <IconButton
       onClick={onClick}
       disabled={disabled}
-      aria-label={direction === "left" ? "Previous" : "Next"}
-      className="grid h-10 w-10 place-items-center rounded-full border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)] transition-colors hover:border-[rgba(78,27,189,0.35)] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[var(--border-subtle)]"
-    >
-      <svg
-        viewBox="0 0 24 24"
-        className="h-4 w-4"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        aria-hidden
-      >
-        {direction === "left" ? (
-          <path d="M15 18l-6-6 6-6" />
-        ) : (
-          <path d="M9 18l6-6-6-6" />
-        )}
-      </svg>
-    </button>
+      label={direction === "left" ? "Previous" : "Next"}
+      icon={
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          {direction === "left" ? <path d="M15 18l-6-6 6-6" /> : <path d="M9 18l6-6-6-6" />}
+        </svg>
+      }
+    />
   );
 }

@@ -56,6 +56,44 @@ describe('ConfirmDialog', () => {
         expect(confirm.textContent).not.toContain('…')
     })
 
+    // AUTM-1838 (Don, 2026-10-12): lime is the one primary action, and a
+    // destructive confirm is never lime: red words on band, never a red fill.
+    it('AUTM-1838: a destructive confirm is danger, never lime; a primary confirm is lime', () => {
+        const { unmount } = render(
+            <ConfirmDialog
+                open
+                title="Cancel this booking?"
+                description="The customer is told at once."
+                confirmLabel="Cancel booking"
+                cancelLabel="Keep booking"
+                tone="destructive"
+                onConfirm={vi.fn()}
+                onClose={vi.fn()}
+                testId="booking-cancel"
+            />,
+        )
+        const destructive = screen.getByTestId('booking-cancel-confirm').className
+        expect(destructive).not.toMatch(/lime/)
+        expect(destructive).not.toMatch(/bg-\[var\(--strong\)\]/)
+        expect(destructive).toMatch(/text-\[var\(--danger\)\]/)
+        expect(destructive).toMatch(/bg-\[var\(--band\)\]/)
+        expect(screen.getByTestId('booking-cancel-cancel').className).not.toMatch(/lime/)
+        unmount()
+
+        render(
+            <ConfirmDialog
+                open
+                title="Send the request?"
+                description="The customer has 24 hours to answer."
+                confirmLabel="Send request"
+                onConfirm={vi.fn()}
+                onClose={vi.fn()}
+                testId="reschedule"
+            />,
+        )
+        expect(screen.getByTestId('reschedule-confirm').className).toMatch(/bg-\[var\(--lime\)\]/)
+    })
+
     it('calls onClose, not onConfirm, when dismissed', () => {
         const onClose = vi.fn()
         const onConfirm = vi.fn()

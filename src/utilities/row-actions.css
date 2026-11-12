@@ -1,0 +1,36 @@
+/* ─── RowActions (AUTM-1787) ──────────────────────────────────────────────
+ * A list row's everyday actions follow the room the ROW has. The row is the
+ * container (`row-actions-host`), and the thresholds are in `em`, which a
+ * container query resolves against the current font size, so 200% text reads
+ * as less room and folds the actions into the menu sooner (AUTM-963's rule,
+ * which a `rem` media query cannot follow).
+ *
+ *   under 36em   the More menu
+ *   36em to 60em icon discs
+ *   60em and up  icon and label
+ */
+.row-actions-host {
+    container-type: inline-size;
+}
+.row-actions-inline {
+    display: none;
+}
+.row-actions-menu {
+    display: inline-flex;
+}
+.row-action-label {
+    display: none;
+}
+@container (min-width: 36em) {
+    .row-actions-inline {
+        display: flex;
+    }
+    .row-actions-menu {
+        display: none;
+    }
+}
+@container (min-width: 60em) {
+    .row-action-label {
+        display: inline;
+    }
+}

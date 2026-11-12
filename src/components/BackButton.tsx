@@ -12,81 +12,103 @@ import { Slot } from '@radix-ui/react-slot'
 import { cn } from '../lib/cn'
 
 /**
- * BackButton — the unified back affordance (AUTM-365).
+ * BackButton — the unified back affordance (AUTM-365; AUTM-1756).
  *
- * Generalised from the merchant app's local BackButton
- * (autara-merchant-mobile/src/components/BackButton.tsx) so every
- * surface renders the same anatomy:
+ * AUTM-1756 (Don, 2026-10-15, beside a bare back chevron and the invoice
+ * record's "< Invoice" pill, which he prefers): Back says where it goes.
  *
- *   - 40×40 circle, hairline border, cream surface, ink chevron
- *   - Solar AltArrowLeft-style Linear glyph, inlined (autara-ui must
- *     not depend on @solar-icons/react)
- *   - Hover bumps the border + chevron to brand purple
- *   - Soft purple focus ring
- *   - Effective hit area ≥44px (`before:` inset extension + min-h-11
- *     root), per the cross-stack tap-target rule
+ *   - With `label` (the destination, "Invoice", "Bookings", "Inbox") it is a
+ *     filled PILL: the chevron and the destination inside one 44px control
+ *     (48px to a finger), the icon disc's fill (`--icon-disc`) and ink. Its
+ *     accessible name is "Back to Invoice" (an sr-only "Back to" before the
+ *     visible word), so it contains what is seen (WCAG 2.5.3) and says what
+ *     it does.
+ *   - Without `label`, or with `compact`, it is the bare chevron on the icon
+ *     disc, IconButton's anatomy, named `ariaLabel` ("Back"). Use that only
+ *     where there is no room for the word. `compact="phone"` is the pill from
+ *     40rem up and the disc below it; the name stays "Back to Invoice".
  *
- * Optional `label` renders a context word ("Bookings", "Menu") beside
- * the circle inside the SAME interactive element, so the label grows
- * the tap target instead of sitting next to it as dead text.
+ * Hover and press are the icon disc's (utilities/icon-disc.css): the glyph's
+ * colour laid over the fill, and a 97% press (`.motion-press`), opacity and
+ * scale only, the scale off under reduced motion. Focus is the library ring:
+ * full `--accent` with a 2px offset band.
  *
- * Polymorphic via Radix `Slot` (asChild) — compose with a framework
- * Link. autara-ui never imports next/link or react-router-dom. Unlike
- * Button, the visual content is intrinsic, so pass the link element
- * EMPTY and BackButton fills it:
+ * `tone="ondark"` is the translucent white disc for brand, brand-deep and ink
+ * grounds.
+ *
+ * The chevron is Solar's AltArrowLeft (Linear), inlined: autara-ui must not
+ * depend on @solar-icons/react.
+ *
+ * Polymorphic via Radix `Slot` (asChild): compose with a framework Link.
+ * autara-ui never imports next/link or react-router-dom. The visual content
+ * is intrinsic, so pass the link element EMPTY and BackButton fills it:
  *
  *   <BackButton asChild label="Bookings">
  *     <Link href="/account/bookings" />
  *   </BackButton>
  *
- * Native shells that need extra behaviour (haptics, history pop) keep
- * a thin app-side wrapper and compose this for the visuals.
+ * Native shells that need extra behaviour (haptics, history pop) keep a thin
+ * app-side wrapper and compose this for the visuals.
  */
 
 export interface BackButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    /** Context label rendered beside the circle, inside the tap target. */
+    /** Where Back goes ("Invoice"), shown in the pill. Leave it out for the bare disc. */
     label?: string
-    /** Accessible name when icon-only. Ignored when `label` is set. */
+    /** Accessible name when icon-only and no `label` is given. Default "Back". */
     ariaLabel?: string
+    /**
+     * Draw the disc without the word, where there is no room: `true` always,
+     * `"phone"` below 40rem. The name keeps the destination.
+     */
+    compact?: boolean | 'phone'
+    /** `neutral` (default), or `ondark` on brand, brand-deep and ink grounds. */
+    tone?: 'neutral' | 'ondark'
     /** Compose with another component (e.g. framework Link) via Radix Slot. */
     asChild?: boolean
 }
 
 const ChevronGlyph = () => (
-    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className="size-5 shrink-0">
         <path
             d="M15 19l-7-7 7-7"
             stroke="currentColor"
-            strokeWidth="1.8"
+            strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
         />
     </svg>
 )
 
+const TONE = {
+    neutral: 'bg-[var(--icon-disc)] text-[var(--on-icon-disc)]',
+    ondark: 'bg-[var(--icon-disc-ondark)] text-[var(--on-icon-disc-ondark)]',
+} as const
+
 export const BackButton = forwardRef<HTMLButtonElement, BackButtonProps>(
-    function BackButton({ label, ariaLabel = 'Back', asChild, className, children, ...rest }, ref) {
+    function BackButton(
+        { label, ariaLabel = 'Back', compact = false, tone = 'neutral', asChild, className, children, ...rest },
+        ref
+    ) {
         const Comp = asChild ? Slot : 'button'
+        const pill = Boolean(label) && compact !== true
+        const phoneDisc = pill && compact === 'phone'
 
         const content = (
             <>
-                <span
-                    aria-hidden
-                    /* before:-inset-0.5 pads the hit area to 44px around the
-                       40px circle without changing the rendered size. */
-                    className={cn(
-                        'relative grid h-10 w-10 shrink-0 place-items-center rounded-full',
-                        'border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
-                        'transition-colors group-hover:border-[rgba(78,27,189,0.35)] group-hover:text-[var(--color-autara-purple)]',
-                        "before:absolute before:-inset-0.5 before:rounded-full before:content-['']",
-                    )}
-                >
-                    <ChevronGlyph />
-                </span>
+                <ChevronGlyph />
                 {label ? (
-                    <span className="text-sm font-medium text-[var(--text-muted)] transition-colors group-hover:text-[var(--text-strong)]">
-                        {label}
-                    </span>
+                    pill ? (
+                        <span
+                            className={cn(
+                                'min-w-0 truncate',
+                                // Below 40rem the word goes; the name keeps it.
+                                phoneDisc && 'max-sm:sr-only'
+                            )}
+                        >
+                            <span className="sr-only">Back to </span>
+                            {label}
+                        </span>
+                    ) : null
                 ) : null}
             </>
         )
@@ -102,18 +124,30 @@ export const BackButton = forwardRef<HTMLButtonElement, BackButtonProps>(
         return (
             <Comp
                 ref={ref}
-                aria-label={label ? undefined : ariaLabel}
+                // The pill is named by its words ("Back to Invoice"); the disc
+                // by its label, the destination kept when it is compact.
+                aria-label={pill ? undefined : label ? `Back to ${label}` : ariaLabel}
+                title={pill ? undefined : label ? `Back to ${label}` : ariaLabel}
+                data-shape={pill ? (phoneDisc ? 'pill-phone-disc' : 'pill') : 'disc'}
                 className={cn(
-                    'group inline-flex min-h-11 items-center gap-2.5 rounded-full',
+                    'icon-disc motion-press relative isolate inline-flex shrink-0 cursor-pointer select-none items-center justify-center rounded-full',
+                    'min-h-11 min-w-11 pointer-coarse:min-h-12 pointer-coarse:min-w-12',
+                    TONE[tone],
+                    pill
+                        ? cn(
+                              'max-w-full gap-1 py-2 pl-2.5 pr-4 text-[0.9375rem] font-medium leading-tight',
+                              phoneDisc && 'max-sm:size-11 max-sm:p-0 max-sm:pointer-coarse:size-12'
+                          )
+                        : 'size-11 p-0 pointer-coarse:size-12',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]',
-                    className,
+                    className
                 )}
                 {...(asChild ? rest : { type: 'button' as const, ...rest })}
             >
                 {slotted}
             </Comp>
         )
-    },
+    }
 )
 
 BackButton.displayName = 'BackButton'

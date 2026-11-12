@@ -67,6 +67,14 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      # AUTM-1786: tests of what the browser hit-tests need a real browser;
+      # jsdom cannot hit-test. Chromium only, with its system libraries.
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Browser tests
+        run: pnpm run test:browser
+
       # Last, because it is the slowest and the least likely to be the thing
       # that broke.
       - name: Build

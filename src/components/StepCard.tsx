@@ -65,7 +65,8 @@ export function StepCard({
       {/* Bottom border sweep on hover (replaces the motion lib variant) */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-0 bg-[var(--color-autara-purple)] transition-[width] duration-[550ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:w-full"
+        // AUTM-2025: grows by scaleX, not width, so hover never triggers layout.
+        className="pointer-events-none absolute bottom-0 left-0 h-[2px] w-full origin-left scale-x-0 bg-[var(--color-autara-purple)] transition-transform duration-[550ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-x-100"
       />
 
       <div className="relative z-10">
@@ -112,7 +113,7 @@ export function StepCard({
         <svg
           aria-hidden="true"
           viewBox="0 0 16 16"
-          className="absolute right-6 top-6 z-10 h-3.5 w-3.5 text-[var(--color-autara-purple)] opacity-25 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-90"
+          className="absolute right-6 top-6 z-10 h-3.5 w-3.5 text-[var(--color-autara-purple)] opacity-25 transition-[opacity,translate] duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-90"
         >
           <path
             d="M3 13 L13 3 M5 3 h8 v8"

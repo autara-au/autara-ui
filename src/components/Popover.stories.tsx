@@ -750,3 +750,51 @@ export const BothThemes: Story = {
         )
     },
 }
+
+/**
+ * AUTM-1792: lifted over a plain paper page, which is where the merchant
+ * portal opens it (its calendar settings, the notification bell). Glass over
+ * a gradient reads as a panel by its frost; glass over paper has nothing to
+ * frost, so the lift (`.floating-surface`: a firmer hairline and a
+ * purple-tinted shadow) is what separates it. Light and dark side by side.
+ */
+export const LiftedOverPaper: Story = {
+    name: 'Lifted over a paper page (AUTM-1792)',
+    tags: ['!autodocs'],
+    render: function LiftedOverPaperStory() {
+        const lightRef = React.useRef<HTMLDivElement>(null)
+        const darkRef = React.useRef<HTMLDivElement>(null)
+        const [ready, setReady] = React.useState(false)
+        React.useEffect(() => setReady(true), [])
+        const panel = (container: HTMLElement | null) => (
+            <Popover defaultOpen>
+                <PopoverTrigger asChild>
+                    <Button variant="outline">Calendar settings</Button>
+                </PopoverTrigger>
+                {ready && container ? (
+                    <PopoverContent
+                        container={container}
+                        tone="strong"
+                        className="w-80 p-4"
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                    >
+                        <PopoverTitle>Calendar settings</PopoverTitle>
+                        <p className="mt-2 text-[0.8125rem] leading-relaxed text-[var(--text-muted)]">
+                            Tapping an open time asks whether to book it or block it.
+                        </p>
+                    </PopoverContent>
+                ) : null}
+            </Popover>
+        )
+        return (
+            <div className="grid min-h-[22rem] grid-cols-2">
+                <div ref={lightRef} className="bg-[var(--paper)] p-10">
+                    {panel(lightRef.current)}
+                </div>
+                <div ref={darkRef} data-theme="dark" className="bg-[var(--paper)] p-10">
+                    {panel(darkRef.current)}
+                </div>
+            </div>
+        )
+    },
+}

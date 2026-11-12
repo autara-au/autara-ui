@@ -57,6 +57,7 @@ import {
     PopoverTrigger,
 } from './Popover'
 import { PhoneInput } from './PhoneInput'
+import { FilterChipRow } from './FilterChipRow'
 
 /**
  * MOTION — every enter and exit in the package, on one page (AUTM-967).
@@ -403,7 +404,7 @@ export const JsTokens: Story = {
                     </p>
                     <div className="flex flex-col gap-3">
                         <div>
-                            <Button variant="strong" onClick={() => setOpen((v) => !v)}>
+                            <Button onClick={() => setOpen((v) => !v)}>
                                 {open ? 'Hide the panel' : 'Show the panel'}
                             </Button>
                         </div>
@@ -850,6 +851,82 @@ export const TextScale200: Story = {
                 >
                     Send the customer a reminder about tomorrow&apos;s booking
                 </button>
+            </div>
+        )
+    },
+}
+
+/* ─── AUTM-1792: pops, rows and the shimmer ──────────────────────────────
+ *
+ * Don, 2026-10-09: "can you see this smooth animation, can we apply slight
+ * animation in our app too". The vocabulary of the dashboard he pointed at,
+ * on this package's tokens. Open the menu, choose a chip, replay the rows,
+ * and watch the shimmer; then turn on reduced motion in the OS and every one
+ * of them is still.
+ */
+const CHIPS = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled']
+const ROWS = ['09:00  Alex Chen, Express wash', '11:30  Priya Nandakumar, Cut and polish', '13:00  Marcus Bell, Ceramic coating', '15:30  Jo Lee, Headlight restoration', '17:00  Tom Whitfield, Full clean']
+
+export const PopsRowsAndShimmer: Story = {
+    name: 'Pops, rows and shimmer (AUTM-1792)',
+    render: function PopsRowsAndShimmerStory() {
+        const [chip, setChip] = React.useState<string>('All')
+        const [run, replay] = useReplay()
+        return (
+            <div className="grid max-w-5xl gap-4 md:grid-cols-2">
+                <Panel title="A menu pops: 92%, 6px, a small overshoot" token="--motion-menu-in 300ms, --motion-ease-pop">
+                    <div>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="quiet">Open the menu</Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem>Your account</DropdownMenuItem>
+                                <DropdownMenuItem>Settings</DropdownMenuItem>
+                                <DropdownMenuItem>Sign out</DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                    <p className="m-0 text-sm text-[var(--text-muted)]">Closes on --motion-menu-out (150ms), faster than it opened.</p>
+                </Panel>
+                <Panel title="A chosen chip pops" token="--motion-pop 450ms">
+                    <FilterChipRow
+                        options={CHIPS.map((c) => ({ value: c, label: c }))}
+                        value={chip}
+                        onChange={setChip}
+                        ariaLabel="Filter bookings"
+                    />
+                    <p className="m-0 text-sm text-[var(--text-muted)]">100, 104, 99, 100%. The chip on at first paint stays still.</p>
+                </Panel>
+                <Panel title="Rows rise in, 30ms apart" token="--motion-row 400ms, --motion-row-stagger 30ms">
+                    <div>
+                        <Button size="sm" variant="quiet" onClick={replay}>
+                            Replay
+                        </Button>
+                    </div>
+                    <ul key={run} className="motion-rows m-0 list-none divide-y divide-[var(--hairline)] rounded-autara-md bg-[var(--paper)] p-0">
+                        {ROWS.map((r) => (
+                            <li key={r} className="px-4 py-3 text-[0.9375rem]">
+                                {r}
+                            </li>
+                        ))}
+                    </ul>
+                </Panel>
+                <Panel title="A skeleton shimmers" token="--motion-skeleton, .motion-shimmer">
+                    <div className="motion-shimmer rounded-autara-md bg-[var(--paper)] p-4" role="status" aria-live="polite">
+                        <span className="sr-only">Loading your bookings</span>
+                        {[0, 1, 2].map((i) => (
+                            <div key={i} className="flex items-center gap-4 py-2">
+                                <Skeleton pulse={false} label={null} className="h-10 w-16" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton pulse={false} label={null} className="h-3.5 w-3/5" />
+                                    <Skeleton pulse={false} label={null} className="h-3 w-2/5" />
+                                </div>
+                                <Skeleton pulse={false} label={null} className="h-7 w-20 rounded-full" />
+                            </div>
+                        ))}
+                    </div>
+                </Panel>
             </div>
         )
     },

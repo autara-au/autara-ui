@@ -300,7 +300,7 @@ export function PickerSheet<T = unknown>(props: PickerSheetProps<T>) {
                     role="listbox"
                     aria-label={title}
                     aria-multiselectable={mode === 'multi'}
-                    className="-mx-1 flex max-h-[min(60vh,420px)] flex-col gap-1.5 overflow-y-auto px-1 py-0.5"
+                    className="-mx-3 flex max-h-[min(60vh,420px)] flex-col gap-1.5 overflow-y-auto px-1 py-0.5"
                 >
                     {visible.map((option) => {
                         const hasChildren = !!(option.children || option.loadChildren)
@@ -322,13 +322,14 @@ export function PickerSheet<T = unknown>(props: PickerSheetProps<T>) {
                                     disabled={option.disabled}
                                     onClick={() => handleRow(option)}
                                     /* AUTM-1594 — canvas v44 "Picker sheet":
-                                       52px rows under a hairline, 16px
-                                       Medium; the chosen row is Bold with a
+                                       52px rows, 16px Medium (AUTM-2042:
+                                       no hairline between them; they part
+                                       by the gap, and hover fills the row); the chosen row is Bold with a
                                        check. No box, no outline, no fill
                                        marker (AUTM-974's solid marker is
                                        retired by the sheet). */
                                     className={cn(
-                                        'flex min-h-13 w-full items-center gap-3 border-t border-[var(--hairline)] px-1 py-2 text-left text-base transition-colors',
+                                        'flex min-h-13 w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-base transition-colors',
                                         'bg-transparent text-[var(--text-strong)]',
                                         isSelected ? 'font-bold' : 'font-medium',
                                         'hover:bg-[var(--band)]',
@@ -377,11 +378,11 @@ export function PickerSheet<T = unknown>(props: PickerSheetProps<T>) {
             )}
 
             {mode === 'multi' ? (
-                <div className="flex items-center justify-between border-t border-[var(--hairline)] pt-3">
+                <div className="flex items-center justify-between pt-3">
                     <span className="text-sm text-[var(--text-muted)]">
                         {selectedSet.size} selected
                     </span>
-                    <Button variant="strong" onClick={() => onOpenChange(false)}>
+                    <Button variant="primary" onClick={() => onOpenChange(false)}>
                         {confirmLabel}
                     </Button>
                 </div>

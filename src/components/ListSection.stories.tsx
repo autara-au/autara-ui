@@ -179,3 +179,82 @@ export const Press: Story = {
         </div>
     ),
 }
+
+/**
+ * AUTM-1781: `variant="plain"`, the grouped list on the page's white ground,
+ * rows apart by space instead of a cream box (AUTM-2042: no hairlines). A row can be a link (here an
+ * external one, with its arrow), carry an avatar as `leading`, and wrap.
+ */
+export const Plain: Story = {
+    render: () => (
+        <div className="w-[480px] bg-[var(--surface)] p-4">
+            <ListSection variant="plain" title="When and where" titleId="when-where">
+                <ListSectionRow icon={<ShopIcon />} label="Thu 16 Oct, 11:00 am AEDT" description="About 3 hours" />
+                <ListSectionRow
+                    icon={<ShopIcon />}
+                    label="41 Smith Street, Fitzroy VIC 3065"
+                    description="Drop the car at the workshop"
+                    wrap
+                    href="https://maps.google.com"
+                    external
+                />
+            </ListSection>
+            <ListSection
+                variant="plain"
+                title="Change or cancel"
+                lead="Free to cancel until 24 hours before. After that, 50% of the deposit is kept."
+            >
+                <ListSectionRow icon={<BellIcon />} label="Change time" onTap={() => {}} />
+                <ListSectionRow icon={<LogoutIcon />} label="Cancel booking" destructive onTap={() => {}} />
+            </ListSection>
+        </div>
+    ),
+}
+
+/** In context: the pro once, as a link to their page, with a monogram. */
+export const PlainWithLeading: Story = {
+    render: () => (
+        <div className="w-[480px] bg-[var(--surface)] p-4">
+            <ListSection variant="plain">
+                <ListSectionRow
+                    leading={
+                        <span className="grid size-12 place-items-center rounded-full bg-[var(--band)] font-bold text-[var(--accent)]">
+                            FP
+                        </span>
+                    }
+                    label="Fitzroy Paint Co"
+                    description="Rated 4.9 from 31 reviews · Fitzroy, VIC"
+                    href="#"
+                />
+            </ListSection>
+        </div>
+    ),
+}
+
+/**
+ * `variant="quiet"` (Don, 2026-11-07, the merchant app's quiet pass): one band
+ * surface per group with the rows on it, no white card per row, so a settings
+ * screen of several groups is not a box inside a box on every line. The icon
+ * discs are paper so they still read on the band. Hover a row.
+ */
+export const Quiet: Story = {
+    name: 'Quiet (2026-11-07)',
+    render: () => (
+        <div className="w-[480px] bg-[var(--surface)] p-4">
+            <ListSection variant="quiet" title="Business">
+                <ListSectionRow icon={<ShopIcon />} label="Business profile" description="Name, photo, description and address" onTap={() => {}} />
+                <ListSectionRow icon={<BellIcon />} label="Reviews" description="3.2 from 60 reviews" onTap={() => {}} />
+                <ListSectionRow icon={<BellIcon />} label="Verification" description="ABN and documents approved" trailing="Verified" />
+            </ListSection>
+            <ListSection variant="quiet" title="Account">
+                <ListSectionRow icon={<LogoutIcon />} label="Sign out" destructive onTap={() => {}} />
+            </ListSection>
+        </div>
+    ),
+}
+
+export const QuietDark: Story = {
+    name: 'Quiet, dark',
+    globals: { theme: 'dark' },
+    render: Quiet.render,
+}

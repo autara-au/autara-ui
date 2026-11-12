@@ -1,0 +1,87 @@
+/* ─── Scroll areas (AUTM-1756) ──────────────────────────────────────────
+ *
+ * Don, 2026-10-15: "optimize the scroll views throughout the app". The
+ * classes behind `ScrollArea`, usable on their own on an element a consumer
+ * already owns:
+ *
+ *   .scroll-area        a panel, drawer or list that scrolls inside itself.
+ *                       `overscroll-behavior: contain`, so reaching its end
+ *                       never scrolls the page behind it or bounces the shell;
+ *                       `scroll-padding-top` from `--scroll-area-offset`, so a
+ *                       row brought into view by the keyboard or by
+ *                       `scrollIntoView` lands under a sticky header, not
+ *                       behind it; and an inset focus ring for the one case
+ *                       the area itself takes focus (nothing focusable in it).
+ *   .scroll-area-x/-y   the axis; `-y` is the default for `.scroll-area`.
+ *   .scroll-fade        fades the edge that has more to show, from
+ *                       `data-fade-start` / `data-fade-end` (ScrollArea and
+ *                       `useScrollEdges` set them), so a chip row says "there
+ *                       is more" instead of cutting a chip mid-word. A mask,
+ *                       so the chips keep their own colours on any ground.
+ *
+ * One page scroll beats two: put `.scroll-area` on a region that must scroll
+ * on its own (a split pane's list, a drawer, a chat thread), never on a
+ * screen whose page already scrolls.
+ *
+ * In `@layer components`, so a Tailwind utility on the same element (an
+ * `overflow-visible` at one breakpoint, a `scroll-pt-*`) still wins.
+ */
+@layer components {
+    .scroll-area {
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scroll-padding-top: var(--scroll-area-offset, 0px);
+        -webkit-overflow-scrolling: touch;
+    }
+    .scroll-area.scroll-area-x {
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-padding-top: 0;
+        scroll-padding-inline: var(--scroll-area-offset-inline, 0px);
+    }
+    .scroll-area.scroll-area-xy {
+        overflow: auto;
+    }
+    .scroll-area:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+    }
+
+    .scroll-fade {
+        --scroll-fade-size: 2.5rem;
+    }
+    .scroll-fade.scroll-area-x[data-fade-end],
+    .scroll-fade[data-axis="x"][data-fade-end] {
+        mask-image: linear-gradient(to right, #000 calc(100% - var(--scroll-fade-size)), transparent);
+    }
+    .scroll-fade.scroll-area-x[data-fade-start],
+    .scroll-fade[data-axis="x"][data-fade-start] {
+        mask-image: linear-gradient(to left, #000 calc(100% - var(--scroll-fade-size)), transparent);
+    }
+    .scroll-fade.scroll-area-x[data-fade-start][data-fade-end],
+    .scroll-fade[data-axis="x"][data-fade-start][data-fade-end] {
+        mask-image: linear-gradient(
+            to right,
+            transparent,
+            #000 var(--scroll-fade-size),
+            #000 calc(100% - var(--scroll-fade-size)),
+            transparent
+        );
+    }
+    .scroll-fade:not(.scroll-area-x, [data-axis="x"])[data-fade-end] {
+        mask-image: linear-gradient(to bottom, #000 calc(100% - var(--scroll-fade-size)), transparent);
+    }
+    .scroll-fade:not(.scroll-area-x, [data-axis="x"])[data-fade-start] {
+        mask-image: linear-gradient(to top, #000 calc(100% - var(--scroll-fade-size)), transparent);
+    }
+    .scroll-fade:not(.scroll-area-x, [data-axis="x"])[data-fade-start][data-fade-end] {
+        mask-image: linear-gradient(
+            to bottom,
+            transparent,
+            #000 var(--scroll-fade-size),
+            #000 calc(100% - var(--scroll-fade-size)),
+            transparent
+        );
+    }
+}

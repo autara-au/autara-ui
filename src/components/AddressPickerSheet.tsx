@@ -431,9 +431,10 @@ export function AddressPickerSheet(props: AddressPickerSheetProps) {
                                 aria-selected={false}
                                 onClick={() => void handlePick(s)}
                                 className={cn(
-                                    'flex min-h-[44px] w-full items-start gap-3 rounded-2xl border px-3 py-2.5 text-left transition-colors',
-                                    'border-[var(--border-subtle)] bg-[var(--surface)]',
-                                    'hover:border-autara-purple/35',
+                                    // AUTM-2042 (Don, 2026-11-08: no hairlines): a band
+                                    // tile, set apart by its fill, not an outline.
+                                    'flex min-h-[44px] w-full items-start gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors',
+                                    'bg-[var(--band)] hover:bg-[var(--band-press)]',
                                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]',
                                 )}
                             >
@@ -467,9 +468,9 @@ export function AddressPickerSheet(props: AddressPickerSheetProps) {
                 type="button"
                 onClick={handleManualEntry}
                 className={cn(
-                    'min-h-[44px] w-full rounded-2xl border border-dashed px-4 py-3 text-sm font-medium transition-colors',
-                    'border-[var(--border-subtle)] text-[var(--text-muted)]',
-                    'hover:border-autara-purple/35 hover:text-[var(--text-strong)]',
+                    // AUTM-2042: a quiet text action, no dashed outline.
+                    'min-h-[44px] w-full rounded-2xl px-4 py-3 text-sm font-medium transition-colors',
+                    'text-[var(--accent)] hover:bg-[var(--band)]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]',
                 )}
             >
@@ -539,7 +540,7 @@ export function AddressPickerSheet(props: AddressPickerSheetProps) {
                         Drag the pin to your entrance — this is where customers
                         will be sent.
                     </p>
-                    <div className="h-56 w-full overflow-hidden rounded-2xl border border-[var(--border-subtle)]">
+                    <div className="h-56 w-full overflow-hidden rounded-2xl bg-[var(--band)]">
                         {renderMap({
                             lat: draft.lat,
                             lng: draft.lng,
@@ -567,7 +568,7 @@ export function AddressPickerSheet(props: AddressPickerSheetProps) {
 
     const footer =
         step === 'details' ? (
-            <div className="flex shrink-0 gap-2 border-t border-[var(--border-subtle)] pt-4">
+            <div className="flex shrink-0 gap-2 pt-4">
                 <Button
                     variant="outline"
                     fullWidth

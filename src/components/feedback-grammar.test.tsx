@@ -50,11 +50,13 @@ describe('feedback grammar', () => {
         expect(stamp.className).not.toContain('tracking-[0.18em]')
     })
 
-    it('ErrorCard offers its retry as the strong action, never an outline', () => {
+    it('ErrorCard offers its retry as the lime action, never an outline', () => {
         render(<ErrorCard message="We could not load this." onRetry={() => {}} />)
         const retry = screen.getByRole('button', { name: 'Retry' })
-        // AUTM-1594: on a band card the action is ink (canvas v44 "Error").
-        expect(retry.className).toContain('bg-[var(--strong)]')
+        // AUTM-1594 drew it ink on the band card; AUTM-1838 (no black
+        // buttons, Don 2026-10-12) makes it the lime primary.
+        expect(retry.className).toContain('bg-[var(--lime)]')
+        expect(retry.className).not.toContain('bg-[var(--strong)]')
         expect(retry.className).not.toContain('border')
         // The sheet's 44px strong action, across the card.
         expect(retry.className).toContain('min-h-11')

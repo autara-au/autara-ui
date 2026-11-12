@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { StatTile } from './StatTile'
 import { StatsStrip } from './StatsStrip'
+import { CountUp } from './CountUp'
 
 const meta: Meta<typeof StatTile> = {
     title: 'Merchant portal/StatTile',
@@ -260,4 +261,23 @@ export const AlignedRow: Story = {
             />
         </div>
     ),
+}
+
+/**
+ * AUTM-1792: the figure counts up to its value once, as the page lands
+ * (`CountUp`). The real value is in the page from the first frame; a later
+ * value is shown at once. Reduced motion shows it with no count.
+ */
+export const CountingUp: Story = {
+    name: 'Counting up (AUTM-1792)',
+    render: () => {
+        const aud = (n: number) =>
+            new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n)
+        return (
+            <div className="grid max-w-xl grid-cols-2 gap-3">
+                <StatTile hero label="Today" value={<CountUp value={189} format={aud} />} caption="2 jobs" />
+                <StatTile label="This month" value={<CountUp value={4072} format={aud} />} caption="Through Fri 9 Oct" />
+            </div>
+        )
+    },
 }

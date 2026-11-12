@@ -3,6 +3,8 @@
 import * as React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { cn } from '../lib/cn'
+import { CloseButton } from './IconButton'
+import { useReturnFocus } from '../lib/use-return-focus'
 
 /**
  * Dialog — Radix dialog primitive styled for the Autara cream canvas.
@@ -10,10 +12,11 @@ import { cn } from '../lib/cn'
  * Single light treatment (a dark companion for photo/ink surfaces is
  * deferred to a future PR). Honors the Autara house rules:
  *   - `--surface` (white) fill, `--text-strong` ink text
- *   - Hairline `--border-subtle` ring instead of any drop shadow
+ *   - No edge and no drop shadow: the panel is set apart by its fill on
+ *     the scrim (AUTM-2042: no hairlines)
  *   - Ink overlay at 50% opacity (no backdrop blur — flat
  *     editorial scrim)
- *   - Solar Bold close icon at the top-right
+ *   - CloseButton (AUTM-1756) at the top-right: a filled disc, not a bare cross
  *
  * The `theme` prop on `DialogContent` is preserved for source-level
  * compatibility but is currently a **no-op**.
@@ -54,13 +57,22 @@ import { cn } from '../lib/cn'
  *             <DialogBody>…the form…</DialogBody>
  *             <DialogFooter>
  *                 <Button variant="quiet">Cancel</Button>
- *                 <Button variant="strong">Confirm address</Button>
+ *                 <Button>Confirm address</Button>
  *             </DialogFooter>
  *         </DialogContent>
  *     </Dialog>
  *
  * The default (`layout="centered"`) renders exactly as it did before, so
  * every existing dialog is unchanged.
+ *
+ * ─── AUTM-1768: focus goes back where it came from ──────────────────────
+ *
+ * Radix returns focus on close to `DialogTrigger` only, so a dialog opened
+ * from state (a button that sets `open`) dropped keyboard focus on `<body>`
+ * and the next Tab restarted at the top of the page. `DialogContent` now
+ * remembers the focused element when it opens and puts focus back there when
+ * Radix leaves it nowhere. A trigger, or a consumer's own `onCloseAutoFocus`
+ * that calls `preventDefault()`, still wins. `SheetContent` does the same.
  */
 const Dialog = DialogPrimitive.Root
 const DialogTrigger = DialogPrimitive.Trigger
@@ -92,8 +104,8 @@ export type DialogSize = 'md' | 'lg'
 
 /**
  * What the parts inside a `DialogContent` need to know about it: which layout
- * they are in, whether the body has scrolled (the header draws its hairline
- * only then, so a dialog that fits has no line under its title), and whether
+ * they are in, whether the body has scrolled (the header is marked
+ * `data-scrolled` then; AUTM-2042 took away the hairline it drew), and whether
  * the panel is cramped (see `CRAMPED_SHARE`).
  */
 interface DialogLayoutState {
@@ -231,10 +243,15 @@ const DialogContent = React.forwardRef<
             size = 'md',
             closeLabel = 'Close dialog',
             theme: _theme,
+            onOpenAutoFocus,
+            onCloseAutoFocus,
             ...props
         },
         ref
     ) => {
+        // AUTM-1768: focus goes back to the control that opened the dialog,
+        // trigger or not. See use-return-focus.ts.
+        const returnFocus = useReturnFocus(onOpenAutoFocus, onCloseAutoFocus)
         const [scrolled, setScrolled] = React.useState(false)
         // State, not a ref: the panel mounts inside Radix's Portal a render
         // after this component, and an effect keyed on a ref would never see
@@ -266,34 +283,22 @@ const DialogContent = React.forwardRef<
                         className
                     )}
                     {...props}
+                    onOpenAutoFocus={returnFocus.onOpenAutoFocus}
+                    onCloseAutoFocus={returnFocus.onCloseAutoFocus}
                 >
                     <DialogLayoutContext.Provider value={state}>
                         {children}
                     </DialogLayoutContext.Provider>
-                    <DialogPrimitive.Close
-                        aria-label={closeLabel}
-                        className={cn(
-                            /* AUTM-1221: 44px on the ladder. It was 28px, which is
-                               under the floor on the one control that dismisses a
-                               modal, and a pill besides. */
-                            'absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full',
-                            'text-[var(--text-subtle)] transition-colors',
-                            'hover:bg-[var(--band)] hover:text-[var(--text-strong)]',
-                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--paper)]'
-                        )}
-                    >
-                        <svg
-                            aria-hidden
-                            viewBox="0 0 24 24"
-                            width="14"
-                            height="14"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth={2.4}
-                            strokeLinecap="round"
-                        >
-                            <path d="M6 6l12 12M18 6L6 18" />
-                        </svg>
+                    {/* AUTM-1756: the library's one close control, a filled
+                        44px disc (48px to a finger) with a 20px cross. It was a
+                        14px cross on a bare 44px target that drew a band
+                        circle only on hover: Don, of the Share your booking
+                        link dialog, "Icon buttons are less accessible". */}
+                    <DialogPrimitive.Close asChild>
+                        <CloseButton
+                            label={closeLabel}
+                            className="absolute right-3 top-3 z-10"
+                        />
                     </DialogPrimitive.Close>
                 </DialogPrimitive.Content>
             </DialogPortal>
@@ -318,12 +323,10 @@ const DialogHeader = ({
                     // close disc; the description under it takes the full
                     // width, as Fresha's sheets set it.
                     'relative flex shrink-0 flex-col gap-1.5 px-5 pb-3 pt-6 text-left sm:px-6 [&>:first-child]:pr-11',
-                    // The hairline appears once the body has scrolled, so the
-                    // edge is only drawn when something is passing under it.
-                    // Opacity on the panel token: transform and opacity only.
-                    "after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:h-px after:bg-[var(--hairline)] after:opacity-0 after:content-['']",
-                    'after:transition-opacity after:duration-[var(--motion-panel-in)] after:ease-[var(--motion-ease-out)]',
-                    'data-[scrolled]:after:opacity-100',
+                    // AUTM-2042 (Don, 2026-11-08: no hairlines): no rule
+                    // under the header, even once the body has scrolled; the
+                    // body simply passes under it. `data-scrolled` stays, as
+                    // a hook.
                     className
                 )}
                 {...props}
@@ -333,7 +336,10 @@ const DialogHeader = ({
     return (
         <div
             className={cn(
-                'flex flex-col space-y-1.5 text-left',
+                // AUTM-1756: the title and the line under it keep clear of the
+                // drawn close disc (12px from the corner, 44px wide; the
+                // panel's own 24px padding plus this 32px clears it).
+                'flex flex-col space-y-1.5 pr-8 text-left',
                 className
             )}
             {...props}
@@ -391,10 +397,11 @@ const DialogFooter = ({
             <div
                 data-dialog-footer=""
                 className={cn(
-                    // Pinned on a hairline, as Fresha, Airbnb and merchant-web's
-                    // address dialog draw it. It holds the home-indicator inset
-                    // (0 on a desktop browser).
-                    'flex shrink-0 flex-row flex-wrap-reverse gap-2.5 border-t border-[var(--hairline)] bg-[var(--paper)] px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:justify-end sm:px-6',
+                    // Pinned at the foot on the panel's own paper, with no rule
+                    // above it (AUTM-2042: no hairlines; Fresha and Airbnb draw
+                    // one). It holds the home-indicator inset (0 on a desktop
+                    // browser).
+                    'flex shrink-0 flex-row flex-wrap-reverse gap-2.5 bg-[var(--paper)] px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:justify-end sm:px-6',
                     // Cramped: the panel scrolls, and the actions stick to its foot.
                     cramped && 'sticky bottom-0 z-10',
                     // Side by side and sharing the width on a phone while both

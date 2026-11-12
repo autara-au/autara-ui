@@ -6,6 +6,13 @@ import { cn } from '../lib/cn'
 export interface StepperStep {
     id: string
     label: string
+    /**
+     * AUTM-1867: a line under the label in the vertical list (Wise's desktop
+     * steps: what was chosen under a done step, what is asked under the
+     * current one). Outside the step's button, so the label alone stays its
+     * accessible name. Not drawn in the compact bars.
+     */
+    detail?: React.ReactNode
 }
 
 export interface StepperProps {
@@ -196,6 +203,14 @@ const Stepper = React.forwardRef<HTMLDivElement, StepperProps>(function Stepper(
                                         {row}
                                     </span>
                                 )}
+                                {step.detail ? (
+                                    <div
+                                        data-step-detail={step.id}
+                                        className="pb-2 pl-10 text-[0.875rem] leading-snug text-[var(--text-muted)]"
+                                    >
+                                        {step.detail}
+                                    </div>
+                                ) : null}
                             </li>
                         )
                     })}

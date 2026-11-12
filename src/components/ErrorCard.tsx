@@ -64,7 +64,7 @@ export interface ErrorCardProps {
 /*
  * AUTM-1594 — canvas v44 "Error": a band card, 24px radius, 20px in; an
  * 18px Bold title that names the thing, a 15px line that says the way out,
- * and Retry as the strong action across the card. On band the action is ink.
+ * and Retry as the lime action across the card (AUTM-1838: no black buttons).
  * No intent medallion: the words carry it. `icon` still renders, in a raised
  * disc, for a consumer that wants one. `tone` is kept on the element as
  * data-tone for consumers and tests that read it.
@@ -102,7 +102,7 @@ export function ErrorCard({
         <p className="text-[0.8125rem] text-[var(--text-subtle)]">{detail}</p>
       ) : null}
       {onRetry ? (
-        <Button variant="strong" size="sm" fullWidth onClick={onRetry}>
+        <Button variant="primary" size="sm" fullWidth onClick={onRetry}>
           {retryLabel}
         </Button>
       ) : null}

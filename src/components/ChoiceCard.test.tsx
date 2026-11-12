@@ -23,4 +23,14 @@ describe('ChoiceCard', () => {
         expect(radios[2].disabled).toBe(true)
         expect(screen.getByTestId('card-c').textContent).toContain('Booked')
     })
+
+    it('announces its error when it appears (AUTM-1538)', () => {
+        render(
+            <ChoiceGroup name="t" value={null} onChange={() => {}} legend="Type" error="Pick the type that's closest.">
+                <ChoiceCard value="a" label="A" />
+            </ChoiceGroup>,
+        )
+        expect(screen.getByRole('alert').textContent).toBe("Pick the type that's closest.")
+        expect(screen.getByRole('group').getAttribute('aria-invalid')).toBe('true')
+    })
 })

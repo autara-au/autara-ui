@@ -45,7 +45,10 @@ export interface ConfirmDialogProps {
     confirmLabel: string
     /** The safe option. Default "Cancel"; pass "Keep booking" and the like where "Cancel" would read as the destructive verb. */
     cancelLabel?: string
-    /** `destructive` for anything that deletes, cancels or refunds. */
+    /**
+     * `destructive` for anything that deletes, cancels, voids, discards or
+     * refunds: the confirm is `danger` (red words on band), never lime.
+     */
     tone?: 'primary' | 'destructive'
     loading?: boolean
     /** Rendered as an error InlineAlert above the footer. */
@@ -104,9 +107,10 @@ export function ConfirmDialog({
                     </InlineAlert>
                 ) : null}
 
-                {/* AUTM-1594 — canvas v44: quiet Cancel and the strong action,
-                    side by side and full width. Destructive is strong too: no
-                    red buttons, the consequence is said in the body. */}
+                {/* AUTM-1594 — canvas v44: quiet Cancel and the action, side by
+                    side and full width. AUTM-1838 (Don, 2026-10-12): the action
+                    is lime, and a destructive one is `danger` (band, red
+                    words), never lime and never a red fill. */}
                 <DialogFooter className="mt-2 flex-row gap-2.5">
                     <Button
                         variant="quiet"
@@ -122,7 +126,7 @@ export function ConfirmDialog({
                         width holds and the accessible name does not change while
                         the request runs; it used to become "Remove…" at 45%. */}
                     <Button
-                        variant="strong"
+                        variant={tone === 'destructive' ? 'danger' : 'primary'}
                         size="md"
                         fullWidth
                         busy={loading}

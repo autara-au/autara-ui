@@ -82,6 +82,7 @@ describe('Badge tones (canvas v44)', () => {
         ['off', '--band', '--danger'],
         ['count', '--brand', '--on-brand'],
         ['count-alert', '--alert', '--on-alert'],
+        ['count-selected', '--lime', '--on-lime'],
     ] as const)('%s is a solid fill with its ink', (variant, fill, on) => {
         const cls = render(<Badge variant={variant}>State</Badge>).container.firstElementChild!.className
         expect(cls).toContain(`bg-[var(${fill})]`)

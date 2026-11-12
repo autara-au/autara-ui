@@ -190,11 +190,13 @@
      * for attention and a closing one is getting out of the way. */
     --motion-panel-in: 160ms;
     --motion-panel-out: 120ms;
-    --motion-modal-in: 200ms;
+    /* AUTM-1792: dialogs and sheets on Don's 2026-10-09 reference, 350ms in.
+     * Menus pop on their own pair below the page-content tokens. */
+    --motion-modal-in: 350ms;
     --motion-modal-out: 150ms;
     --motion-scrim-in: 200ms;
     --motion-scrim-out: 150ms;
-    --motion-sheet-in: 280ms;
+    --motion-sheet-in: 350ms;
     --motion-sheet-out: 200ms;
     --motion-nav-in: 250ms;
     --motion-nav-out: 200ms;
@@ -213,10 +215,49 @@
     --motion-skeleton: 1400ms;
     --motion-crossfade: 160ms;
 
+    /* AUTM-1792: the vocabulary of the dashboard Don pointed at on
+     * 2026-10-09 ("can you see this smooth animation, can we apply slight
+     * animation in our app too"), measured and kept slight. Uses in the
+     * "Pops, rows and counts" block at the end of this file.
+     *   menu-in / -out   a menu, dropdown or popover popping open, and closing
+     *                    faster than it opened
+     *   pop              a chip, a slot or a tab being chosen
+     *   tab              every 450ms slide: a segmented control's or the
+     *                    dock's selected pill sliding across, and a screen
+     *                    pushed or popped (AUTM-1781, `.motion-screen`)
+     *   row / row-stagger a list's rows rising in, capped at the twelfth
+     *   count            a figure counting up to its value, once per arrival */
+    --motion-menu-in: 300ms;
+    --motion-menu-out: 150ms;
+    --motion-pop: 450ms;
+    --motion-tab: 450ms;
+    --motion-row: 400ms;
+    --motion-row-stagger: 30ms;
+    --motion-count: 900ms;
+    /* AUTM-1799 (AUTM-1797's step track): the current step's disc breathes,
+     * a ring that grows and fades, once per breath, while the booking waits
+     * on someone. Reduced: no ring at all. */
+    --motion-breathe: 2400ms;
+    /* AUTM-1819: a small pill arriving (`.motion-badge-in`), a scale-in and
+     * a fade, once. `.motion-breathe-soft` (a pill breathing in opacity)
+     * reuses `--motion-breathe`. */
+    --motion-badge-in: 240ms;
+    /* AUTM-1781: a screen's sections arriving (`.motion-rise`), one
+     * `--motion-stagger` apart. The customer app's other moves use the tokens
+     * above: sheets and dialogs `--motion-sheet-in` and `--motion-modal-in`,
+     * rows, pops and counts the AUTM-1792 set. */
+    --motion-enter: 550ms;
+
     /* The house easing — the same curve `.animate-on-scroll` above uses, so
      * a panel and a reveal feel like one product. */
     --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
     --motion-ease-in: cubic-bezier(0.4, 0, 1, 1);
+    /* AUTM-1792: a small overshoot, for things that POP (a menu opening, a
+     * chip chosen). Transform only: it would push opacity past 1 for nothing.
+     * Never for a sheet, a dialog, a page or a list; those stay calm.
+     * AUTM-1781: there is no second ease-out. The customer app's vocabulary
+     * runs on `--motion-ease-out` like everything else. */
+    --motion-ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ─── Scrim — the ink behind a Dialog or a Sheet ─────────────────────── */
@@ -244,10 +285,12 @@
         forwards;
 }
 
+/* AUTM-1792: rises 14px as it scales from 98%, per Don's reference; the
+ * scale alone read as a flash rather than an arrival. */
 @keyframes modal-panel-in {
     from {
         opacity: 0;
-        transform: scale(0.96);
+        transform: translateY(14px) scale(0.98);
     }
     to {
         opacity: 1;
@@ -262,7 +305,7 @@
     }
     to {
         opacity: 0;
-        transform: scale(0.96);
+        transform: translateY(8px) scale(0.98);
     }
 }
 
@@ -661,28 +704,38 @@
  *                                   `motion-reduce`, so this follows that.
  *   skeleton                        pulse off: a still placeholder
  *   crossfade                       stays, opacity only, 160ms
+ *   draw-x, breathe (AUTM-1799)     none: the track's line is drawn, no ring
+ *   badge-in, breathe-soft          none: the pill is there, still
+ *   (AUTM-1819)
  */
 
 /* ─── Stagger index ──────────────────────────────────────────────────────
  *
  * `--stagger-i` is a direct child's position, 0 to 5, for `.reveal-stagger`
- * (scroll-driven, above) and `.motion-stagger` (timed, below). Set by
+ * (scroll-driven, above), `.motion-stagger` (timed, below) and `.motion-rise`
+ * (a screen's sections, AUTM-1781, at the end of the file). Set by
  * position so server HTML carries it with no script. A consumer can override
  * it with an inline style when DOM order is not reading order. Outside the
  * `--motion-` namespace on purpose: that one holds tokens, and
  * motion-tokens.test.ts reads every name in it as one. */
 .reveal-stagger > *,
-.motion-stagger > * { --stagger-i: 0; }
+.motion-stagger > *,
+.motion-rise > * { --stagger-i: 0; }
 .reveal-stagger > :nth-child(2),
-.motion-stagger > :nth-child(2) { --stagger-i: 1; }
+.motion-stagger > :nth-child(2),
+.motion-rise > :nth-child(2) { --stagger-i: 1; }
 .reveal-stagger > :nth-child(3),
-.motion-stagger > :nth-child(3) { --stagger-i: 2; }
+.motion-stagger > :nth-child(3),
+.motion-rise > :nth-child(3) { --stagger-i: 2; }
 .reveal-stagger > :nth-child(4),
-.motion-stagger > :nth-child(4) { --stagger-i: 3; }
+.motion-stagger > :nth-child(4),
+.motion-rise > :nth-child(4) { --stagger-i: 3; }
 .reveal-stagger > :nth-child(5),
-.motion-stagger > :nth-child(5) { --stagger-i: 4; }
+.motion-stagger > :nth-child(5),
+.motion-rise > :nth-child(5) { --stagger-i: 4; }
 .reveal-stagger > :nth-child(n + 6),
-.motion-stagger > :nth-child(n + 6) { --stagger-i: 5; }
+.motion-stagger > :nth-child(n + 6),
+.motion-rise > :nth-child(n + 6) { --stagger-i: 5; }
 
 /* ─── Timed stagger: a list or a group arriving on first paint ───────────
  *
@@ -831,5 +884,300 @@
 @media (prefers-reduced-motion: reduce) {
     .motion-crossfade {
         animation-duration: var(--motion-crossfade) !important;
+    }
+}
+
+/* ─── Pops, rows and counts (AUTM-1792) ──────────────────────────────────
+ *
+ * Don, 2026-10-09, pointing at a dashboard template: "can you see this smooth
+ * animation, can we apply slight animation in our app too". These borrow its
+ * vocabulary, not its code or its library: CSS keyframes on the tokens above,
+ * transform and opacity only, every moving rule inside `no-preference`, so a
+ * reduced-motion user sees the end state with nothing waiting on a delay.
+ *
+ *   class                    what moves                       reduced motion
+ *   .floating-panel--pop     a menu pops: 92% and 6px toward  the plain
+ *                            its trigger, a small overshoot,  .floating-panel
+ *                            on --motion-menu-in; closes on   (clamped)
+ *                            --motion-menu-out
+ *   .motion-pop              a chosen chip, slot or tab:      none
+ *                            100, 104, 99, 100%
+ *   .motion-rows             a list's direct children rise    none
+ *                            4px and fade in, 30ms apart,
+ *                            the twelfth onward together
+ *   .motion-shimmer          a highlight sweeps a skeleton    still, the
+ *                            container, left to right         blocks stay
+ *
+ * One shot, except the shimmer (a loop, like the pulse it replaces). Rows
+ * animate when they are INSERTED, so a filter that keeps a row keeps it
+ * still and only the rows it brings in rise.
+ */
+
+/* A menu, dropdown or popover popping open. */
+@keyframes floating-pop-in {
+    from {
+        transform: translate(var(--panel-dx), var(--panel-dy)) scale(0.92);
+    }
+    to {
+        transform: none;
+    }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .floating-panel--pop[data-side="bottom"] { --panel-dy: -6px; }
+    .floating-panel--pop[data-side="top"] { --panel-dy: 6px; }
+    .floating-panel--pop[data-side="left"] { --panel-dx: 6px; }
+    .floating-panel--pop[data-side="right"] { --panel-dx: -6px; }
+    /* Two animations: the fade on the calm curve, the movement on the
+     * overshoot, so opacity never overshoots. Radix waits on the exit by
+     * name and matches either. */
+    .floating-panel--pop[data-state]:not([data-state="closed"]) {
+        animation:
+            autara-fade-in var(--motion-menu-in) var(--motion-ease-out) both,
+            floating-pop-in var(--motion-menu-in) var(--motion-ease-pop) both;
+    }
+    .floating-panel--pop[data-state="closed"] {
+        animation: floating-panel-out var(--motion-menu-out) var(--motion-ease-in) forwards;
+    }
+}
+
+/* A chip, a slot or a tab being chosen. Put the class on the element the
+ * moment it is chosen (FilterChipRow does it for a chip); re-adding it
+ * replays. `transform`, so it composes with `.motion-press`, which uses the
+ * standalone `scale`. */
+@keyframes autara-pop {
+    0% { transform: none; }
+    40% { transform: scale(1.04); }
+    75% { transform: scale(0.99); }
+    100% { transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .motion-pop {
+        animation: autara-pop var(--motion-pop) var(--motion-ease-out);
+    }
+}
+
+/* A list's rows arriving. `--row-i` by position, capped at the twelfth so
+ * a long list is done within 400 + 330ms. */
+.motion-rows > * { --row-i: 0; }
+.motion-rows > :nth-child(2) { --row-i: 1; }
+.motion-rows > :nth-child(3) { --row-i: 2; }
+.motion-rows > :nth-child(4) { --row-i: 3; }
+.motion-rows > :nth-child(5) { --row-i: 4; }
+.motion-rows > :nth-child(6) { --row-i: 5; }
+.motion-rows > :nth-child(7) { --row-i: 6; }
+.motion-rows > :nth-child(8) { --row-i: 7; }
+.motion-rows > :nth-child(9) { --row-i: 8; }
+.motion-rows > :nth-child(10) { --row-i: 9; }
+.motion-rows > :nth-child(11) { --row-i: 10; }
+.motion-rows > :nth-child(n + 12) { --row-i: 11; }
+@keyframes autara-row-in {
+    from { opacity: 0.001; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .motion-rows > * {
+        animation: autara-row-in var(--motion-row) var(--motion-ease-out) both;
+        animation-delay: calc(var(--row-i, 0) * var(--motion-row-stagger));
+    }
+}
+
+/* A skeleton's shimmer. On the CONTAINER, so one highlight sweeps the whole
+ * placeholder rather than every block pulsing on its own; the blocks inside
+ * take `Skeleton pulse={false}`. The highlight is a themed token, faint on
+ * ink, and the sweep is a transform. */
+:root,
+:host {
+    --shimmer-hi: rgba(255, 255, 255, 0.65);
+}
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --shimmer-hi: rgba(255, 255, 255, 0.06);
+}
+.motion-shimmer {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.motion-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent 0%, var(--shimmer-hi) 50%, transparent 100%);
+}
+@keyframes autara-shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .motion-shimmer::after {
+        animation: autara-shimmer var(--motion-skeleton) ease-in-out infinite;
+    }
+}
+@media (prefers-reduced-motion: reduce) {
+    .motion-shimmer::after {
+        display: none;
+    }
+}
+
+/* ─── App screens (AUTM-1781) ────────────────────────────────────────────
+ *
+ * Don, 2026-10-09, the same request as the block above, for the customer
+ * app (spec: the CTO session's motion spec of 2026-10-09). Only what the
+ * block above and the overlay rules do not already do: a screen arriving in
+ * a direction, its sections rising, and a bar rising at the bottom edge. A
+ * sheet and a dialog are the plain Sheet and Dialog (`--motion-sheet-in` and
+ * `--motion-modal-in`, the 14px settle); rows, pops and counts are the
+ * AUTM-1792 classes; the dock's pill is AppTabBar on `--motion-tab`.
+ *
+ *   class / helper          what moves                          token
+ *   .motion-screen          a screen arriving in a direction:   --motion-tab
+ *                           6% sideways and a fade (push from
+ *                           the right, back from the left, a
+ *                           tab fades)
+ *   .motion-rise            a screen's sections arriving:       --motion-enter,
+ *                           18px up, 98.5% to full size, fade,  --motion-stagger
+ *                           one stagger apart, capped at the
+ *                           sixth (the `--stagger-i` index)
+ *   .motion-bar-in          a bar at the bottom edge rising     --motion-sheet-in
+ *                           into place on mount (below lg)
+ *
+ * Rules that travel with it: transform and opacity only; nothing blocks
+ * input; content is readable and present at once (every `from` is opacity
+ * 0.001, never hidden); once per arrival, never on a re-render or a poll.
+ * Every rule below sits inside `prefers-reduced-motion: no-preference`, so a
+ * reduced-motion user gets the end state at once.
+ *
+ * `.motion-screen` must never be an ancestor of a fixed bar: a transformed
+ * ancestor turns `position: fixed` into "fixed to me" while it animates, and
+ * the bar would ride down the page. Its direction is read off
+ * `html[data-nav]`, which `markNavigation()` (lib/navigation-motion) sets just
+ * before the router changes the page and clears once the screen has arrived,
+ * so a first load and a later re-render never slide.
+ */
+
+@keyframes autara-screen-push {
+    from { opacity: 0.001; transform: translateX(6%); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes autara-screen-back {
+    from { opacity: 0.001; transform: translateX(-6%); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes autara-rise {
+    from { opacity: 0.001; transform: translateY(18px) scale(0.985); }
+    to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html[data-nav="push"] .motion-screen {
+        animation: autara-screen-push var(--motion-tab) var(--motion-ease-out) both;
+    }
+    html[data-nav="back"] .motion-screen {
+        animation: autara-screen-back var(--motion-tab) var(--motion-ease-out) both;
+    }
+    html[data-nav="tab"] .motion-screen {
+        animation: autara-fade-in var(--motion-tab) var(--motion-ease-out) both;
+    }
+    .motion-rise > * {
+        animation: autara-rise var(--motion-enter) var(--motion-ease-out) both;
+        animation-delay: calc(var(--stagger-i, 0) * var(--motion-stagger));
+    }
+}
+/* A step inside a component replacing the one before (AUTM-1870:
+ * VehiclePicker's Find, Model and Details). The screen's own move, at the
+ * scale of a step: 6% from the side it comes from and a fade, on the tab's
+ * slide and the house ease-out. Keyed on the element's own `data-step-dir`,
+ * never on `html`, so only the step that changed moves; the component
+ * remounts the step (by key) when it changes and leaves the attribute off
+ * on its first draw. Never an ancestor of a fixed bar, as .motion-screen. */
+@media (prefers-reduced-motion: no-preference) {
+    .motion-step[data-step-dir="forward"] {
+        animation: autara-screen-push var(--motion-tab) var(--motion-ease-out) both;
+    }
+    .motion-step[data-step-dir="back"] {
+        animation: autara-screen-back var(--motion-tab) var(--motion-ease-out) both;
+    }
+}
+/* Below lg only (64rem), where bars are fixed to the edge; from lg the same
+ * bar sits in a side panel and does not travel. The sheet's own keyframes,
+ * from the foot. Transform only: the bar is opaque. */
+@media (prefers-reduced-motion: no-preference) and (max-width: 63.999rem) {
+    .motion-bar-in {
+        --sheet-from: translateY(100%);
+        animation: sheet-panel-in var(--motion-sheet-in) var(--motion-ease-out) both;
+    }
+}
+
+/* ─── A step track (AUTM-1799) ─────────────────────────────────────────
+ * ProgressSteps with icons: the line joining two steps draws in from the
+ * left, once, on the count's length (`.motion-draw-x`, on the line's
+ * `::before`); the current step's disc breathes (`.motion-breathe`, a ring
+ * on `::after` in the disc's own colour that grows and fades). Transform and
+ * opacity only; none of it under reduced motion. */
+@keyframes autara-draw-x {
+    from { transform: scaleX(0); }
+    to { transform: none; }
+}
+@keyframes autara-breathe {
+    0% { transform: scale(1); opacity: 0.55; }
+    70%, 100% { transform: scale(1.7); opacity: 0.001; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .motion-draw-x::before {
+        transform-origin: left;
+        animation: autara-draw-x var(--motion-count) var(--motion-ease-out) both;
+    }
+    .motion-breathe::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: inherit;
+        background: inherit;
+        animation: autara-breathe var(--motion-breathe) var(--motion-ease-out) infinite;
+    }
+}
+
+/* ─── A countdown pill (AUTM-1819) ───────────────────────────────────────
+ * CountdownPill, and anything else small that arrives and may need to say
+ * "soon" without blinking (Don, 2026-10-10: "this blink is super ugly").
+ *
+ *   class                  what moves                          token
+ *   .motion-badge-in       a pill arriving: 92% to full size   --motion-badge-in
+ *                          and a fade, once, on mount          on ease-out
+ *   .motion-breathe-soft   the element's own opacity, 100% to  --motion-breathe
+ *                          85% and back, for as long as the    on ease-in-out
+ *                          class is on
+ *
+ * The breathe is a loop, so it runs on the symmetric `ease-in-out`, as the
+ * skeleton pulse and the loader do: an ease-out loop turns sharply at each
+ * end, which reads as a blink. 85% is the floor because the element's own
+ * label dims with it: white on the danger fill at 85% over white paper is
+ * still 5.1:1 (CountdownPill.contrast.test.ts measures every tone on paper,
+ * band and raised in both themes). Unlike `.motion-breathe` (AUTM-1799) there
+ * is no ring: nothing grows past the pill's own edge.
+ *
+ * Transform and opacity only. Both inside `no-preference`, so a
+ * reduced-motion reader sees the pill at rest. `.motion-badge-in` plays when
+ * the element is inserted; adding `.motion-breathe-soft` later (the deadline
+ * crossing a line) starts the breathe without replaying the arrival, as long
+ * as the two are on different elements (CountdownPill puts the arrival on its
+ * root and the breathe on its fill). */
+@keyframes autara-badge-in {
+    from { opacity: 0.001; transform: scale(0.92); }
+    to { opacity: 1; transform: none; }
+}
+@keyframes autara-breathe-soft {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .motion-badge-in {
+        animation: autara-badge-in var(--motion-badge-in) var(--motion-ease-out) both;
+    }
+    .motion-breathe-soft {
+        animation: autara-breathe-soft var(--motion-breathe) ease-in-out infinite;
     }
 }

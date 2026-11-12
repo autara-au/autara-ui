@@ -185,13 +185,15 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                     disabled={disabled}
                 >
                     {/* Country selector — a quiet inline segment: flag ·
-                        dial code · chevron, divided from the number by a
-                        single hairline. The dial code sits in brand purple
-                        so it reads as the one accent, not a heavy chip. */}
+                        dial code · chevron, set apart from the number by
+                        space (AUTM-2042: no hairline between them; the
+                        field's own border is kept). The dial code sits in
+                        brand purple so it reads as the one accent, not a
+                        heavy chip. */}
                     <SelectPrimitive.Trigger
                         aria-label="Country"
                         className={cn(
-                            'flex shrink-0 items-center gap-1.5 border-r border-[var(--border-subtle)] pl-3.5 pr-3',
+                            'flex shrink-0 items-center gap-1.5 pl-3.5 pr-2',
                             'text-sm outline-none transition-colors',
                             'hover:bg-[var(--surface-warm)]',
                             'focus-visible:bg-[var(--surface-warm)]',
@@ -236,7 +238,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                             position="popper"
                             sideOffset={6}
                             className={cn(
-                                'z-50 max-h-[18rem] min-w-[18rem] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] py-1',
+                                // AUTM-1792: lifted, as every floating list is.
+                                'z-50 max-h-[18rem] min-w-[18rem] overflow-hidden rounded-xl border bg-[var(--surface)] py-1',
+                                'floating-surface floating-panel--pop',
                                 // AUTM-967 — was `animate-in zoom-in-95`,
                                 // which resolved to nothing. Real CSS, from
                                 // utilities/animations.css.

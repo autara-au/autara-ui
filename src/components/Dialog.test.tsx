@@ -84,12 +84,16 @@ describe('Dialog layout="responsive"', () => {
         expect(body).toContain('overscroll-contain')
     })
 
-    it('draws the hairline under the header only once the body has scrolled', async () => {
+    // AUTM-2042 (Don, 2026-11-08: no hairlines): the header draws no rule,
+    // scrolled or not; `data-scrolled` stays as a hook.
+    it('marks the header once the body has scrolled, and never draws a rule under it', async () => {
         render(<Responsive />)
         await userEvent.click(screen.getByRole('button', { name: 'Edit business address' }))
         const head = screen.getByTestId('head')
         const body = screen.getByTestId('body')
         expect(head.hasAttribute('data-scrolled')).toBe(false)
+        expect(head.className).not.toContain('hairline')
+        expect(screen.getByTestId('foot').className).not.toMatch(/border-t|hairline/)
         body.scrollTop = 40
         fireEvent.scroll(body)
         expect(head.hasAttribute('data-scrolled')).toBe(true)
@@ -103,8 +107,10 @@ describe('Dialog layout="responsive"', () => {
         await userEvent.click(screen.getByRole('button', { name: 'Edit business address' }))
         expect(screen.getByTestId('head').className).toContain('[&>:first-child]:pr-11')
         const close = screen.getByRole('button', { name: 'Close dialog' })
-        expect(close.className).toContain('h-11')
-        expect(close.className).toContain('w-11')
+        // AUTM-1756: the filled 44px disc, 48px to a finger.
+        expect(close.className).toContain('size-11')
+        expect(close.className).toContain('pointer-coarse:size-12')
+        expect(close.className).toContain('bg-[var(--icon-disc)]')
     })
 
     it('lays the actions side by side, stacking primary-on-top when they do not fit', async () => {
@@ -236,7 +242,8 @@ describe('Dialog default layout is unchanged', () => {
             expect(panel.className).toContain(cls)
         }
         expect(panel.className).not.toContain('dialog-panel--responsive')
-        expect(screen.getByTestId('head').className).toBe('flex flex-col space-y-1.5 text-left')
+        // AUTM-1756: the header keeps clear of the drawn close disc.
+        expect(screen.getByTestId('head').className).toBe('flex flex-col space-y-1.5 pr-8 text-left')
         expect(screen.getByTestId('foot').className).toBe('flex flex-col-reverse gap-2.5 sm:flex-row sm:justify-end')
         expect(screen.getByTestId('body').className).toBe('min-w-0')
     })

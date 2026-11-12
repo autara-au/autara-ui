@@ -85,12 +85,18 @@ import { Skeleton } from './Skeleton'
  * ─── Material ───────────────────────────────────────────────────────────
  *
  * The panel is the OPAQUE twin of the house glass surface: `--surface` fill,
- * `--glass-edge` hairline, and the 1px inset top highlight. Not glass, on
- * purpose. Every glass contrast number in the system is measured over the
- * gradient ground, and a menu portals over whatever the consumer happens to
- * have on the page, which is not measurable. Same edge, same highlight, no
- * blur and no gamble. No drop shadow anywhere: depth is the highlight plus the
- * surface step, per the house rule.
+ * a hairline, and the 1px inset top highlight. Not glass, on purpose. Every
+ * glass contrast number in the system is measured over the gradient ground,
+ * and a menu portals over whatever the consumer happens to have on the page,
+ * which is not measurable. Same edge, same highlight, no blur and no gamble.
+ *
+ * AUTM-1792: as a dropdown it is LIFTED (`.floating-surface`: the firmer
+ * `--float-edge` and the purple-tinted `--float-shadow`). Don, 2026-10-09, on
+ * the merchant portal: "there's no shadow or something here when open the
+ * menu, fix it". On a paper page the surface step under a paper panel is
+ * zero, so the hairline alone left the menu melting into the page. As a
+ * bottom sheet it keeps the flat glass edge: a sheet is anchored to the
+ * screen's edge and has a scrim behind it, so it has nothing to float over.
  *
  * autara-ui inlines its own glyphs and takes no icon dependency, so the chevron
  * and the fallback person here are drawn in the Solar Linear style: 24x24
@@ -908,6 +914,13 @@ export function AccountMenu({
         'overflow-hidden bg-[var(--surface)] text-[var(--text-strong)]',
         'border border-[var(--glass-edge)] shadow-[inset_0_1px_0_var(--glass-hi)]'
     )
+    /** The dropdown: the same material, lifted off the page (AUTM-1792). The
+     *  edge colour and the shadow come from `.floating-surface`, which also
+     *  carries the inset highlight, so neither is set here. */
+    const DROPDOWN_MATERIAL = cn(
+        'overflow-hidden bg-[var(--surface)] text-[var(--text-strong)]',
+        'border floating-surface'
+    )
 
     const triggerNode = trigger ?? (
         <AccountTrigger
@@ -973,7 +986,7 @@ export function AccountMenu({
                    should match every other dropdown in the library rather
                    than step up to the card rung on its own. */
                 className={cn(
-                    PANEL_MATERIAL,
+                    DROPDOWN_MATERIAL,
                     'w-[min(20rem,calc(100vw-1.5rem))] p-0',
                     contentClassName
                 )}

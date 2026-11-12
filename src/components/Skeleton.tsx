@@ -27,9 +27,15 @@ export interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
      * ancestor already announces.
      */
     label?: string | null
+    /**
+     * AUTM-1792: `false` inside a `.motion-shimmer` container, where one
+     * highlight sweeps the whole placeholder and every block pulsing on its
+     * own as well would be two motions saying the same thing.
+     */
+    pulse?: boolean
 }
 
-function Skeleton({ className, label = 'Loading', ...props }: SkeletonProps) {
+function Skeleton({ className, label = 'Loading', pulse = true, ...props }: SkeletonProps) {
     const silent = label === null
     return (
         <div
@@ -37,7 +43,8 @@ function Skeleton({ className, label = 'Loading', ...props }: SkeletonProps) {
                 // AUTM-1594 — canvas v44 "Loading": band blocks, 14px radius.
                 // AUTM-1678: the pulse is `.motion-skeleton` (1400ms, to 55%,
                 // off under reduced motion), not Tailwind's `animate-pulse`.
-                'motion-skeleton rounded-autara-md bg-[var(--band)]',
+                pulse && 'motion-skeleton',
+                'rounded-autara-md bg-[var(--band)]',
                 className
             )}
             {...(silent

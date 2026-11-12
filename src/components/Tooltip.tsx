@@ -44,7 +44,10 @@ const TooltipContent = React.forwardRef<
         className={cn(
             // Capsule grammar — matches the Toast ink pill so floating
             // UI reads as one family.
-            'z-50 max-w-xs rounded-md bg-[var(--surface-inverse)] px-3 py-1.5 text-[12px] font-medium text-[var(--text-on-inverse)] ring-1 ring-inset ring-[var(--border-on-inverse)]',
+            'z-50 max-w-xs rounded-md bg-[var(--surface-inverse)] px-3 py-1.5 text-[0.75rem] font-medium text-[var(--text-on-inverse)] ring-1 ring-inset ring-[var(--border-on-inverse)]',
+            // AUTM-1792: the lift without an edge change; composes with the
+            // inset ring through Tailwind's shadow variables.
+            'shadow-float',
             // Enter/exit — side-aware, and the rule matches Tooltip's
             // `delayed-open` / `instant-open` states, not just `open`.
             'floating-panel',

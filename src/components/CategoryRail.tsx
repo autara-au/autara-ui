@@ -101,13 +101,13 @@ export const CategoryRail = React.forwardRef<HTMLElement, CategoryRailProps>(
                     <div className="mb-6 lg:mb-10 flex items-baseline justify-between gap-4">
                         <div>
                             {eyebrow ? (
-                                <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-[var(--color-autara-purple)]/80 mb-3">
+                                <p className="text-[0.75rem] font-medium uppercase tracking-[0.22em] text-[var(--color-autara-purple)]/80 mb-3">
                                     {eyebrow}
                                 </p>
                             ) : null}
                             <h2
                                 id={headingId}
-                                className="text-[24px] sm:text-[28px] lg:text-[36px] font-bold text-[var(--text-strong)] tracking-[-0.025em] leading-[1.05]"
+                                className="text-[1.5rem] sm:text-[1.75rem] lg:text-[2.25rem] font-bold text-[var(--text-strong)] tracking-[-0.025em] leading-[1.05]"
                             >
                                 {title}
                             </h2>
@@ -115,10 +115,10 @@ export const CategoryRail = React.forwardRef<HTMLElement, CategoryRailProps>(
                         {seeAllHref ? (
                             <Link
                                 href={seeAllHref}
-                                className="hidden sm:inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--text-muted)] hover:text-[var(--color-autara-purple)] transition-colors shrink-0"
+                                className="hidden sm:inline-flex items-center gap-1.5 text-[0.8125rem] font-medium text-[var(--text-muted)] hover:text-[var(--color-autara-purple)] transition-colors shrink-0"
                             >
                                 {seeAllLabel}
-                                <span aria-hidden className="text-[14px] leading-none">
+                                <span aria-hidden className="text-[0.875rem] leading-none">
                                     ↗
                                 </span>
                             </Link>
@@ -148,15 +148,15 @@ export const CategoryRail = React.forwardRef<HTMLElement, CategoryRailProps>(
                                     >
                                         {c.icon}
                                     </span>
-                                    <h3 className="text-[16px] sm:text-[17px] font-bold text-[var(--text-strong)] tracking-[-0.005em] leading-snug group-hover:text-[var(--color-autara-purple)] transition-colors">
+                                    <h3 className="text-[1rem] sm:text-[1.0625rem] font-bold text-[var(--text-strong)] tracking-[-0.005em] leading-snug group-hover:text-[var(--color-autara-purple)] transition-colors">
                                         {c.label}
                                     </h3>
-                                    <p className="mt-1.5 text-[13px] text-[var(--text-muted)] leading-relaxed">
+                                    <p className="mt-1.5 text-[0.8125rem] text-[var(--text-muted)] leading-relaxed">
                                         {c.blurb}
                                     </p>
                                     <p
                                         aria-hidden
-                                        className="mt-4 inline-flex items-center gap-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--text-subtle)] group-hover:text-[var(--color-autara-purple)] transition-colors"
+                                        className="mt-4 inline-flex items-center gap-1 text-[0.75rem] font-medium uppercase tracking-[0.18em] text-[var(--text-subtle)] group-hover:text-[var(--color-autara-purple)] transition-colors"
                                     >
                                         {tileFooterLabel}
                                         <ArrowGlyph />

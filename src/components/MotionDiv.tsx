@@ -1,22 +1,40 @@
 'use client'
 
 import * as React from 'react'
-import { motion, type HTMLMotionProps } from 'motion/react'
+import { motion, useReducedMotion, type HTMLMotionProps } from 'motion/react'
 import { cn } from '../lib/cn'
+import { motionDurations, motionEasings } from '../lib/motion-tokens'
+
+/*
+ * AUTM-2025: these ran on their own numbers (500 to 600ms, 20 to 30px) and
+ * ignored a reader who asked for less motion, because the stylesheet's
+ * reduced-motion clamp cannot reach an animation driven from JS. They now
+ * use the `--motion-reveal` rise (16px over 480ms on the house ease-out) and
+ * `--motion-stagger`, and with reduced motion they render in place: no rise,
+ * no scale, no fade.
+ */
+
+/** The `--motion-reveal` rise, in px. Kept equal to `@keyframes autara-reveal`. */
+const RISE = 16
+
+// Plain lookups, not `motionTransition()`: a call at import time breaks the
+// tree-shaking contract (side-effects.test.ts, AUTM-1688).
+const reveal = { duration: motionDurations.reveal / 1000, ease: motionEasings.out }
 
 /** Fade in from bottom */
 export function FadeIn({
     className,
     children,
     delay = 0,
-    duration = 0.5,
+    duration = reveal.duration,
     ...props
 }: HTMLMotionProps<'div'> & { delay?: number; duration?: number }) {
+    const reduce = useReducedMotion()
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={reduce ? false : { opacity: 0, y: RISE }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration, delay, ease: reveal.ease }}
             className={cn(className)}
             {...props}
         >
@@ -30,15 +48,16 @@ export function FadeInView({
     className,
     children,
     delay = 0,
-    duration = 0.6,
+    duration = reveal.duration,
     ...props
 }: HTMLMotionProps<'div'> & { delay?: number; duration?: number }) {
+    const reduce = useReducedMotion()
     return (
         <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={reduce ? false : { opacity: 0, y: RISE }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration, delay, ease: reveal.ease }}
             className={cn(className)}
             {...props}
         >
@@ -52,14 +71,15 @@ export function ScaleIn({
     className,
     children,
     delay = 0,
-    duration = 0.5,
+    duration = reveal.duration,
     ...props
 }: HTMLMotionProps<'div'> & { delay?: number; duration?: number }) {
+    const reduce = useReducedMotion()
     return (
         <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={reduce ? false : { opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration, delay, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration, delay, ease: reveal.ease }}
             className={cn(className)}
             {...props}
         >
@@ -72,12 +92,13 @@ export function ScaleIn({
 export function StaggerContainer({
     className,
     children,
-    staggerDelay = 0.08,
+    staggerDelay = motionDurations.stagger / 1000,
     ...props
 }: HTMLMotionProps<'div'> & { staggerDelay?: number }) {
+    const reduce = useReducedMotion()
     return (
         <motion.div
-            initial="hidden"
+            initial={reduce ? false : 'hidden'}
             animate="visible"
             variants={{
                 hidden: {},
@@ -100,8 +121,8 @@ export function StaggerItem({
     return (
         <motion.div
             variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+                hidden: { opacity: 0, y: RISE },
+                visible: { opacity: 1, y: 0, transition: reveal },
             }}
             className={cn(className)}
             {...props}

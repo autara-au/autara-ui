@@ -382,3 +382,80 @@ export const RowsOpenText200: Story = {
         return <OpenRows />
     },
 }
+
+/* ─── AUTM-1792: lifted off the page ─────────────────────────────────────
+ *
+ * Don, 2026-10-09, on the merchant portal: "there's no shadow or something
+ * here when open the menu, fix it". A menu portals over whatever the page
+ * has, usually paper on paper, so the surface step that carries depth
+ * everywhere else is zero under it. `.floating-surface` gives it a firmer
+ * hairline and a purple-tinted lift. The page behind is drawn so the lift has
+ * something to lift off: a list of rows on paper and a band card, the two
+ * grounds a menu actually opens over.
+ */
+const PageBehind: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <div className="relative min-h-[24rem] bg-[var(--paper)] p-6 text-[var(--text-strong)]">
+        <div className="flex items-start justify-between gap-4">
+            <div>
+                <p className="text-[0.8125rem] font-medium text-[var(--text-muted)]">Bookings</p>
+                <p className="mt-1 text-2xl font-bold">Your schedule</p>
+            </div>
+            {children}
+        </div>
+        <ul className="mt-6 divide-y divide-[var(--hairline)] rounded-autara-lg border border-[var(--hairline)]">
+            {['Full interior and exterior clean', 'Express wash', 'Cut and polish'].map((s, i) => (
+                <li key={s} className="flex items-center justify-between px-5 py-4">
+                    <span className="font-medium">{s}</span>
+                    <span className="text-sm text-[var(--text-muted)]">{['09:00', '11:30', '14:00'][i]}</span>
+                </li>
+            ))}
+        </ul>
+        <div className="mt-4 rounded-autara-lg bg-[var(--band)] p-5 text-sm text-[var(--text-muted)]">
+            A band card, the other ground a menu opens over.
+        </div>
+    </div>
+)
+
+const LiftedMenu = () => (
+    <PageBehind>
+        <DropdownMenu defaultOpen modal={false}>
+            <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                    Booking actions
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="min-w-[14rem]">
+                <DropdownMenuItem>
+                    <EyeIcon />
+                    View detail
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <PencilIcon />
+                    Reschedule
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                    <CopyIcon />
+                    Copy payment link
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-[var(--color-autara-error)]">
+                    <TrashIcon />
+                    Cancel booking
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    </PageBehind>
+)
+
+export const LiftedOverThePage: Story = {
+    name: 'Lifted over the page (AUTM-1792)',
+    tags: ['!autodocs'],
+    render: () => <LiftedMenu />,
+}
+
+export const LiftedOverThePageDark: Story = {
+    name: 'Lifted over the page, dark (AUTM-1792)',
+    tags: ['!autodocs'],
+    globals: { theme: 'dark' },
+    render: () => <LiftedMenu />,
+}

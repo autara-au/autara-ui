@@ -64,16 +64,28 @@ const KEEPS: Record<string, string> = {
     'StatTile.tsx': 'the 28px icon disc beside the label (AUTM-1594)',
     'ListSection.tsx': 'the row icon disc and the 4px accent bar\'s round caps (AUTM-1594)',
     'Stepper.tsx': 'the 28px step discs and the bars\' round caps, canvas v44 "Steps and progress" (AUTM-1594)',
-    'ProgressSteps.tsx': 'a state bar per step; the round cap is what makes it read as fill, as Progress',
+    'ProgressSteps.tsx': 'a state bar per step; the round cap is what makes it read as fill, as Progress. With icons, the 36px step discs and their joining line\'s caps, state lights like Stepper\'s (AUTM-1799)',
     'Countdown.tsx': 'the countdown is a 32px pill on canvas v44 (AUTM-1594), a status not an action',
     'Dialog.tsx': 'the 44px close disc, an icon disc like IconButton (AUTM-1594)',
     'Sheet.tsx': 'the close disc, drawn at 28px with a 44px hit area, the quiet sibling of Dialog\'s (AUTM-1594); the bottom sheet\'s grabber pill',
     'Toast.tsx': 'the status dot, and the action pill and dismiss disc on the capsule (AUTM-1594)',
+    'InstallOffer.tsx': "InstallSteps' 24px step numerals, step discs like Stepper's (AUTM-1906)",
     'EmptyState.tsx': 'the 44px icon disc, canvas v44 "Empty" (AUTM-1594)',
     'LockedFeature.tsx': 'the optional icon disc (AUTM-1594)',
     'SwatchRadioGroup.tsx': 'colour swatches are 44px circles on canvas v50, a choice of colour, not an action (AUTM-1591)',
     'DurationPicker.tsx': 'the Hours | Working days switch, canvas v44 "Segmented" drawn as Tabs draws it (AUTM-1575); the stepper uses Button\'s icon disc',
     'ServiceCard.tsx': 'the duration and working-days chips, MetaChip\'s 28px pill drawn on raised so it shows on the band card; the select indicator, a 24px state light like Radio\'s (AUTM-1694)',
+    'AppTabBar.tsx': 'the customer app dock as designed (canvas AppBookings): an ink pill, the current tab a lime capsule (a state light), the count a disc (AUTM-1781)',
+    'ActionBar.tsx': 'the customer app bar as designed (AppBookingDetail): pill buttons, the sheet\'s button shape, and 56px icon discs like IconButton (AUTM-1781)',
+    'MediaFrame.tsx': 'the round shape is a person (a pro in a chat header or on the live booking), as Avatar (AUTM-1781)',
+    'BookingPass.tsx': 'the tear line\'s two notches, half circles cut into the pass the way a ticket is cut, never a control; the face is MediaFrame\'s round person (AUTM-1799)',
+    'FactRows.tsx': 'the 40px icon disc beside each value, a glyph in a circle like ChoiceCard and ListSection (AUTM-1799)',
+    'VehiclePicker.tsx': 'the model and type chips are pills, as FilterChipRow\'s on canvas v44: a choice, not an action; the back control is the 44px icon disc (AUTM-1870)',
+    'VehicleCard.tsx': 'Add a car\'s 48px lime disc, an icon in a circle like EmptyState\'s; the paint dot, a colour swatch like SwatchRadioGroup\'s (AUTM-1870)',
+    'IconButton.tsx': 'the icon disc itself, canvas v44 "Icon disc" (AUTM-1594); filled on every tone, never a bare glyph (AUTM-1756)',
+    'BackButton.tsx': 'the icon disc without a label, a pill with one: the chevron and the destination, as the merchant dock draws "< Invoice" (AUTM-1756)',
+    'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
+    'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
 }
 
 /**
@@ -93,8 +105,6 @@ const KEEPS: Record<string, string> = {
  * AUTM-1221 (the close control, the icon tile, the progress track).
  */
 const PENDING: Record<string, string> = {
-    'BackButton.tsx': 'circular icon button, an action, should move',
-    'CarouselHeader.tsx': 'prev/next icon buttons, actions, should move',
     'ImageCropDialog.tsx': 'range-slider track, a state bar, likely a keep',
     'MultiSelect.tsx': 'value chips + clear button, chips go to 8px',
     'StepCard.tsx': 'step numeral medallion, a numeral in a circle, likely a keep',

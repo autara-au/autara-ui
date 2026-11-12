@@ -78,3 +78,76 @@ export const BusinessLockupAtAppBarSize: Story = {
         </div>
     ),
 }
+
+/**
+ * AUTM-1792: the mark alone.
+ *
+ * Don, 2026-10-09, looking at the merchant portal's rail in dark mode: show
+ * only the white icon, not the text logo. `wordmark={false}` draws the orb
+ * without the lettering; `tone="white"` paints it solid white for a dark
+ * surface, where the gradient's purple end sinks into the ground.
+ */
+export const MarkOnly: Story = {
+    name: 'Mark alone, brand and white',
+    parameters: { layout: 'padded' },
+    render: () => (
+        <div className="flex gap-4">
+            <div
+                data-theme="light"
+                className="grid h-40 w-64 place-items-center rounded-2xl border border-[var(--border-subtle)] bg-[var(--background)]"
+            >
+                <Logo wordmark={false} className="h-12 w-auto" />
+            </div>
+            <div data-theme="dark" className="grid h-40 w-64 place-items-center rounded-2xl bg-[var(--background)]">
+                <Logo wordmark={false} tone="white" className="h-12 w-auto" />
+            </div>
+        </div>
+    ),
+}
+
+/**
+ * AUTM-1792: the business lockup without the lettering: mark, hairline,
+ * "for business". Same row height, gap and hairline as the full lockup at each
+ * size, so swapping it in moves nothing. The accessible name is still
+ * "Autara for business", once; the mark inside is decorative.
+ *
+ * The hairline and descriptor follow the theme tokens, so on a dark ground
+ * pick `tone="white"` and they flip with `data-theme="dark"` on their own.
+ */
+export const BusinessLockupMark: Story = {
+    name: 'Business lockup, mark only',
+    parameters: { layout: 'padded' },
+    render: () => (
+        <div className="flex gap-4">
+            {(
+                [
+                    { theme: 'light', tone: 'brand' },
+                    { theme: 'dark', tone: 'white' },
+                ] as const
+            ).map((col) => (
+                <div
+                    key={col.theme}
+                    data-theme={col.theme}
+                    className="flex flex-col gap-6 rounded-2xl border border-[var(--border-subtle)] bg-[var(--background)] p-6 text-[var(--text-strong)]"
+                >
+                    <Logo lockup="business" wordmark={false} tone={col.tone} size="xl" />
+                    <Logo lockup="business" wordmark={false} tone={col.tone} size="lg" />
+                    <Logo lockup="business" wordmark={false} tone={col.tone} size="md" />
+                    <Logo lockup="business" wordmark={false} tone={col.tone} size="sm" />
+                </div>
+            ))}
+        </div>
+    ),
+}
+
+/** The full lockup beside the mark-only one, so the unchanged rhythm is visible. */
+export const BusinessLockupMarkBesideFull: Story = {
+    name: 'Business lockup, full beside mark only',
+    parameters: { layout: 'padded' },
+    render: () => (
+        <div className="flex w-[22rem] flex-col gap-4 rounded-xl border border-[var(--border-subtle)] p-3 text-[var(--text-strong)]">
+            <Logo lockup="business" size="md" />
+            <Logo lockup="business" size="md" wordmark={false} />
+        </div>
+    ),
+}

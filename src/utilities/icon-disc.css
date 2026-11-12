@@ -1,0 +1,54 @@
+/* ─── The icon disc's hover and press (AUTM-1756) ───────────────────────
+ *
+ * Don, 2026-10-15: "Icon buttons are less accessible, can we make it better,
+ * and smooth." Every icon-only control in the library (IconButton,
+ * CloseButton, BackButton) is a filled disc, and it answers the pointer the
+ * same way:
+ *
+ *   - hover lays the glyph's own colour over the fill at 8%, press at 14%.
+ *     A layer, not a second fill token, so it is right on every tone without
+ *     a hover token per tone: it darkens a light disc (ink glyph), lightens a
+ *     dark one (white glyph), and darkens lime. Opacity only, on the one
+ *     ease-out, so it is cheap and never moves anything;
+ *   - press also scales the control to 97% (`.motion-press`, which the
+ *     components add), off under reduced motion there;
+ *   - disabled and busy keep the real colour and do not answer (AUTM-1719).
+ *
+ * The layer sits under the glyph (`z-index: -1`), so the glyph keeps its full
+ * contrast on the disc. Only the pseudo-elements are styled here: the
+ * element's own `position` and `isolation` come from the component's
+ * Tailwind classes (`relative isolate`), so a caller's `absolute` still wins
+ * (this file is unlayered, and an unlayered `position` would beat every
+ * Tailwind utility).
+ *
+ * `.icon-disc-hit` gives a disc drawn under 44px (IconButton `size="sm"`) a
+ * 44px touch area, centred, unpainted, the way Checkbox and Radio carry theirs.
+ */
+.icon-disc::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
+}
+@media (hover: hover) {
+    .icon-disc:hover:not(:disabled, [aria-disabled="true"], [aria-busy="true"])::before {
+        opacity: 0.08;
+    }
+}
+.icon-disc:active:not(:disabled, [aria-disabled="true"], [aria-busy="true"])::before {
+    opacity: 0.14;
+}
+.icon-disc-hit::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 2.75rem);
+    height: max(100%, 2.75rem);
+    translate: -50% -50%;
+}

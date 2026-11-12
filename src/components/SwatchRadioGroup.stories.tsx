@@ -87,3 +87,36 @@ export const Disabled: Story = {
     args: { name: '', options: [], value: null, onChange: () => {}, label: '' },
     render: () => <CalendarColour disabled />,
 }
+
+/**
+ * AUTM-1870: `size="lg"` (56px) where the colour is the main choice, and
+ * `edge` on the swatches a white page would swallow: a car's paint, five to
+ * a row at every width.
+ */
+function CarPaint() {
+    const [value, setValue] = useState<string | null>('white')
+    return (
+        <SwatchRadioGroup
+            name="car-paint"
+            label="Colour (optional)"
+            size="lg"
+            columns={5}
+            compactColumns={5}
+            options={[
+                { value: 'white', label: 'White', color: '#f7f7f5', ink: INK, edge: true },
+                { value: 'silver', label: 'Silver', color: '#c9ccd1', ink: INK, edge: true },
+                { value: 'grey', label: 'Grey', color: '#666b73', ink: WHITE },
+                { value: 'black', label: 'Black', color: '#1c1d21', ink: WHITE },
+                { value: 'blue', label: 'Blue', color: '#1f4fa8', ink: WHITE },
+            ]}
+            value={value}
+            onChange={setValue}
+            testId="car-paint"
+        />
+    )
+}
+
+export const LargeWithEdges: Story = {
+    args: { name: '', options: [], value: null, onChange: () => {}, label: '' },
+    render: () => <CarPaint />,
+}

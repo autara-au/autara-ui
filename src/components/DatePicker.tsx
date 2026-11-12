@@ -16,6 +16,7 @@ import {
 } from '../lib/calendar'
 import { Dialog, DialogBody, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './Dialog'
 import { Button } from './Button'
+import { ChipRow } from './ChipRow'
 import {
     CLOSED_HATCH,
     DAY_STATE_DOT,
@@ -107,67 +108,24 @@ function CalendarIcon() {
 }
 
 /**
- * AUTM-1373 — the rail's mouse affordance.
+ * AUTM-1373, then AUTM-1756 — the rail's mouse affordance.
  *
  * The rail hides its scrollbar on purpose: a scrollbar under fourteen day
  * pills looks like a bug on a tablet, and a finger does not need one. What
- * that left behind was a rail holding 806px of days in a 400px box with no
- * scrollbar and no arrows, so half the fortnight was unreachable with a mouse
- * and nothing on screen said those days existed. QA measured 7 of 14 days
- * visible, and before the sheet was pinned the only way to reach day 8 was to
- * drag the whole sheet sideways, which was itself the other half of that bug.
+ * that once left behind was a rail holding 806px of days in a 400px box with
+ * no scrollbar and no arrows, so half the fortnight was unreachable with a
+ * mouse (QA measured 7 of 14 days visible). AUTM-1373 put an arrow beside each
+ * end; the AUTM-1756 follow-up makes the rail a `ChipRow`, the library's one
+ * sideways row: a round chevron on the fade at the end that has more (shown
+ * where a fine pointer exists: a mouse, a trackpad, a pen), hidden when there
+ * is nothing more that way, a mouse or pen drag, and a finger's own swipe.
  *
- * Shown only where the pointer is FINE. A touch device scrolls the rail by
- * dragging it and always could, so arrows there would spend two day-widths of
- * a phone's rail on a problem it does not have. An iPad with a trackpad
- * reports a fine pointer and gets them, which is the case that matters most.
- *
- * Deliberately `aria-hidden` and out of the tab order. The rail is a
- * radiogroup with ONE tab stop and arrow keys inside it, which is already a
- * better keyboard route than two buttons; exposing these would add two tab
- * stops to a control built to have one, and would read to a screen reader as a
- * second way to do what the arrow keys already do. Nothing becomes
- * mouse-only: every day is still a radio in the group.
+ * The chevrons stay out of the tab order. The rail is a radiogroup with ONE
+ * tab stop and arrow keys inside it, which is already a better keyboard route
+ * than two buttons. They keep their test ids (`-earlier`, `-later`) and now
+ * have names ("Earlier days", "Later days"), so a screen reader that finds
+ * them knows what they do.
  */
-const RailArrow: React.FC<{
-    direction: 'back' | 'forward'
-    disabled: boolean
-    onPress: () => void
-    testId?: string
-}> = ({ direction, disabled, onPress, testId }) => (
-    <button
-        type="button"
-        aria-hidden
-        tabIndex={-1}
-        disabled={disabled}
-        onClick={onPress}
-        data-testid={testId}
-        className={cn(
-            // `hidden` until the pointer is fine — see the note above.
-            'hidden shrink-0 items-center justify-center rounded-[12px] border',
-            '[@media(pointer:fine)]:flex',
-            'min-h-[3.25rem] w-7 border-[var(--border-subtle)] bg-[var(--surface)]',
-            'text-[var(--text-muted)] transition-colors',
-            disabled
-                ? 'cursor-not-allowed opacity-30'
-                : 'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-strong)]',
-        )}
-    >
-        <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            width="14"
-            height="14"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2.4}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <path d={direction === 'back' ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6'} />
-        </svg>
-    </button>
-)
 
 /**
  * DatePicker — a rail of the coming days, with the full month one tap behind it.
@@ -266,57 +224,6 @@ export function DatePicker({
     )
 
     /**
-     * AUTM-1373 — where the rail currently sits, so an arrow that can do
-     * nothing looks like it. Read off the element rather than tracked, because
-     * the rail is also moved by dragging, by the keyboard's `scrollIntoView`
-     * and by a resize.
-     */
-    const [reach, setReach] = React.useState({ scrollable: false, back: false, forward: false })
-
-    const measureReach = React.useCallback(() => {
-        const el = railRef.current
-        if (!el) return
-        // A pixel of tolerance: a fractional scrollWidth on a zoomed page
-        // would otherwise leave the forward arrow live at the far end for ever.
-        const max = el.scrollWidth - el.clientWidth
-        setReach({ scrollable: max > 1, back: el.scrollLeft > 1, forward: el.scrollLeft < max - 1 })
-    }, [])
-
-    React.useEffect(() => {
-        const el = railRef.current
-        if (!el) return
-        measureReach()
-        el.addEventListener('scroll', measureReach, { passive: true })
-        // The rail's width changes with the dialog, the window and the tablet's
-        // orientation, and none of those fires `scroll`.
-        const observer =
-            typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measureReach)
-        observer?.observe(el)
-        return () => {
-            el.removeEventListener('scroll', measureReach)
-            observer?.disconnect()
-        }
-        // `days` is a dependency because a new range resets the geometry.
-    }, [measureReach, days])
-
-    /**
-     * Three days a press, measured off the rail rather than assumed: a day
-     * pill's width answers to the root font size, so it changes under the
-     * merchant's text scaling.
-     */
-    function nudge(direction: -1 | 1) {
-        const el = railRef.current
-        if (!el) return
-        const cells = el.querySelectorAll<HTMLElement>('[data-day]')
-        const measured = cells.length > 1 ? cells[1].offsetLeft - cells[0].offsetLeft : 0
-        // A rail that is laid out but not visible — inside a collapsed panel,
-        // or an inactive tab — measures 0, so a third of the box is the floor
-        // rather than a scroll of nothing.
-        const pitch = measured > 0 ? measured : Math.round(el.clientWidth / 3)
-        el.scrollBy({ left: direction * pitch * 3, behavior: 'smooth' })
-    }
-
-    /**
      * AUTM-1633 — bring the chosen day into view whenever it changes: after a
      * pick in the month calendar, or a prefilled day nine days out. Sets
      * `scrollLeft` on the rail itself rather than calling `scrollIntoView`,
@@ -362,123 +269,112 @@ export function DatePicker({
 
     return (
         <div className={cn('flex flex-col gap-2', className)} data-testid={testId}>
-            {/* AUTM-1373 — the arrows sit BESIDE the rail, not over it.
-                Floating them on top would cover the first and last day pill,
-                and a gradient fade to soften that would have to guess which
-                surface the host put behind the rail. They are rendered only
-                when there is somewhere to scroll, so a short rail that fits
-                carries no chrome at all. */}
-            <div className="flex items-start gap-1">
-                {reach.scrollable ? (
-                    <RailArrow
-                        direction="back"
-                        disabled={disabled || !reach.back}
-                        onPress={() => nudge(-1)}
-                        testId={testId ? `${testId}-earlier` : undefined}
-                    />
-                ) : null}
-                <div
-                    ref={railRef}
-                    id={id}
-                    role="radiogroup"
-                    aria-labelledby={labelledBy}
-                    aria-label={labelledBy ? undefined : label}
-                    aria-invalid={invalid || undefined}
-                    onKeyDown={onRailKeyDown}
-                    className={cn(
-                        // AUTM-1373 — `relative` makes the rail the containing block
-                        // for each day's `sr-only` label, which is absolutely
-                        // positioned. Without it those labels escaped the rail's
-                        // overflow and widened the nearest positioned ancestor: in
-                        // a scrolling dialog the whole sheet scrolled sideways
-                        // (805px of content in a 448px sheet) instead of the rail.
-                        'relative flex gap-1.5 overflow-x-auto pb-1',
-                        // Momentum scrolling that stops on a whole day rather than
-                        // halfway through one.
-                        'snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden',
-                    )}
-                >
-                    {days.map((date, index) => {
-                        const state = stateOf(date)
-                        const isSelected = date === value
-                        const isDisabled = disabled || state === 'unavailable'
-                        const isClosed = state === 'closed' && !isSelected
-                        const dot = DAY_STATE_DOT[state]
-                        return (
-                            <button
-                                key={date}
-                                type="button"
-                                data-day={date}
-                                data-testid={testId ? `${testId}-day-${date}` : undefined}
-                                role="radio"
-                                aria-checked={isSelected}
-                                aria-disabled={isDisabled || undefined}
-                                // One tab stop for the whole rail.
-                                tabIndex={index === activeIndex ? 0 : -1}
-                                onClick={() => {
-                                    if (isDisabled) return
-                                    setFocusIndex(index)
-                                    onChange(date)
-                                }}
-                                style={isClosed ? CLOSED_HATCH : undefined}
+            {/* AUTM-1756 follow-up — the rail is a ChipRow: the chevrons sit
+                on the fade over each end (the fade is a mask, so it works on
+                whatever surface the host put behind the rail), and only while
+                there is more that way, so a rail that fits carries no chrome. */}
+            <ChipRow
+                ref={railRef}
+                id={id}
+                role="radiogroup"
+                aria-labelledby={labelledBy}
+                label={labelledBy ? undefined : label}
+                aria-invalid={invalid || undefined}
+                onKeyDown={onRailKeyDown}
+                previousLabel="Earlier days"
+                nextLabel="Later days"
+                previousTestId={testId ? `${testId}-earlier` : undefined}
+                nextTestId={testId ? `${testId}-later` : undefined}
+                className={cn(
+                    // AUTM-1373 — `relative` makes the rail the containing block
+                    // for each day's `sr-only` label, which is absolutely
+                    // positioned. Without it those labels escaped the rail's
+                    // overflow and widened the nearest positioned ancestor: in
+                    // a scrolling dialog the whole sheet scrolled sideways
+                    // (805px of content in a 448px sheet) instead of the rail.
+                    // ChipRow's row is `relative` and draws no scrollbar.
+                    'gap-1.5',
+                    // Momentum scrolling that stops on a whole day rather than
+                    // halfway through one.
+                    'snap-x snap-mandatory',
+                )}
+            >
+                {days.map((date, index) => {
+                    const state = stateOf(date)
+                    const isSelected = date === value
+                    const isDisabled = disabled || state === 'unavailable'
+                    const isClosed = state === 'closed' && !isSelected
+                    // AUTM-1867 — open, but nothing free: dimmed ink, no hatch.
+                    const isFull = state === 'full' && !isSelected
+                    const dot = DAY_STATE_DOT[state]
+                    return (
+                        <button
+                            key={date}
+                            type="button"
+                            data-day={date}
+                            data-testid={testId ? `${testId}-day-${date}` : undefined}
+                            role="radio"
+                            aria-checked={isSelected}
+                            aria-disabled={isDisabled || undefined}
+                            // One tab stop for the whole rail.
+                            tabIndex={index === activeIndex ? 0 : -1}
+                            onClick={() => {
+                                if (isDisabled) return
+                                setFocusIndex(index)
+                                onChange(date)
+                            }}
+                            style={isClosed ? CLOSED_HATCH : undefined}
+                            className={cn(
+                                'snap-start shrink-0 rounded-[12px] border px-3 py-2',
+                                'flex min-h-[3.25rem] min-w-[3.25rem] flex-col items-center justify-center gap-0.5',
+                                'transition-colors focus-visible:outline-none focus-visible:ring-2',
+                                'focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2',
+                                'focus-visible:ring-offset-[var(--background)]',
+                                isSelected
+                                    ? // Rule 4: a solid fill, never a tint.
+                                      'border-transparent bg-[var(--accent-fill)] text-[var(--on-accent)]'
+                                    : isClosed
+                                      ? // AUTM-1633 — closed but still yours: muted ink over the hatch.
+                                        'border-dashed border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
+                                      : isFull
+                                        ? 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
+                                        : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
+                                !isSelected &&
+                                    !isDisabled &&
+                                    'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)]',
+                                isDisabled && 'cursor-not-allowed opacity-40',
+                            )}
+                        >
+                            <span
                                 className={cn(
-                                    'snap-start shrink-0 rounded-[12px] border px-3 py-2',
-                                    'flex min-h-[3.25rem] min-w-[3.25rem] flex-col items-center justify-center gap-0.5',
-                                    'transition-colors focus-visible:outline-none focus-visible:ring-2',
-                                    'focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2',
-                                    'focus-visible:ring-offset-[var(--background)]',
+                                    'text-[0.6875rem] font-medium',
                                     isSelected
-                                        ? // Rule 4: a solid fill, never a tint.
-                                          'border-transparent bg-[var(--accent-fill)] text-[var(--on-accent)]'
-                                        : isClosed
-                                          ? // AUTM-1633 — closed but still yours: muted ink over the hatch.
-                                            'border-dashed border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
-                                          : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
-                                    !isSelected &&
-                                        !isDisabled &&
-                                        'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)]',
-                                    isDisabled && 'cursor-not-allowed opacity-40',
+                                        ? 'text-[var(--on-accent)]/75'
+                                        : 'text-[var(--text-muted)]',
                                 )}
                             >
-                                <span
-                                    className={cn(
-                                        'text-[0.6875rem] font-medium',
-                                        isSelected
-                                            ? 'text-[var(--on-accent)]/75'
-                                            : 'text-[var(--text-muted)]',
-                                    )}
-                                >
-                                    {WEEKDAY_LABELS[weekdayIndex(date)]}
-                                </span>
-                                <span className="text-[1.0625rem] font-bold leading-none tabular-nums">
-                                    {dayOfMonth(date)}
-                                </span>
-                                {/* Availability is carried by a WORD for screen
-                                    readers and by the dot for everyone else —
-                                    never by colour alone (WCAG 1.4.1). */}
-                                <span
-                                    aria-hidden
-                                    className="block h-1 w-1 rounded-full"
-                                    style={{ background: dot ?? 'transparent' }}
-                                />
-                                <span className="sr-only">
-                                    {longDateLabel(date)}
-                                    {daysBetween(today, date) === 0 ? ', today' : ''}
-                                    {DAY_STATE_WORD[state]}
-                                </span>
-                            </button>
-                        )
-                    })}
-                </div>
-                {reach.scrollable ? (
-                    <RailArrow
-                        direction="forward"
-                        disabled={disabled || !reach.forward}
-                        onPress={() => nudge(1)}
-                        testId={testId ? `${testId}-later` : undefined}
-                    />
-                ) : null}
-            </div>
+                                {WEEKDAY_LABELS[weekdayIndex(date)]}
+                            </span>
+                            <span className="text-[1.0625rem] font-bold leading-none tabular-nums">
+                                {dayOfMonth(date)}
+                            </span>
+                            {/* Availability is carried by a WORD for screen
+                                readers and by the dot for everyone else —
+                                never by colour alone (WCAG 1.4.1). */}
+                            <span
+                                aria-hidden
+                                className="block h-1 w-1 rounded-full"
+                                style={{ background: dot ?? 'transparent' }}
+                            />
+                            <span className="sr-only">
+                                {longDateLabel(date)}
+                                {daysBetween(today, date) === 0 ? ', today' : ''}
+                                {DAY_STATE_WORD[state]}
+                            </span>
+                        </button>
+                    )
+                })}
+            </ChipRow>
 
             {/* AUTM-1633 — the way to any date. A band pill with a calendar
                 icon, where it was a ghost "More dates" that read as a footnote.

@@ -3,6 +3,17 @@ export {
     GradientBar,
     Button, buttonVariants, type ButtonProps,
     IconButton, type IconButtonProps,
+    // AUTM-1756: the icon disc's tones and sizes, the one close control, and
+    // a region that scrolls on its own.
+    CloseButton, CloseGlyph, iconDiscClasses, resolveIconButtonTone,
+    type IconButtonTone, type IconButtonSize, type CloseButtonProps,
+    ScrollArea, useScrollEdges, useScrollbarReveal, type ScrollAreaProps, type ScrollAreaOrientation, type ScrollEdges,
+    // AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+    ChipRow, chipRowPageTarget, CHIP_ROW_DRAG_THRESHOLD, type ChipRowProps, type ChipRowRole, type ChipRowArrows,
+    // AUTM-1787: a list row's everyday actions.
+    RowActions, type RowAction, type RowActionsProps,
+    // AUTM-1755: a list beside its record, with a splitter.
+    SplitPane, type SplitPaneProps,
     Input, inputVariants, type InputProps,
     PhoneInput, DEFAULT_COUNTRIES, findCountryByIso, type PhoneInputProps, type PhoneCountry,
     Textarea, textareaVariants, type TextareaProps,
@@ -31,7 +42,9 @@ export {
     PickerSheet, type PickerOption, type PickerRowRender, type PickerSheetProps,
     PickerTrigger, type PickerTriggerProps,
     Accordion, AccordionItem, AccordionTrigger, AccordionContent,
-    Tabs, TabsList, TabsTrigger, TabsContent,
+    Tabs, TabsList, TabsTrigger, TabsContent, type TabsListProps,
+    // AUTM-1792
+    CountUp, type CountUpProps,
     DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuGroup, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, type DropdownMenuContentProps,
     // AUTM-965 — anchored floating panel for CONTENT (DropdownMenu gives its
     // children `menuitem` semantics, which a list of content must not have).
@@ -40,7 +53,7 @@ export {
     ScrollReveal, type ScrollRevealProps,
     FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem,
     // New components
-    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant,
+    ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant,
     Select, SelectGroup, SelectValue, SelectTrigger, SelectContent, SelectLabel, SelectItem, SelectSeparator,
     Switch,
     Checkbox,
@@ -53,6 +66,9 @@ export {
     Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone,
     // AUTM-1706
     AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone,
+    AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn,
+    AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps,
+    CommandMenu, matchesCommand, type CommandMenuProps, type CommandMenuGroup, type CommandMenuItem,
     MultiSelect, type MultiSelectOption, type MultiSelectProps,
     Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption,
     // v1.1.0 — promoted from autara-customer-web
@@ -68,6 +84,10 @@ export {
     CarouselHeader, type CarouselHeaderProps,
     ServiceCard, ServiceCardSkeleton, type ServiceCardProps, type ServiceCardSkeletonProps,
     type ServiceCardLayout, type ServiceCardChip, type ServiceCardPriceLine, type ServiceCardTestIds,
+    type ServiceCardStatus, type ServiceCardStatusTone,
+    ServiceDetailSheet, type ServiceDetailSheetProps, type ServiceDetailSheetTestIds,
+    PackageCard, type PackageCardProps,
+    CardGrid, type CardGridProps, type CardGridColumns,
     TrustItem, type TrustItemProps,
     SectionBand, type SectionBandProps,
     StepCard, type StepCardProps,
@@ -84,8 +104,17 @@ export {
     DeviceFrame, type DeviceFrameProps, type DeviceKind,
     InfoRow, type InfoRowProps,
     ListSection, ListSectionRow, type ListSectionProps, type ListSectionRowProps,
+    // AUTM-1781 — the signed-in app shell.
+    AppBar, type AppBarProps,
+    AppTabBar, type AppTabBarProps, type AppTabBarItem,
+    ActionBar, type ActionBarProps, type ActionBarAction, type ActionBarControl,
+    // CountUp is exported once, beside Tabs above (AUTM-1792; AUTM-1781 added its server-safe props).
+    MediaFrame, initialsOf, type MediaFrameProps,
+    DateTile, WhenBlock, dateTileParts, type DateTileProps, type DateTileParts, type WhenBlockProps,
+    BookingPass, type BookingPassProps,
+    FactRows, type FactRowsProps, type FactRow,
     ModeChip, type ModeChipProps, type BookingMode,
-    Logo, type LogoProps,
+    Logo, type LogoProps, type LogoTone,
     SearchInput, type SearchInputProps,
     FilterChipRow, type FilterChipRowProps, type FilterChipOption,
     // v2.1.0 — customer-web marketing harvest (AUTAA-UI-007)
@@ -93,6 +122,8 @@ export {
     // AUTM-1018 — reserves its own space, same mechanism as the consent notice.
     PWAInstallBanner, PWA_INSTALL_BANNER_HEIGHT_VAR, PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
+    // AUTM-1906 — the one-time install offer, in the page.
+    InstallOffer, InstallSteps, type InstallOfferProps, type InstallStepsProps,
     // AUTM-852 — the consent notice, and the space it reserves for itself.
     ConsentBanner, CONSENT_BANNER_HEIGHT_VAR, CONSENT_BANNER_OFFSET,
     type ConsentBannerProps,
@@ -101,7 +132,15 @@ export {
     // chat / conversation primitives (AUTM-159)
     MessageBubble, type MessageBubbleProps, type MessageSide,
     MessageComposer, type MessageComposerProps,
-    MessageThread, type MessageThreadProps, type MessageItem,
+    MessageThread, type MessageThreadProps, type MessageItem, type MessageSendStatus,
+    // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
+    MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState,
+    // AUTM-1881 — a booking event from Autara in the booking thread
+    ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone,
+    QuickReplies, type QuickRepliesProps, type QuickReply,
+    // AUTM-1867 — pick one of a few in one tap.
+    ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction,
+    ComposerAttachMenu, attachMenuGlyphs, type ComposerAttachMenuProps, type AttachMenuItem,
     // Media — pick-then-crop dialog (AUTM-163)
     ImageCropDialog, type ImageCropDialogProps,
     // Wizard step indicator (AUTM-322)
@@ -128,17 +167,37 @@ export {
     Banner, type BannerProps,
     ConfirmDialog, type ConfirmDialogProps,
     NativeSelect, type NativeSelectProps,
-    MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow,
+    MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow, type MoneyTone,
+    // AUTM-1856 — one link, ready to hand over: summary, QR, link, the ways it leaves.
+    LinkShareSheet, shareHrefs, type LinkShareSheetProps, type LinkShareSheetPrimary, type ShareTarget,
     // AUTM-1737 — one invoice status colour system.
     InvoiceStatusBadge, invoiceStatusTone, invoiceStatusLabel, type InvoiceStatusBadgeProps, type InvoicePaymentState, type InvoiceStatusTone,
     // AUTM-1221 — graduated from customer-web (plan item U5)
     Countdown, remainingLabel, type CountdownProps,
+    // AUTM-1819 — the time left as a solid pill (Today's requests, the booking record).
+    CountdownPill, countdownPillVariant, type CountdownPillProps, type CountdownPillTone,
     PolicyTimeline, type PolicyTimelineProps, type PolicyTimelineStep,
     // AUTM-1195 — pick one of a few, as cards
     ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps,
     SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption,
+    // AUTM-1870: a car in a few taps, drawn as itself.
+    VehiclePicker, validateVehiclePicker, vehiclePickerStepFor, EMPTY_VEHICLE_PICKER_VALUE, VEHICLE_PICKER_MESSAGES,
+    type VehiclePickerProps, type VehiclePickerValue, type VehiclePickerStep, type VehiclePickerField, type VehiclePickerErrors,
+    VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps,
+    VehicleCard, VehicleAddCard, VehiclePaintDot, vehicleCardFacts, type VehicleCardProps, type VehicleAddCardProps, type VehicleCardSelectable,
+    VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote,
+    // AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
+    CategoryArt, categoryArtKind, type CategoryArtKind,
+    MerchantProfileCover, MerchantProfileCoverArt, MerchantProfileHeader,
+    type MerchantProfileCoverProps, type MerchantProfileCoverArtProps, type MerchantProfileHeaderProps,
+    type MerchantProfileLayout, type MerchantProfileStatus,
+    ProfileSections, ProfileSection, ProfileBio,
+    type ProfileSectionsProps, type ProfileSectionProps, type ProfileBioProps,
 } from './components'
 export { SocialButton, type SocialButtonProps, type SocialButtonProvider } from './components/SocialButton'
+
+/* AUTM-2114: Autara's own icon set, replacing Solar (also the `/icons` subpath). */
+export * from './icons'
 
 // Utilities
 export { cn } from './lib/cn'
@@ -157,10 +216,63 @@ export {
     // AUTM-1678: page content motion
     motionStaggerDelay,
     MOTION_STAGGER_CAP,
+    // AUTM-1781: the same tokens as a Web Animations timing
+    motionTiming,
     type MotionBezier,
     type MotionDurationName,
     type MotionTransitionName,
 } from './lib/motion-tokens'
+
+/* AUTM-1870: the Australian make, model and body catalog behind VehiclePicker
+ * (customer-api's vehicleData.ts names, plus a body per model), the paints,
+ * and the search the picker runs. */
+export {
+    AU_VEHICLE_CATALOG,
+    VEHICLE_BODIES,
+    VEHICLE_PAINTS,
+    vehicleBodyLabel,
+    isVehicleBody,
+    vehiclePaint,
+    findVehicleMake,
+    findVehicleModel,
+    inferVehicleBody,
+    searchVehicleCatalog,
+    popularVehicleMakes,
+    otherVehicleMakes,
+    vehicleSlug,
+    type VehicleBody,
+    type VehiclePaint,
+    type VehicleCatalog,
+    type VehicleCatalogMake,
+    type VehicleCatalogModel,
+    type VehicleSearchResult,
+} from './lib/vehicle-catalog'
+
+/* AUTM-1906: installing the web app. `catchInstallPrompt` once at the root,
+ * then `useInstallOffer` where the offer is drawn (InstallOffer). */
+export {
+    catchInstallPrompt,
+    subscribeInstallPrompt,
+    canPromptInstall,
+    promptInstall,
+    runningInstalled,
+    installedThisSession,
+    installPlatform,
+    useInstallPrompt,
+    useInstallOffer,
+    type InstallOutcome,
+    type InstallPlatform,
+    type InstallPromptState,
+    type InstallOfferOptions,
+    type InstallOfferState,
+} from './lib/install-prompt'
+
+/* AUTM-1781: the direction of the next screen change, for `.motion-screen`. */
+export {
+    markNavigation,
+    listenForBackNavigation,
+    type NavigationDirection,
+} from './lib/navigation-motion'
 
 /* AUTM-1679 — a fixed header that steps out of the way on the way down and
  * comes back on the way up (utilities/autohide.css). */
@@ -195,3 +307,54 @@ export {
     isISODate,
     isISOTime,
 } from './lib/calendar'
+
+/* AUTM-1800: what a pro's public profile says about them (the door state, the
+ * kicker, where they work), shared by customer-web's /m and the portal's
+ * preview so the two cannot word a pro differently. */
+export {
+    PROFILE_DEFAULT_LOCALE,
+    PROFILE_DEFAULT_TIMEZONE,
+    merchantLocalClock,
+    getMerchantOpenState,
+    openStateCopy,
+    describeOpenState,
+    formatPauseUntil,
+    deriveLocationLabel,
+    profileKicker,
+    bookingModeLabel,
+    profileMonogram,
+    type ProfileBookingMode,
+    type ProfilePlaceInput,
+    type MerchantHours,
+    type MerchantOpenState,
+    type MerchantOpenStatus,
+    type LocationLabel,
+} from './lib/merchant-profile'
+
+/* AUTM-1800: how a service is listed to a customer (the price from the
+ * server's quote, its length, the multi-day words), shared by customer-web and
+ * the portal's preview so a card cannot be worded two ways. */
+export {
+    formatPriceCents,
+    hasBookingFee,
+    listingPrice,
+    fromPrice,
+    serviceDurationLabel,
+    isMultiDay,
+    workingDaysLabel,
+    DROP_OFF_TAG,
+    serviceLocationLabel,
+    type ListingBookingMode,
+    type ListingPriceBreakdown,
+    type ListingPrice,
+    type ListingPriceParts,
+    type ListingPriceLine,
+    type ListingPriceInput,
+    type ListingPriceOptions,
+} from './lib/service-listing'
+export {
+    packageSaving,
+    includedServicesLabel,
+    type PackageSaving,
+    type PackageSavingInput,
+} from './lib/package-listing'

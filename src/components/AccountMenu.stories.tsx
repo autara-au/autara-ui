@@ -695,3 +695,63 @@ function ThemePane({ theme }: { theme: 'light' | 'dark' }) {
         </div>
     )
 }
+
+/* ─── AUTM-1792: the dropdown lifts off the page ─────────────────────────
+ *
+ * Don, 2026-10-09, on the merchant portal's top bar: "there's no shadow or
+ * something here when open the menu, fix it". The panel was paper on a paper
+ * page with a 0.10 hairline, so it read as part of the page. As a dropdown it
+ * now takes `.floating-surface`; as a sheet (story above) it stays flat,
+ * because a sheet has a scrim and an edge of the screen behind it. Drawn over
+ * a mock of the portal top bar and a band card so the lift is judged against
+ * the ground it really opens on. Check both themes.
+ */
+function PortalPage({ children }: { children: React.ReactNode }) {
+    return (
+        <div className="min-h-[30rem] bg-[var(--paper)] text-[var(--text-strong)]">
+            <div className="flex items-center justify-between border-b border-[var(--hairline)] px-6 py-3">
+                <span className="font-bold">Today</span>
+                {children}
+            </div>
+            <div className="grid grid-cols-2 gap-4 p-6">
+                <div className="rounded-autara-lg bg-[var(--band)] p-5">
+                    <p className="text-[0.8125rem] font-medium text-[var(--text-muted)]">This month</p>
+                    <p className="mt-1 text-3xl font-black">$407</p>
+                </div>
+                <div className="rounded-autara-lg bg-[var(--band)] p-5">
+                    <p className="text-[0.8125rem] font-medium text-[var(--text-muted)]">Still to collect</p>
+                    <p className="mt-1 text-3xl font-black">$0</p>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+const liftedMenu = (
+    <PortalPage>
+        <OpenMenu
+            triggerVariant="avatar"
+            align="end"
+            identity={merchant}
+            items={[
+                { key: 'account', label: 'Your account', description: 'Name, photo, email and phone', icon: <UserIcon /> },
+                { key: 'settings', label: 'Settings', icon: <SettingsIcon /> },
+                { key: 'help', label: 'Help and support', icon: <HelpIcon /> },
+            ]}
+            signOut={{ key: 'sign-out', label: 'Sign out', icon: <LogoutIcon /> }}
+        />
+    </PortalPage>
+)
+
+export const LiftedOverThePortal: Story = {
+    name: 'Lifted over the portal (AUTM-1792)',
+    tags: ['!autodocs'],
+    render: () => liftedMenu,
+}
+
+export const LiftedOverThePortalDark: Story = {
+    name: 'Lifted over the portal, dark (AUTM-1792)',
+    tags: ['!autodocs'],
+    globals: { theme: 'dark' },
+    render: () => liftedMenu,
+}

@@ -81,6 +81,16 @@ const NEW_KEYFRAMES = [
     'autara-page-out',
     'autara-skeleton',
     'autara-fade-in',
+    // AUTM-1792
+    'floating-pop-in',
+    'autara-pop',
+    'autara-row-in',
+    'autara-shimmer',
+    'modal-panel-in',
+    'modal-panel-out',
+    // AUTM-1819
+    'autara-badge-in',
+    'autara-breathe-soft',
 ]
 
 describe('AUTM-1678: transform and opacity only', () => {
@@ -126,6 +136,14 @@ describe('AUTM-1678: reduced motion is designed, not only clamped', () => {
         ['.motion-press:active', 'scale'],
         ['.motion-press-row:active', 'scale'],
         ['.motion-hover-lift:hover', 'translate'],
+        // AUTM-1792
+        ['.floating-panel--pop[data-state]', 'animation'],
+        ['.motion-pop', 'animation'],
+        ['.motion-rows > *', 'animation'],
+        ['.motion-shimmer::after', 'animation'],
+        // AUTM-1819
+        ['.motion-badge-in', 'animation'],
+        ['.motion-breathe-soft', 'animation'],
     ])('%s moves only inside prefers-reduced-motion: no-preference', (selector, prop) => {
         const moving = ALL.filter(
             (r) => r.selector.startsWith(selector) && properties(r.body).includes(prop)
@@ -205,5 +223,34 @@ describe('Reveal stagger (AUTM-1678)', () => {
         // At rest in server HTML: no inline style, no hidden state, no script.
         expect(el.getAttribute('style')).toBeNull()
         expect([...el.children].every((c) => c.getAttribute('style') === null)).toBe(true)
+    })
+})
+
+describe('AUTM-1792: pops, rows and counts', () => {
+    it('only the pop moves on the overshoot curve, and never opacity', () => {
+        const onPop = ALL.filter((r) => r.body.includes('var(--motion-ease-pop)'))
+        expect(onPop.length).toBeGreaterThan(0)
+        for (const r of onPop) {
+            // The overshoot drives the movement keyframes only; the fade beside
+            // it runs on ease-out.
+            expect(r.body).toMatch(/floating-pop-in var\(--motion-menu-in\) var\(--motion-ease-pop\)/)
+            expect(r.body).toMatch(/autara-fade-in var\(--motion-menu-in\) var\(--motion-ease-out\)/)
+        }
+    })
+
+    it('a menu closes faster than it opens', () => {
+        expect(motionDurations.menuOut).toBeLessThan(motionDurations.menuIn)
+    })
+
+    it('rows step 30ms and stop stepping at the twelfth', () => {
+        expect(CSS).toContain('.motion-rows > :nth-child(n + 12) { --row-i: 11; }')
+        expect(motionDurations.rowStagger).toBe(30)
+    })
+
+    it('the shimmer is hidden, not merely slowed, under reduce', () => {
+        const hide = ALL.find(
+            (r) => r.selector === '.motion-shimmer::after' && r.context.some((c) => c.includes('motion: reduce'))
+        )
+        expect(hide?.body).toContain('display: none')
     })
 })

@@ -65,3 +65,26 @@ export const Sheet: Story = {
     </div>
   ),
 };
+
+/**
+ * AUTM-1797 / AUTM-1799: ProgressSteps with an icon per step, the customer
+ * booking screen's track. Reached steps are lime with a tick, the current one
+ * aqua and breathing, the rest band; only the current word is drawn, every
+ * word is read out.
+ */
+export const IconTrack: Story = {
+  render: () => {
+    const g = (d: string) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+        <path d={d} />
+      </svg>
+    );
+    const icons = [g("M7 17 17 7M9 7h8v8"), g("M4 10v9h16v-9M3 6l1.5-3h15L21 6"), g("M12 3v4M12 17v4M3 12h4M17 12h4"), g("M3 7h18v10H3zM3 11h18")];
+    return (
+      <div className="flex max-w-[390px] flex-col gap-8 p-6">
+        <ProgressSteps steps={["Sent", "Accepted", "The job", "Paid"]} current={1} label="Where your booking is" icons={icons} />
+        <ProgressSteps steps={["Requested", "Accepted", "In progress", "Done"]} current={2} label="Where your booking is" icons={icons} />
+      </div>
+    );
+  },
+};

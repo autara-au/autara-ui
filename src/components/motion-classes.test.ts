@@ -103,10 +103,15 @@ describe('every animation the stylesheet names actually exists', () => {
     const declared = new Set(
         [...CSS.matchAll(/@keyframes\s+([\w-]+)/g)].map((m) => m[1])
     )
+    // AUTM-1792: a shorthand can list several animations (a menu's fade on
+    // one curve and its pop on another), so read every comma-separated
+    // entry, not only the first.
     const used = [
-        ...CSS.matchAll(/animation:\s*([\w-]+)\s/g),
-        ...CSS.matchAll(/animation-name:\s*([\w-]+)/g),
-    ].map((m) => m[1])
+        ...[...CSS.matchAll(/animation:\s*([^;]+);/g)].flatMap((m) =>
+            m[1].split(',').map((part) => part.trim().split(/\s+/)[0])
+        ),
+        ...[...CSS.matchAll(/animation-name:\s*([\w-]+)/g)].map((m) => m[1]),
+    ].filter((n) => /^[a-z][\w-]*$/.test(n) && n !== 'none')
 
     it('references at least the surfaces AUTM-967 covered', () => {
         expect(used.length).toBeGreaterThanOrEqual(10)

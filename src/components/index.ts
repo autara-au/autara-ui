@@ -1,6 +1,34 @@
 export { GradientBar } from './GradientBar'
 export { Button, buttonVariants, type ButtonProps } from './Button'
-export { IconButton, type IconButtonProps } from './IconButton'
+export {
+    IconButton,
+    CloseButton,
+    CloseGlyph,
+    iconDiscClasses,
+    resolveIconButtonTone,
+    type IconButtonProps,
+    type IconButtonTone,
+    type IconButtonSize,
+    type CloseButtonProps,
+} from './IconButton'
+// AUTM-1756: a region that scrolls on its own, and its edge reader.
+export {
+    ScrollArea,
+    useScrollEdges,
+    useScrollbarReveal,
+    type ScrollAreaProps,
+    type ScrollAreaOrientation,
+    type ScrollEdges,
+} from './ScrollArea'
+// AUTM-1756 follow-up: one sideways row of chips, chevrons and a drag, no bar.
+export {
+    ChipRow,
+    chipRowPageTarget,
+    CHIP_ROW_DRAG_THRESHOLD,
+    type ChipRowProps,
+    type ChipRowRole,
+    type ChipRowArrows,
+} from './ChipRow'
 export { Input, inputVariants, type InputProps } from './Input'
 export { OtpInput, type OtpInputProps } from './OtpInput'
 export {
@@ -71,7 +99,10 @@ export {
 export { PickerTrigger, type PickerTriggerProps } from './PickerTrigger'
 
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from './Accordion'
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
+export { Tabs, TabsList, TabsTrigger, TabsContent, type TabsListProps } from './Tabs'
+// AUTM-1792: a figure that counts up to its value once, as it arrives.
+// AUTM-1781 added `text`, `formatOptions`, `locale` and `testId`, for a server component.
+export { CountUp, type CountUpProps } from './CountUp'
 
 export {
     DropdownMenu,
@@ -123,7 +154,7 @@ export {
 export { ScrollReveal, type ScrollRevealProps } from './ScrollReveal'
 export { FadeIn, FadeInView, ScaleIn, StaggerContainer, StaggerItem } from './MotionDiv'
 
-export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastPosition, type ToastVariant } from './Toast'
+export { ToastProvider, useToast, toast, type Toast, type ToastType, type ToastTone, type ToastPosition, type ToastVariant } from './Toast'
 
 export {
     Select,
@@ -147,6 +178,9 @@ export { ProgressSteps, type ProgressStepsProps } from './ProgressSteps'
 export { Spinner, type SpinnerProps, type SpinnerSize, type SpinnerTone } from './Spinner'
 // AUTM-1706: the Autara mark as a loader; Button's busy state uses it.
 export { AutaraLoader, type AutaraLoaderProps, type AutaraLoaderSize, type AutaraLoaderTone } from './AutaraLoader'
+export { AutaraSplash, type AutaraSplashProps, type AutaraSplashSize, type AutaraSplashOn } from './AutaraSplash'
+export { AutaraSplashScreen, useSplashElapsed, type AutaraSplashScreenProps } from './AutaraSplashScreen'
+export { CommandMenu, matchesCommand, type CommandMenuProps, type CommandMenuGroup, type CommandMenuItem } from './CommandMenu'
 export { MultiSelect, type MultiSelectOption, type MultiSelectProps } from './MultiSelect'
 
 export {
@@ -179,7 +213,16 @@ export {
     type ServiceCardChip,
     type ServiceCardPriceLine,
     type ServiceCardTestIds,
+    type ServiceCardStatus,
+    type ServiceCardStatusTone,
 } from './ServiceCard'
+export {
+    ServiceDetailSheet,
+    type ServiceDetailSheetProps,
+    type ServiceDetailSheetTestIds,
+} from './ServiceDetailSheet'
+export { PackageCard, type PackageCardProps } from './PackageCard'
+export { CardGrid, type CardGridProps, type CardGridColumns } from './CardGrid'
 export { TrustItem, type TrustItemProps } from './TrustItem'
 export { SectionBand, type SectionBandProps } from './SectionBand'
 export { StepCard, type StepCardProps } from './StepCard'
@@ -192,7 +235,14 @@ export { ErrorCard, type ErrorCardProps } from './ErrorCard'
 // ─── Chat / conversation primitives (AUTM-159) ───────────────────────────
 export { MessageBubble, type MessageBubbleProps, type MessageSide } from './MessageBubble'
 export { MessageComposer, type MessageComposerProps } from './MessageComposer'
-export { MessageThread, type MessageThreadProps, type MessageItem } from './MessageThread'
+export { MessageThread, type MessageThreadProps, type MessageItem, type MessageSendStatus } from './MessageThread'
+// AUTM-1806 — cards, quick replies and the attach menu for the booking thread
+export { MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState } from './MessageCard'
+export { ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone } from './ChatEventCard'
+export { QuickReplies, type QuickRepliesProps, type QuickReply } from './QuickReplies'
+// AUTM-1867 — pick one of a few in one tap (services, times), with one trailing action.
+export { ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction } from './ChoiceChips'
+export { ComposerAttachMenu, attachMenuGlyphs, type ComposerAttachMenuProps, type AttachMenuItem } from './ComposerAttachMenu'
 
 // v1.3.0 introduced a standalone TrendingPill component for marker
 // pills. AUTAA-UI-006 (v1.2.0+ — or whatever semantic-release picks)
@@ -221,7 +271,7 @@ export {
     type ListSectionRowProps,
 } from './ListSection'
 export { ModeChip, type ModeChipProps, type BookingMode } from './ModeChip'
-export { Logo, type LogoProps } from './Logo'
+export { Logo, type LogoProps, type LogoTone } from './Logo'
 export { SearchInput, type SearchInputProps } from './SearchInput'
 export {
     FilterChipRow,
@@ -244,6 +294,13 @@ export {
     PWA_INSTALL_BANNER_OFFSET,
     type PWAInstallBannerProps,
 } from './PWAInstallBanner'
+// AUTM-1906 — the one-time install offer, in the page (customer-web's, promoted).
+export {
+    InstallOffer,
+    InstallSteps,
+    type InstallOfferProps,
+    type InstallStepsProps,
+} from './InstallOffer'
 // AUTM-852 — the consent notice, and the space it reserves for itself.
 export {
     ConsentBanner,
@@ -324,7 +381,16 @@ export { InlineAlert, type InlineAlertProps, type InlineAlertTone } from './Inli
 export { Banner, type BannerProps } from './Banner'
 export { ConfirmDialog, type ConfirmDialogProps } from './ConfirmDialog'
 export { NativeSelect, type NativeSelectProps } from './NativeSelect'
-export { MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow } from './MoneyBreakdown'
+export { MoneyBreakdown, type MoneyBreakdownProps, type MoneyRow, type MoneyTone } from './MoneyBreakdown'
+// AUTM-1856 — one link, ready to hand over (payment link, business link):
+// a summary, a QR, the link, and the ways it leaves.
+export {
+    LinkShareSheet,
+    shareHrefs,
+    type LinkShareSheetProps,
+    type LinkShareSheetPrimary,
+    type ShareTarget,
+} from './LinkShareSheet'
 // AUTM-1737 — one invoice status colour system: due and overdue red, partially
 // paid amber, paid lime, draft and void neutral.
 export {
@@ -338,10 +404,43 @@ export {
 // ─── AUTM-1195 — pick one of a few, as cards: a real radio group ────────
 export { ChoiceCard, ChoiceGroup, type ChoiceCardProps, type ChoiceGroupProps } from './ChoiceCard'
 export { SwatchRadioGroup, type SwatchRadioGroupProps, type SwatchOption } from './SwatchRadioGroup'
+// AUTM-1870: a car in a few taps: the picker, the make mark, the garage card (no car illustrations, Don 2026-10-15).
+export {
+    VehiclePicker,
+    validateVehiclePicker,
+    vehiclePickerStepFor,
+    EMPTY_VEHICLE_PICKER_VALUE,
+    VEHICLE_PICKER_MESSAGES,
+    type VehiclePickerProps,
+    type VehiclePickerValue,
+    type VehiclePickerStep,
+    type VehiclePickerField,
+    type VehiclePickerErrors,
+} from './VehiclePicker'
+export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps } from './VehicleMakeMark'
+export {
+    VehicleCard,
+    VehicleAddCard,
+    VehiclePaintDot,
+    vehicleCardFacts,
+    type VehicleCardProps,
+    type VehicleAddCardProps,
+    type VehicleCardSelectable,
+} from './VehicleCard'
+// AUTM-1878 follow-up: a car as a pro sees it, with the jobs done on it.
+export { VehicleProfile, type VehicleProfileProps, type VehicleProfileJob, type VehicleProfileNote } from './VehicleProfile'
 // ─── AUTM-1221 — graduated from customer-web (plan item U5) ──────────────
 // Countdown: a deadline the server enforces, counted down and announced
 // once a minute; PolicyTimeline: the tiers of a policy with the live one lit.
 export { Countdown, remainingLabel, type CountdownProps } from './Countdown'
+// AUTM-1819 — the time left as a solid pill: purple, amber, red; pops in once,
+// breathes slowly in the last stretch. Today's requests and the booking record.
+export {
+    CountdownPill,
+    countdownPillVariant,
+    type CountdownPillProps,
+    type CountdownPillTone,
+} from './CountdownPill'
 export {
     PolicyTimeline,
     type PolicyTimelineProps,
@@ -369,3 +468,42 @@ export { PageContainer, type PageContainerProps } from './PageContainer'
 
 // SocialButton: the one social sign-in button, Google, Apple and mobile (AUTM-1513).
 export { SocialButton, type SocialButtonProps, type SocialButtonProvider } from './SocialButton'
+
+// AUTM-1781: the signed-in app shell: the top bar, the tab bar (bottom on a
+// phone, inline in the top bar from md) and a detail screen's action bar.
+export { AppBar, type AppBarProps } from './AppBar'
+export { AppTabBar, type AppTabBarProps, type AppTabBarItem } from './AppTabBar'
+export { ActionBar, type ActionBarProps, type ActionBarAction, type ActionBarControl } from './ActionBar'
+// AUTM-1781: the slot where a screen shows its subject: a photo, a map, or initials on deep purple.
+export { MediaFrame, type MediaFrameProps } from './MediaFrame'
+// AUTM-1799 (AUTM-1797, visual first): a booking drawn, not told. A date as a
+// calendar leaf and the time as a figure, the booking as a pass, place and car
+// as icon rows.
+export { DateTile, WhenBlock, dateTileParts, type DateTileProps, type DateTileParts, type WhenBlockProps } from './DateTile'
+export { BookingPass, type BookingPassProps } from './BookingPass'
+export { FactRows, type FactRowsProps, type FactRow } from './FactRows'
+export { initialsOf } from '../lib/initials'
+// AUTM-1787: a list row's everyday actions, a menu on a phone, discs and labels with room.
+export { RowActions, type RowAction, type RowActionsProps } from './RowActions'
+// AUTM-1755: a list beside its record, with a splitter that drags, keys and remembers.
+export { SplitPane, type SplitPaneProps } from './SplitPane'
+// AUTM-1800: a pro's public profile, as /m draws it and the portal previews it.
+export { CategoryArt, categoryArtKind, type CategoryArtKind } from './CategoryArt'
+export {
+    MerchantProfileCover,
+    MerchantProfileCoverArt,
+    MerchantProfileHeader,
+    type MerchantProfileCoverProps,
+    type MerchantProfileCoverArtProps,
+    type MerchantProfileHeaderProps,
+    type MerchantProfileLayout,
+    type MerchantProfileStatus,
+} from './MerchantProfileHeader'
+export {
+    ProfileSections,
+    ProfileSection,
+    ProfileBio,
+    type ProfileSectionsProps,
+    type ProfileSectionProps,
+    type ProfileBioProps,
+} from './ProfileSection'

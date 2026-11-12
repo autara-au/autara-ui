@@ -500,9 +500,11 @@ describe('every control clears 44px', () => {
         expect(screen.getByTestId('pwa-install-banner-install').className).toContain('min-h-11')
         expect(screen.getByTestId('pwa-install-banner-dismiss').className).toContain('min-h-11')
 
+        // AUTM-1756: the library's CloseButton, a 2.75rem disc (rem, so it
+        // grows with the text scale), 48px to a finger.
         const close = screen.getByTestId('pwa-install-banner-close')
-        expect(close.className).toContain('min-h-11')
-        expect(close.className).toContain('min-w-11')
+        expect(close.className).toContain('size-11')
+        expect(close.className).toContain('pointer-coarse:size-12')
     })
 
     it('uses MINIMUMS, so scaled text grows the control instead of clipping', () => {

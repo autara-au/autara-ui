@@ -126,7 +126,9 @@ const SelectContent = React.forwardRef<
         <SelectPrimitive.Content
             ref={ref}
             className={cn(
-                'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
+                // AUTM-1792: lifted off the page like every floating list.
+                'relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border bg-[var(--surface)] text-[var(--text-strong)]',
+                'floating-surface floating-panel--pop',
                 // AUTM-967 — the four dead `animate-in` / `slide-in-from-*`
                 // lines that used to sit here emitted nothing. Real CSS now.
                 'floating-panel',

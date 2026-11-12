@@ -1,3 +1,4 @@
+import { useEffect, type ReactNode } from 'react'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 import { MoneyBreakdown } from './MoneyBreakdown'
 
@@ -22,7 +23,7 @@ export const CheckoutReview: Story = {
         note: 'GST included. The balance is charged when the pro marks the job complete.',
     },
     render: (args) => (
-        <div className="max-w-sm rounded-autara-lg border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <div className="max-w-sm rounded-[1.5rem] bg-[var(--band)] p-5">
             <MoneyBreakdown {...args} />
         </div>
     ),
@@ -73,6 +74,170 @@ export const LongLabelsNarrow: Story = {
     render: (args) => (
         <div className="w-[260px]">
             <MoneyBreakdown {...args} />
+        </div>
+    ),
+}
+
+/**
+ * AUTM-1797 / AUTM-1799: the same rows as chips, the label over the amount.
+ * AUTM-1856 (Don, 2026-10-13): every chip is the neutral band card with the
+ * amount in ink, and what the money is doing is a small solid badge beside
+ * the label: aqua on hold, grey a balance still due.
+ */
+export const Chips: Story = {
+    args: {
+        variant: 'chips',
+        label: 'When you pay',
+        title: 'Payment',
+        rows: [
+            { label: 'Deposit', value: '$54', tone: 'flight', state: 'On hold' },
+            { label: 'Balance', value: '$126', state: 'Balance due' },
+        ],
+    },
+    render: (args) => (
+        <div className="max-w-[390px]">
+            <MoneyBreakdown {...args} />
+        </div>
+    ),
+}
+
+/**
+ * Every state badge side by side (AUTM-1856): lime paid or captured, aqua on
+ * hold or pending, purple yours to act on, grey otherwise; and a row with no
+ * state, which draws no badge.
+ */
+export const ChipTones: Story = {
+    args: {
+        variant: 'chips',
+        label: 'Money',
+        rows: [
+            { label: 'Deposit', value: '$54', tone: 'money', state: 'Captured' },
+            { label: 'Deposit', value: '$54', tone: 'flight', state: 'On hold' },
+            { label: 'To pay', value: '$126', tone: 'act', state: 'Your move' },
+            { label: 'Balance', value: '$126', state: 'Balance due' },
+            { label: 'Refund on its way', value: '$27', tone: 'flight', state: 'Pending' },
+            { label: 'Kept by the pro', value: '$27' },
+        ],
+    },
+    render: (args) => (
+        <div className="max-w-[390px]">
+            <MoneyBreakdown {...args} />
+        </div>
+    ),
+}
+
+const CHECKOUT_ROWS = [
+    {
+        label: (
+            <span className="flex flex-col">
+                <span>On hold today</span>
+                <span className="text-xs font-normal">Deposit $24 + booking fee $1.18</span>
+            </span>
+        ),
+        value: '$25.18',
+        tone: 'flight' as const,
+    },
+    {
+        label: (
+            <span className="flex flex-col">
+                <span>After the job</span>
+                <span className="text-xs font-normal">Balance $56 + booking fee $2.74</span>
+            </span>
+        ),
+        value: '$58.74',
+    },
+]
+
+/** The root at 200%, as a reader's large text sets it; restored when the story leaves. */
+function LargeText({ children }: { children: ReactNode }) {
+    useEffect(() => {
+        const root = document.documentElement
+        const was = root.style.fontSize
+        root.style.fontSize = '200%'
+        return () => {
+            root.style.fontSize = was
+        }
+    }, [])
+    return <>{children}</>
+}
+
+/**
+ * AUTM-1799: 200% text in a 270px card (about checkout's at 390). Each
+ * amount stays one figure on one line ("$25.18", never "$25.1" over "8"),
+ * and one too wide for its chip scales down to fit (right: "$1,234.50").
+ */
+export const ChipsLargeText: Story = {
+    args: { variant: 'chips', label: 'When you pay', rows: CHECKOUT_ROWS },
+    render: (args) => (
+        <LargeText>
+            <div className="flex flex-wrap items-start gap-6">
+                <div className="w-[270px]">
+                    <MoneyBreakdown {...args} />
+                </div>
+                <div className="w-[270px]">
+                    <MoneyBreakdown {...args} rows={[{ label: 'Paid', value: '$1,234.50', tone: 'money' }]} />
+                </div>
+            </div>
+        </LargeText>
+    ),
+}
+
+/**
+ * AUTM-1878 — the chip's own action: Send payment link sits in the "After
+ * the job" chip it collects, on the raised fill so it reads on the band card.
+ */
+export const ChipWithAction: Story = {
+    args: {
+        variant: 'chips',
+        label: 'Deposit and balance',
+        rows: [
+            { label: 'Deposit', value: '$56.70', tone: 'money', state: 'Captured' },
+            {
+                label: 'After the job',
+                value: '$132.30',
+                state: 'Balance due',
+                action: (
+                    <button
+                        type="button"
+                        className="min-h-11 w-full rounded-full bg-[var(--raised)] px-4 text-[0.9375rem] font-medium text-[var(--text-strong)]"
+                    >
+                        Send payment link
+                    </button>
+                ),
+            },
+        ],
+    },
+    render: (args) => (
+        <div className="max-w-[34rem]">
+            <MoneyBreakdown {...args} />
+        </div>
+    ),
+}
+
+
+/**
+ * `figure="md"` (Don, 2026-11-07): 26px Bold, for money that sits beside the
+ * action that matters more (the deposit and balance beside Confirm in the
+ * merchant's Inbox panel), where two 32px Black figures out-shouted it.
+ */
+export const ChipsBesideAnAction: Story = {
+    name: 'Chips, medium figure, beside an action',
+    args: {
+        variant: 'chips',
+        figure: 'md',
+        label: 'Money',
+        rows: [
+            { label: 'Deposit', value: '$24.00', tone: 'flight', state: 'On hold' },
+            { label: 'Balance', value: '$56.00', state: 'After the job' },
+        ],
+    },
+    render: (args) => (
+        <div className="flex max-w-[320px] flex-col gap-3">
+            <MoneyBreakdown {...args} />
+            <div className="flex gap-2">
+                <button type="button" className="min-h-11 flex-1 rounded-full bg-[var(--band)] text-[var(--danger)]">Decline</button>
+                <button type="button" className="min-h-11 flex-1 rounded-full bg-[var(--lime)] font-bold text-[var(--on-lime)]">Confirm</button>
+            </div>
         </div>
     ),
 }

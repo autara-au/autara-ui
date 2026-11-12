@@ -27,17 +27,18 @@ describe('one loading picture', () => {
         expect(send.textContent).not.toContain('Sending')
     })
 
-    it('a loading Toast turns the mark where the dot was; other kinds keep the dot', () => {
+    it('a loading Toast turns the mark in its icon disc; other kinds draw their glyph (AUTM-1871)', () => {
         render(<ToastProvider>{null}</ToastProvider>)
         act(() => {
             toast.loading('Saving your hours')
             toast.success('Saved')
         })
-        const loading = document.querySelector('[data-toast-dot="loading"]')!
+        const loading = document.querySelector('[data-toast-icon="loading"]')!
         expect(loading.querySelector('svg.autara-loader')).not.toBeNull()
         expect(loading).toHaveAttribute('aria-hidden', 'true')
-        const success = document.querySelector('[data-toast-dot="success"]')!
-        expect(success.querySelector('svg')).toBeNull()
+        const success = document.querySelector('[data-toast-type="success"] [data-toast-icon]')!
+        expect(success.querySelector('svg.autara-loader')).toBeNull()
+        expect(success.querySelector('svg')).not.toBeNull()
     })
 
     /**

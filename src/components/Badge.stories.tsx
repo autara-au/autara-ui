@@ -236,7 +236,7 @@ export const InCardContext: Story = {
     name: 'In context — marketplace card',
     parameters: { layout: 'padded' },
     render: () => (
-        <div className="max-w-sm rounded-autara-lg border border-[var(--border-subtle)] bg-[var(--surface)] p-5">
+        <div className="max-w-sm rounded-[1.5rem] bg-[var(--band)] p-5">
             <div className="mb-3 flex items-start justify-between gap-3">
                 <h3 className="text-[0.9375rem] font-bold text-[var(--text-strong)]">
                     Northside Mobile Car Care
@@ -400,6 +400,108 @@ export const SolidNoRings: Story = {
                     </div>
                 </div>
             ))}
+        </div>
+    ),
+}
+
+/**
+ * AUTM-1753: a count on an ACTIVE or SELECTED row is lime with ink
+ * (`count-selected`), in both themes; an inactive row keeps `count`. Don,
+ * 2026-10-09, on the merchant portal in dark mode: the current rail item
+ * showed "99+" as a dark pill on purple, and the chosen notifications
+ * category "49" as a dark pill on lavender. Lime on ink measures 16.9:1.
+ */
+function CountRows() {
+    const row =
+        'flex min-h-11 w-60 items-center gap-3 rounded-[var(--radius-autara-md,14px)] px-3 text-[0.9375rem]'
+    const chip = 'inline-flex min-h-11 items-center gap-2 rounded-full px-4 text-[0.8125rem] font-medium'
+    return (
+        <div className="space-y-4">
+            <div className="flex flex-col gap-1">
+                <div className={`${row} bg-[var(--accent-fill)] font-bold text-white`}>
+                    <span className="flex-1">Notifications</span>
+                    <Badge variant="count-selected">99+</Badge>
+                </div>
+                <div className={`${row} font-medium text-[var(--text-muted)]`}>
+                    <span className="flex-1">Inbox</span>
+                    <Badge variant="count">2</Badge>
+                </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                <span className={`${chip} bg-[var(--selected)] text-[var(--on-selected)]`}>
+                    All <Badge variant="count-selected">49</Badge>
+                </span>
+                <span className={`${chip} bg-[var(--band)] text-[var(--text-strong)]`}>
+                    Bookings <Badge variant="count">12</Badge>
+                </span>
+            </div>
+        </div>
+    )
+}
+
+export const CountOnSelectedRows: Story = {
+    name: 'Counts — on a selected row, both themes',
+    parameters: { layout: 'padded' },
+    render: () => (
+        <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-3xl bg-[var(--paper)] p-5">
+                <CountRows />
+            </div>
+            <div data-theme="dark" className="rounded-3xl bg-[var(--paper)] p-5">
+                <CountRows />
+            </div>
+        </div>
+    ),
+}
+
+/**
+ * AUTM-1812: the quiet count on unselected filter chips, in both themes. It
+ * painted --brand-deep, the same dark purple in both themes, so in dark the
+ * number all but vanished (about 1.4:1). It is --accent now: 9.5:1 in light,
+ * 10.3:1 in dark (Badge.contrast.test.ts). The chosen chip keeps lime.
+ */
+function QuietCountChips() {
+    const chip = 'inline-flex min-h-11 items-center gap-1.5 rounded-full px-4 text-[0.8125rem] font-medium'
+    return (
+        <div className="flex flex-wrap gap-2">
+            <span className={`${chip} bg-[var(--selected)] text-[var(--on-selected)]`}>
+                All <Badge variant="count-selected">5</Badge>
+            </span>
+            <span className={`${chip} bg-[var(--band)] text-[var(--text-strong)]`}>
+                Active <Badge variant="count-quiet">3</Badge>
+            </span>
+            <span className={`${chip} bg-[var(--band)] text-[var(--text-strong)]`}>
+                Drafts <Badge variant="count-quiet">1</Badge>
+            </span>
+            <span className={`${chip} bg-[var(--band)] text-[var(--text-strong)]`}>
+                Inactive <Badge variant="count-quiet">12</Badge>
+            </span>
+        </div>
+    )
+}
+
+export const QuietCountOnChips: Story = {
+    name: 'Counts — quiet on unselected chips, both themes',
+    parameters: { layout: 'padded' },
+    render: () => (
+        <div className="grid gap-6">
+            <div className="rounded-3xl bg-[var(--paper)] p-5">
+                <QuietCountChips />
+            </div>
+            <div data-theme="dark" className="rounded-3xl bg-[var(--paper)] p-5">
+                <QuietCountChips />
+            </div>
+        </div>
+    ),
+}
+
+export const QuietCountOnChipsDark: Story = {
+    name: 'Counts — quiet on unselected chips, dark',
+    globals: { theme: 'dark' },
+    parameters: { layout: 'padded', backgrounds: { default: 'Paper, dark' } },
+    render: () => (
+        <div className="rounded-3xl bg-[var(--paper)] p-5">
+            <QuietCountChips />
         </div>
     ),
 }

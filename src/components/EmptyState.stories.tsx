@@ -2,6 +2,11 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EmptyState } from "./EmptyState";
 import { BrandButton } from "./BrandButton";
 
+/* A stand-in for the real art, which lives in merchant-mobile: a flat block cut
+   out on transparency, 320px square for a 10rem box at 2x. Through a URL, so
+   tsc needs no image module. */
+const CUTOUT = new URL("./story-assets/empty-state-cutout.png", import.meta.url).href;
+
 const meta = {
   title: "Molecules/EmptyState",
   component: EmptyState,
@@ -73,6 +78,52 @@ export const Minimal: Story = {
   render: () => (
     <div className="max-w-md">
       <EmptyState title="No services yet" />
+    </div>
+  ),
+};
+
+/**
+ * AUTM-2042 (Don, 2026-11-08): "the cut-out object on the grey band tile".
+ * The same band card, centred: the picture about 10rem square, then the title,
+ * the description and the action at its own width. The picture is decorative,
+ * so pass `alt=""`.
+ */
+export const WithIllustration: Story = {
+  render: () => (
+    <div className="max-w-md">
+      <EmptyState
+        illustration={<img src={CUTOUT} alt="" />}
+        title="No bookings yet"
+        description="New requests from customers will appear here. We'll send you a push notification the moment one comes in."
+        action={<BrandButton>Share your booking link</BrandButton>}
+      />
+    </div>
+  ),
+};
+
+/** The same in the dark theme: the band and the ink follow the tokens. */
+export const WithIllustrationDark: Story = {
+  name: "With illustration (dark)",
+  globals: { theme: "dark" },
+  render: WithIllustration.render,
+};
+
+/** Edge cases: a phone-width column, a long title, no action, and both props (the illustration wins). */
+export const WithIllustrationEdgeCases: Story = {
+  name: "With illustration, edge cases",
+  render: () => (
+    <div className="grid max-w-[22rem] gap-4">
+      <EmptyState
+        illustration={<img src={CUTOUT} alt="" />}
+        title="No packages yet, so customers can only book your services one at a time"
+        description="Bundle two or more services into a package to sell them together."
+      />
+      <EmptyState
+        icon={CalendarIcon}
+        illustration={<img src={CUTOUT} alt="" />}
+        title="Nothing on the calendar"
+        action={<BrandButton>Add a service</BrandButton>}
+      />
     </div>
   ),
 };

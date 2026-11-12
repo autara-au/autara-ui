@@ -172,7 +172,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                                page content, this one sits inside a field we
                                control. */
                             className={cn(
-                                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[12px] font-medium',
+                                'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[0.75rem] font-medium',
                                 'bg-[var(--surface-inverse)] text-[var(--text-on-inverse)]'
                             )}
                         >
@@ -216,7 +216,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                 {isOpen && !disabled && filteredOptions.length > 0 && (
                     <div
                         role="listbox"
-                        className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-auto rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-1"
+                        className="floating-surface absolute left-0 right-0 top-full z-50 mt-1.5 max-h-60 overflow-auto rounded-xl border bg-[var(--surface)] p-1"
                     >
                         {filteredOptions.map((opt) => (
                             <button
@@ -234,7 +234,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                 )}
 
                 {isOpen && !disabled && filteredOptions.length === 0 && search && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-3">
+                    <div className="floating-surface absolute left-0 right-0 top-full z-50 mt-1.5 rounded-xl border bg-[var(--surface)] p-3">
                         <p className="text-sm text-[var(--text-muted)]">
                             No results for &ldquo;{search}&rdquo;
                         </p>

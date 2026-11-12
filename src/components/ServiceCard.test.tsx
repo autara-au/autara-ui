@@ -138,6 +138,145 @@ describe('ServiceCard link mode (merchant page)', () => {
     })
 })
 
+describe('ServiceCard hit area (AUTM-1786)', () => {
+    /* The hit test itself needs a real browser: ServiceCard.browser.test.tsx.
+       These pin the classes that make it, and the backstop's decisions. */
+    const LinkCard = ({ onOpen }: { onOpen: (trusted: boolean) => void }) => {
+        const Recording = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement>>(
+            function Recording(props, ref) {
+                return (
+                    <a
+                        ref={ref}
+                        {...props}
+                        onClick={(event) => {
+                            event.preventDefault()
+                            onOpen(event.nativeEvent.isTrusted)
+                        }}
+                    />
+                )
+            },
+        )
+        return (
+            <ServiceCard
+                name="Interior steam clean"
+                description="Hot-water extraction on carpets and cloth seats."
+                priceLabel="$188.82"
+                coverImageUrl="https://cdn.example/interior.jpg"
+                href="/x"
+                as={Recording}
+                testIds={{ price: 'price' }}
+            />
+        )
+    }
+
+    it('pins the link so a consumer press cannot shrink its hit area to the name', () => {
+        render(<ServiceCard name="Wash" priceLabel="$80" href="/x" />)
+        const link = screen.getByRole('link')
+        for (const pin of ['static!', 'transform-none!', 'scale-none!', 'translate-none!', 'rotate-none!']) {
+            expect(link.className.split(' ')).toContain(pin)
+        }
+    })
+
+    it('reaches out by what the card press takes in, only while pressed', () => {
+        render(<ServiceCard name="Wash" priceLabel="$80" href="/x" />)
+        const classes = screen.getByRole('link').className.split(' ')
+        expect(classes).toContain('after:inset-0')
+        expect(classes).toContain('motion-safe:active:after:inset-[calc((1_-_1/0.985)*50%)]')
+        // The press it compensates: change the two together.
+        const card = screen.getByRole('link').closest('[data-slot="service-card"]') as HTMLElement
+        expect(card.className).toContain('motion-safe:has-[[data-hit]:active]:scale-[0.985]')
+    })
+
+    it('forwards a click on the photo, the description or the price to the link, once each', () => {
+        const onOpen = vi.fn()
+        const { container } = render(<LinkCard onOpen={onOpen} />)
+        fireEvent.click(container.querySelector('[data-slot="media"] img') as Element)
+        fireEvent.click(screen.getByText('Hot-water extraction on carpets and cloth seats.'))
+        fireEvent.click(screen.getByTestId('price'))
+        expect(onOpen).toHaveBeenCalledTimes(3)
+    })
+
+    it('carries the modifier keys, so Cmd-click still opens a new tab', () => {
+        const seen: boolean[] = []
+        const Recording = forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement>>(
+            function Recording(props, ref) {
+                return (
+                    <a
+                        ref={ref}
+                        {...props}
+                        onClick={(event) => {
+                            event.preventDefault()
+                            seen.push(event.metaKey)
+                        }}
+                    />
+                )
+            },
+        )
+        const { container } = render(<ServiceCard name="Wash" priceLabel="$80" href="/x" as={Recording} />)
+        fireEvent.click(container.querySelector('[data-slot="media"]') as Element, { metaKey: true })
+        expect(seen).toEqual([true])
+    })
+
+    it('never doubles a click the link took itself', () => {
+        const onOpen = vi.fn()
+        render(<LinkCard onOpen={onOpen} />)
+        fireEvent.click(screen.getByRole('link'))
+        expect(onOpen).toHaveBeenCalledTimes(1)
+    })
+
+    it('leaves a click on More to More', () => {
+        const onOpen = vi.fn()
+        render(
+            <ServiceCard
+                name="Wash"
+                priceLabel="$80"
+                href="/x"
+                description="Long enough to clamp."
+                as={forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement>>(function R(props, ref) {
+                    return <a ref={ref} {...props} onClick={(e) => (e.preventDefault(), onOpen())} />
+                })}
+            />,
+        )
+        // jsdom measures nothing, so More only shows once it is forced open
+        // in a real browser; any button in the card stands in for it here.
+        const card = screen.getByRole('link').closest('[data-slot="service-card"]') as HTMLElement
+        const button = document.createElement('button')
+        card.querySelector('[data-slot="media"]')?.append(button)
+        fireEvent.click(button)
+        expect(onOpen).not.toHaveBeenCalled()
+    })
+
+    it('leaves a click alone after a text selection in the card', () => {
+        const onOpen = vi.fn()
+        render(<LinkCard onOpen={onOpen} />)
+        const text = screen.getByText('Hot-water extraction on carpets and cloth seats.')
+        const range = document.createRange()
+        range.selectNodeContents(text)
+        window.getSelection()?.removeAllRanges()
+        window.getSelection()?.addRange(range)
+        fireEvent.click(text)
+        window.getSelection()?.removeAllRanges()
+        expect(onOpen).not.toHaveBeenCalled()
+    })
+
+    it('selects through the label when the click lands elsewhere on a picker card', () => {
+        const onSelect = vi.fn()
+        const { container } = render(
+            <ServiceCard name="Wash" priceLabel="$80" groupName="g" value="s1" onSelect={onSelect} />,
+        )
+        fireEvent.click(container.querySelector('[data-slot="media"]') as Element)
+        // Once, through the label and its radio; `selected` is the consumer's.
+        expect(onSelect).toHaveBeenCalledTimes(1)
+    })
+
+    it('forwards nothing on a static card', () => {
+        const { container } = render(<ServiceCard name="Wash" priceLabel="$80" />)
+        const card = container.querySelector('[data-slot="service-card"]') as HTMLElement
+        expect(() => fireEvent.click(card)).not.toThrow()
+        expect(card.querySelector('[data-hit]')).toBeNull()
+    })
+})
+
 describe('ServiceCard select mode (booking picker)', () => {
     function Picker({ onSelect, selected }: { onSelect: (id: string) => void; selected: string | null }) {
         return (
@@ -229,9 +368,21 @@ describe('ServiceCard description', () => {
         expect(toggle).toHaveAttribute('aria-expanded', 'false')
         const text = screen.getByText(LONG)
         expect(text.className).toContain('line-clamp-2')
+        // AUTM-1848: collapsed, More is laid over the second line's end and
+        // takes no room, so it can appear after hydration without moving the
+        // card. The line fades under it.
+        expect(toggle.className.split(' ')).toContain('absolute')
+        expect(text).toHaveAttribute('data-clamped', 'true')
+        expect(text.style.maskImage || text.style.getPropertyValue('-webkit-mask-image')).toContain('linear-gradient')
         await user.click(toggle)
         expect(screen.getByRole('button', { name: 'Less about Full wash' })).toHaveAttribute('aria-expanded', 'true')
         expect(text.className).not.toContain('line-clamp-2')
+        // Open, Less sits in the flow under the whole text, unmasked.
+        expect(toggle.className.split(' ')).not.toContain('absolute')
+        expect(text).not.toHaveAttribute('data-clamped')
+        expect(text.style.maskImage).toBe('')
+        // The same button, so focus stays on it.
+        expect(screen.getByRole('button', { name: 'Less about Full wash' })).toBe(toggle)
     })
 
     it('reading more never selects the card', async () => {
@@ -416,3 +567,310 @@ describe('ServiceCard name survives a consumer heading rule', () => {
     })
 })
 
+
+describe('ServiceCard menu layout (AUTM-1866)', () => {
+    /* Don, 2026-10-14: text left, photo right; one meta line; two lines of
+       description and no More; the all-in total with the fee on one small
+       line; a quiet Book that is its own control. Geometry (the photo's
+       column, the 16rem reflow, 200% text) is in ServiceCard.browser.test.tsx. */
+    const Recording = (record: (what: string) => void, tag: string) =>
+        forwardRef<HTMLAnchorElement, AnchorHTMLAttributes<HTMLAnchorElement>>(function Recording(props, ref) {
+            return (
+                <a
+                    ref={ref}
+                    {...props}
+                    onClick={(event) => {
+                        event.preventDefault()
+                        record(`${tag} ${props.href}`)
+                    }}
+                />
+            )
+        })
+
+    const menuProps = {
+        layout: 'menu' as const,
+        name: 'Tyre shine',
+        description: 'Tyres cleaned and dressed with a water-based shine that dries to a satin finish.',
+        durationLabel: '15 min',
+        locationLabel: 'At the workshop',
+        priceLabel: '$10.99',
+        priceNote: 'incl. $0.99 booking fee',
+    }
+
+    it('puts the photo in the right-hand column, square, inset like the card', () => {
+        const { container } = render(<ServiceCard {...menuProps} coverImageUrl="https://cdn.example/tyre.jpg" />)
+        const media = container.querySelector('[data-slot="media"]') as HTMLElement
+        const classes = media.className.split(' ')
+        for (const c of ['@min-[16rem]:col-start-2', '@min-[16rem]:aspect-square', '@min-[16rem]:w-[min(30cqi,8.5rem)]']) {
+            expect(classes).toContain(c)
+        }
+        expect(classes).not.toContain('aspect-[4/3]')
+        expect(media.querySelector('img')?.getAttribute('alt')).toBe('')
+    })
+
+    it('with no photo draws no placeholder, and the text takes the full width', () => {
+        const { container } = render(
+            <ServiceCard {...menuProps} fallback={<span data-testid="own-fallback" />} noPhotoLabel="No photo yet" />,
+        )
+        expect(container.querySelector('[data-slot="media"]')).toBeNull()
+        expect(container.querySelector('[data-slot="media-fallback"]')).toBeNull()
+        expect(container.querySelector('[data-testid="own-fallback"]')).toBeNull()
+        expect(container.textContent).not.toContain('No photo yet')
+        const content = screen.getByRole('heading').parentElement as HTMLElement
+        expect(content.className).toContain('@min-[16rem]:col-span-2')
+    })
+
+    it('drops the photo box when the photo fails to load', () => {
+        const { container } = render(<ServiceCard {...menuProps} coverImageUrl="https://cdn.example/404.jpg" />)
+        fireEvent.error(container.querySelector('img') as HTMLImageElement)
+        expect(container.querySelector('[data-slot="media"]')).toBeNull()
+    })
+
+    it('sets the name in Satoshi 500, inside the heading', () => {
+        render(<ServiceCard {...menuProps} href="/x" />)
+        const inner = screen.getByRole('heading', { name: 'Tyre shine' }).firstElementChild as HTMLElement
+        expect(inner.className).toContain('font-medium')
+        expect(inner.className).not.toContain('font-bold')
+    })
+
+    it('writes duration and where as ONE meta line, each part locatable, no chips, no icons', () => {
+        const { container } = render(
+            <ServiceCard
+                {...menuProps}
+                testIds={{ duration: 'booking-service-duration', location: 'booking-service-location' }}
+            />,
+        )
+        const meta = container.querySelector('[data-slot="meta"]') as HTMLElement
+        expect(meta.tagName).toBe('P')
+        expect(meta.textContent).toBe('15 min · At the workshop')
+        expect(screen.getByTestId('booking-service-duration').textContent).toBe('15 min')
+        expect(screen.getByTestId('booking-service-location').textContent).toBe('At the workshop')
+        expect(meta.querySelector('svg')).toBeNull()
+        expect(meta.innerHTML).not.toContain('rounded-full')
+    })
+
+    it('keeps the multi-day words and the drop-off tag on the same line', () => {
+        render(
+            <ServiceCard
+                {...menuProps}
+                durationLabel={null}
+                locationLabel={null}
+                workingDaysLabel="3 working days"
+                chips={[{ label: 'Drop off at the workshop', testId: 'merchant-profile-service-dropoff-tag', icon: <svg /> }]}
+                testIds={{ workingDays: 'merchant-profile-service-working-days' }}
+            />,
+        )
+        expect(screen.getByTestId('merchant-profile-service-working-days').textContent).toBe('3 working days')
+        expect(screen.getByTestId('merchant-profile-service-dropoff-tag').textContent).toBe('Drop off at the workshop')
+        expect(screen.getByTestId('merchant-profile-service-dropoff-tag').parentElement?.textContent).toBe(
+            '3 working days · Drop off at the workshop',
+        )
+    })
+
+    it('clamps the description at two lines with no More, the full text still in the DOM', () => {
+        const long = 'Hot-water extraction on carpets and cloth seats. '.repeat(8).trim()
+        const { container } = render(
+            <ServiceCard {...menuProps} description={long} testIds={{ descriptionToggle: 'more' }} />,
+        )
+        const desc = container.querySelector('[data-slot="description"]') as HTMLElement
+        expect(desc.className).toContain('line-clamp-2')
+        expect(desc.textContent).toBe(long)
+        expect(screen.queryByTestId('more')).toBeNull()
+        expect(screen.queryByRole('button')).toBeNull()
+    })
+
+    it('leads with the all-in total and says the fee on one small line under it', () => {
+        render(
+            <ServiceCard
+                {...menuProps}
+                priceLines={[{ label: 'Service', value: '$10' }, { label: '+ booking fee', value: '$0.99' }]}
+                testIds={{ price: 'merchant-profile-service-price', priceLines: 'merchant-profile-service-price-parts' }}
+            />,
+        )
+        const total = screen.getByTestId('merchant-profile-service-price')
+        expect(total.textContent).toBe('$10.99')
+        expect(total.parentElement?.className).toContain('font-bold')
+        // The note takes the price-lines id, so QA's locator still resolves.
+        const note = screen.getByTestId('merchant-profile-service-price-parts')
+        expect(note.textContent).toBe('incl. $0.99 booking fee')
+        expect(note.className).toContain('text-[0.8125rem]')
+        expect(note.className).not.toMatch(/font-(bold|medium)/)
+        // One line, not the two-line breakdown.
+        expect(screen.queryByText('Service $10')).toBeNull()
+    })
+
+    it('gives the note its own test id when one is passed', () => {
+        render(<ServiceCard {...menuProps} testIds={{ priceLines: 'parts', priceNote: 'note' }} />)
+        expect(screen.getByTestId('note').textContent).toBe('incl. $0.99 booking fee')
+        expect(screen.queryByTestId('parts')).toBeNull()
+    })
+
+    it('shows the price alone when no fee is charged', () => {
+        const { container } = render(<ServiceCard {...menuProps} priceLabel="$10" priceNote={null} />)
+        expect(container.querySelector('[data-slot="price-note"]')).toBeNull()
+        expect(container.textContent?.toLowerCase()).not.toContain('fee')
+    })
+
+    it('makes Book its own link: a second focus stop, named for the service, described by the price', async () => {
+        const user = userEvent.setup()
+        render(
+            <ServiceCard
+                {...menuProps}
+                href="/m/abc/services/tyre"
+                bookHref="/m/abc/book/checkout?serviceId=tyre"
+                testIds={{ action: 'merchant-profile-service-open', book: 'merchant-profile-service-book' }}
+            />,
+        )
+        const links = screen.getAllByRole('link')
+        expect(links).toHaveLength(2)
+        const [card, book] = links
+        expect(card).toHaveAccessibleName('Tyre shine')
+        expect(book).toHaveAccessibleName('Book Tyre shine')
+        expect(book).toHaveAccessibleDescription(/\$10\.99.*incl\. \$0\.99 booking fee/)
+        expect(book.getAttribute('href')).toBe('/m/abc/book/checkout?serviceId=tyre')
+        expect(book.getAttribute('data-testid')).toBe('merchant-profile-service-book')
+        await user.tab()
+        expect(document.activeElement).toBe(card)
+        await user.tab()
+        expect(document.activeElement).toBe(book)
+    })
+
+    it('never lets the card swallow a click on Book, and still opens the card everywhere else', () => {
+        const seen: string[] = []
+        const Link = Recording((what) => seen.push(what), 'link')
+        const { container } = render(
+            <ServiceCard
+                {...menuProps}
+                coverImageUrl="https://cdn.example/tyre.jpg"
+                href="/open"
+                bookHref="/book"
+                as={Link}
+                testIds={{ book: 'book' }}
+            />,
+        )
+        fireEvent.click(screen.getByTestId('book'))
+        expect(seen).toEqual(['link /book'])
+        fireEvent.click(container.querySelector('[data-slot="media"] img') as Element)
+        fireEvent.click(container.querySelector('[data-slot="description"]') as Element)
+        expect(seen).toEqual(['link /book', 'link /open', 'link /open'])
+    })
+
+    it('takes onBook and onOpen as buttons, each to its own handler', () => {
+        const onOpen = vi.fn()
+        const onBook = vi.fn()
+        const { container } = render(<ServiceCard {...menuProps} onOpen={onOpen} onBook={onBook} />)
+        const open = screen.getByRole('button', { name: 'Tyre shine' })
+        expect(open).toHaveAccessibleDescription(/15 min · At the workshop/)
+        fireEvent.click(screen.getByRole('button', { name: 'Book Tyre shine' }))
+        expect(onBook).toHaveBeenCalledTimes(1)
+        expect(onOpen).not.toHaveBeenCalled()
+        fireEvent.click(container.querySelector('[data-slot="description"]') as Element)
+        expect(onOpen).toHaveBeenCalledTimes(1)
+        expect(onBook).toHaveBeenCalledTimes(1)
+        // The open button is pinned like the link, so a consumer press cannot shrink its hit area.
+        expect(open.className.split(' ')).toContain('scale-none!')
+    })
+
+    it('draws Book as a solid brand purple pill with a trailing arrow, 44px, never lime (Don, revised)', () => {
+        render(<ServiceCard {...menuProps} href="/x" bookHref="/b" testIds={{ book: 'book' }} />)
+        const book = screen.getByTestId('book')
+        const classes = book.className
+        expect(classes).toContain('min-h-11')
+        // The fill-grade pair: 4.5:1 in both themes. `--accent` is text grade.
+        expect(classes).toContain('bg-[var(--accent-fill)]')
+        expect(classes).toContain('text-[var(--on-accent)]')
+        expect(classes).toContain('not-disabled:hover:bg-[var(--accent-fill-hover)]')
+        expect(classes).toContain('font-medium')
+        expect(classes).not.toMatch(/var\(--(strong|lime|raised|cta-fill|paper|band|band-press)\)/)
+        expect(classes).not.toMatch(/#[0-9a-f]{3,8}/i)
+        // The arrow is decoration: the name stays "Book <service>".
+        const arrow = book.querySelector('svg')
+        expect(arrow?.getAttribute('aria-hidden')).toBe('true')
+        expect(book).toHaveAccessibleName('Book Tyre shine')
+        // A pointer on Book does not light the card up as the card's own press.
+        const card = book.closest('[data-slot="service-card"]') as HTMLElement
+        expect(card.className).toContain('[&:hover:not(:has([data-own]:hover))]:bg-[var(--band-press)]')
+    })
+
+    it('draws the action pill as a picture when the card itself is the target', () => {
+        render(<ServiceCard {...menuProps} href="/x" actionLabel="Book" />)
+        expect(screen.getAllByRole('link')).toHaveLength(1)
+        const pill = screen.getByText('Book')
+        expect(pill.getAttribute('aria-hidden')).toBe('true')
+        expect(pill.className).toContain('min-h-11')
+        expect(pill.className).toContain('bg-[var(--accent-fill)]')
+        // It darkens with the card, because the card is its target.
+        expect(pill.className).toContain('group-hover/service:bg-[var(--accent-fill-hover)]')
+    })
+
+    it('in the picker with onOpen: the name opens, the state light chooses, the radio keeps its id and name', () => {
+        const onOpen = vi.fn()
+        const onSelect = vi.fn()
+        const { container } = render(
+            <ServiceCard
+                {...menuProps}
+                groupName="g"
+                value="tyre"
+                onSelect={onSelect}
+                onOpen={onOpen}
+                testIds={{ action: 'booking-service-radio', open: 'booking-service-open' }}
+            />,
+        )
+        const radio = screen.getByTestId('booking-service-radio') as HTMLInputElement
+        expect(radio.type).toBe('radio')
+        expect(radio).toHaveAccessibleName('Tyre shine')
+        // QA reads the name through the radio's label.
+        expect(radio.labels?.[0]?.textContent).toBe('Tyre shine')
+        const open = screen.getByTestId('booking-service-open')
+        expect(open.tagName).toBe('BUTTON')
+        expect(open).toHaveAccessibleName('Tyre shine')
+        // A press on the card opens and does not choose.
+        fireEvent.click(container.querySelector('[data-slot="description"]') as Element)
+        fireEvent.click(open)
+        expect(onOpen).toHaveBeenCalledTimes(2)
+        expect(onSelect).not.toHaveBeenCalled()
+        // The light chooses and does not open.
+        const target = container.querySelector('[data-slot="choice-target"]') as HTMLElement
+        expect(target.className).toContain('size-11')
+        expect(target.className).toContain('z-[2]')
+        fireEvent.click(target)
+        expect(onSelect).toHaveBeenCalledTimes(1)
+        expect(onOpen).toHaveBeenCalledTimes(2)
+    })
+
+    it('stays a radio in the picker, with its state light and no Book', () => {
+        const onSelect = vi.fn()
+        const { container } = render(
+            <ServiceCard {...menuProps} groupName="g" value="tyre" onSelect={onSelect} testIds={{ action: 'radio' }} />,
+        )
+        expect(screen.getByRole('radio', { name: 'Tyre shine' })).toHaveAccessibleDescription(
+            /15 min · At the workshop.*\$10\.99/,
+        )
+        expect(screen.queryByText('Book')).toBeNull()
+        fireEvent.click(container.querySelector('[data-slot="description"]') as Element)
+        expect(onSelect).toHaveBeenCalledTimes(1)
+    })
+
+    it('puts a status on the text when there is no photo corner to hold it', () => {
+        render(<ServiceCard {...menuProps} status={{ label: 'Draft', tone: 'draft' }} testIds={{ status: 's' }} />)
+        const status = screen.getByTestId('s')
+        expect(status.closest('[data-slot="media"]')).toBeNull()
+        expect(status.textContent).toBe('Draft.')
+    })
+
+    it('uses rem type and tokens only, and no em or en dash', () => {
+        const { container } = render(
+            <ServiceCard {...menuProps} coverImageUrl="https://cdn.example/t.jpg" href="/x" bookHref="/b" />,
+        )
+        expect(container.innerHTML).not.toMatch(/text-\[\d+px\]/)
+        expect(container.innerHTML).not.toMatch(/(bg|text|border)-\[#/)
+        expect(container.innerHTML).not.toMatch(/[–—]/)
+        expect(container.innerHTML).not.toContain('font-semibold')
+    })
+
+    it('has a skeleton of its own shape', () => {
+        const { container } = render(<ServiceCardSkeleton layout="menu" />)
+        expect(container.innerHTML).toContain('@min-[16rem]:aspect-square')
+        expect(container.innerHTML).toContain('h-11')
+    })
+})

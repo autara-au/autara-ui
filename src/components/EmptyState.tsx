@@ -10,8 +10,16 @@ import type { ReactNode } from "react";
  * in, left-aligned, 10px between parts:
  *   - Optional 44px icon disc (raised)
  *   - 18px Bold title + 15px description at 72% ink
- *   - Optional action, full width. On band the action is ink: pass a
- *     `Button variant="strong" size="sm"`.
+ *   - Optional action, full width: the lime primary, `Button size="sm"`
+ *     (AUTM-1838: no black buttons, on band as on paper).
+ *
+ * With an `illustration` (AUTM-2042, Don 2026-11-08: "the cut-out object on
+ * the grey band tile"), the same band card centres its content, after Wise's
+ * empty lists: the picture about 10rem square above the title, the title and
+ * description centred, and the action at its own width, centred, not
+ * stretched. The picture is decorative (the title says what is empty), so its
+ * box is hidden from assistive tech; pass an `<img alt="">`, typically a
+ * transparent WebP of a 3D object, and it is fitted inside the box whole.
  *
  * Copy guidance — recoverable + specific:
  *   - Bad: "No data"
@@ -19,7 +27,14 @@ import type { ReactNode } from "react";
  *     customers find your services."
  */
 export interface EmptyStateProps {
+  /** A small icon in the 44px disc, for the left-aligned card. Ignored when `illustration` is set. */
   icon?: ReactNode;
+  /**
+   * A large decorative picture, usually `<img src="…webp" alt="" />` of a 3D
+   * object cut out on transparency. Centres the card. Takes the place of
+   * `icon`: pass one or the other; with both, the illustration wins.
+   */
+  illustration?: ReactNode;
   title: string;
   description?: string;
   /** Typically a BrandButton or BrandButton-asChild link. */
@@ -29,16 +44,29 @@ export interface EmptyStateProps {
 
 export function EmptyState({
   icon,
+  illustration,
   title,
   description,
   action,
   className = "",
 }: EmptyStateProps) {
+  const pictured = illustration != null && illustration !== false;
   return (
     <div
-      className={`flex flex-col gap-2.5 rounded-[1.5rem] bg-[var(--band)] p-5 text-[var(--text-strong)] ${className}`}
+      data-layout={pictured ? "illustrated" : undefined}
+      className={`flex flex-col gap-2.5 rounded-[1.5rem] bg-[var(--band)] p-5 text-[var(--text-strong)] ${
+        pictured ? "items-center text-center " : ""
+      }${className}`}
     >
-      {icon ? (
+      {pictured ? (
+        <div
+          aria-hidden="true"
+          data-slot="illustration"
+          className="mb-2 grid aspect-square w-40 max-w-full shrink-0 place-items-center [&>img]:size-full [&>img]:object-contain [&>svg]:size-full"
+        >
+          {illustration}
+        </div>
+      ) : icon ? (
         <div
           aria-hidden="true"
           className="grid size-11 shrink-0 place-items-center rounded-full bg-[var(--raised)] text-[var(--text-strong)]"
@@ -50,7 +78,9 @@ export function EmptyState({
       {description ? (
         <p className="text-[0.9375rem] leading-normal text-[var(--text-muted)]">{description}</p>
       ) : null}
-      {action ? <div className="flex flex-col">{action}</div> : null}
+      {action ? (
+        <div className={pictured ? "flex flex-col items-center pt-1" : "flex flex-col"}>{action}</div>
+      ) : null}
     </div>
   );
 }

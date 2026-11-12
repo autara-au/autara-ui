@@ -1,0 +1,163 @@
+/* ─── Chip rows (AUTM-1756 follow-up) ───────────────────────────────────
+ *
+ * Don, 2026-10-15: "instead of scrollbar can add an chevron arrow in the
+ * ending, to move it. also dragable, because scrollbar is bit ugly." The
+ * classes behind `ChipRow`:
+ *
+ *   .chip-row            the box: holds the row and the two chevrons over its
+ *                        ends. `--chip-row-edge` is the room kept at each end
+ *                        for the fade and, where shown, the chevron: 2.5rem of
+ *                        fade alone; with a chevron, the disc
+ *                        (`--chip-row-solid`, 3rem, 3.25rem where the disc is
+ *                        48px under a finger) plus 1.25rem of fade.
+ *   .chip-row__scroller  the row: scrolls sideways with NO scrollbar
+ *                        (`scrollbar-width: none` for Firefox and Chromium
+ *                        121+, `::-webkit-scrollbar` for Safari); contained,
+ *                        so its end never swipes the page back; scroll
+ *                        padding of one edge, so a chip reached by Tab or a
+ *                        chevron lands clear of the fade; 4px of padding
+ *                        inside a -4px margin, so a chip's focus ring is not
+ *                        clipped and the layout does not move; and the
+ *                        containing block for anything absolutely placed in
+ *                        it (a chip's sr-only text), which would otherwise
+ *                        escape the row and widen the page (AUTM-1373).
+ *   .chip-row__arrow     a chevron's slot over one end, faded in and out on
+ *                        opacity (the one ease-out), hidden from pointers,
+ *                        and from assistive tech, when there is nothing more
+ *                        that way.
+ *
+ * Since AUTM-1899 nothing inside a page draws a bar (utilities/scrollbars.css);
+ * a chip row also hides its own, for a finger and under forced colours too.
+ *
+ * In `@layer components`, so a Tailwind utility on the same element (a gap, a
+ * padding, `flex-wrap` at a breakpoint) still wins.
+ */
+@layer components {
+    .chip-row {
+        position: relative;
+        min-width: 0;
+        --chip-row-solid: 0rem;
+        --chip-row-edge: 2.5rem;
+    }
+    .chip-row[data-arrows="always"] {
+        --chip-row-solid: 3rem;
+        --chip-row-edge: 4.25rem;
+    }
+    @media (any-pointer: fine) {
+        .chip-row[data-arrows="auto"] {
+            --chip-row-solid: 3rem;
+            --chip-row-edge: 4.25rem;
+        }
+    }
+    @media (pointer: coarse) {
+        .chip-row[data-arrows="always"] {
+            --chip-row-solid: 3.25rem;
+            --chip-row-edge: 4.5rem;
+        }
+    }
+    @media (pointer: coarse) and (any-pointer: fine) {
+        .chip-row[data-arrows="auto"] {
+            --chip-row-solid: 3.25rem;
+            --chip-row-edge: 4.5rem;
+        }
+    }
+
+    .chip-row__scroller {
+        position: relative;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        margin: -0.25rem;
+        padding: 0.25rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scrollbar-width: none;
+        scroll-padding-inline: var(--chip-row-edge);
+        --scroll-fade-size: var(--chip-row-edge);
+        -webkit-overflow-scrolling: touch;
+    }
+    /* The fade, drawn for the chevron: clear under the disc (it covers that
+       part anyway, and a chip showing through beside it reads as a cut), then
+       1.25rem of ramp, so the chip beside the disc dissolves into it. With no
+       chevron (`--chip-row-solid: 0`) this is ScrollArea's 2.5rem fade. */
+    .chip-row__scroller.scroll-fade[data-axis="x"][data-fade-end] {
+        mask-image: linear-gradient(
+            to right,
+            #000 calc(100% - var(--chip-row-edge)),
+            transparent calc(100% - var(--chip-row-solid))
+        );
+    }
+    .chip-row__scroller.scroll-fade[data-axis="x"][data-fade-start] {
+        mask-image: linear-gradient(to right, transparent var(--chip-row-solid), #000 var(--chip-row-edge));
+    }
+    .chip-row__scroller.scroll-fade[data-axis="x"][data-fade-start][data-fade-end] {
+        mask-image: linear-gradient(
+            to right,
+            transparent var(--chip-row-solid),
+            #000 var(--chip-row-edge),
+            #000 calc(100% - var(--chip-row-edge)),
+            transparent calc(100% - var(--chip-row-solid))
+        );
+    }
+    .chip-row__scroller::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+    .chip-row__scroller > * {
+        flex-shrink: 0;
+    }
+    @media (any-pointer: fine) {
+        .chip-row__scroller[data-drag][data-overflow] {
+            cursor: grab;
+        }
+    }
+    .chip-row__scroller[data-dragging],
+    .chip-row__scroller[data-dragging] * {
+        cursor: grabbing;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .chip-row__arrow {
+        position: absolute;
+        inset-block: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        pointer-events: none;
+        opacity: 1;
+        visibility: visible;
+        transition:
+            opacity var(--motion-hover, 160ms) var(--motion-ease-out, ease-out),
+            visibility 0s;
+    }
+    .chip-row__arrow[data-side="previous"] {
+        inset-inline-start: 0;
+    }
+    .chip-row__arrow[data-side="next"] {
+        inset-inline-end: 0;
+    }
+    .chip-row__arrow > * {
+        pointer-events: auto;
+    }
+    .chip-row__arrow[data-hidden] {
+        opacity: 0;
+        visibility: hidden;
+        transition:
+            opacity var(--motion-hover, 160ms) var(--motion-ease-out, ease-out),
+            visibility 0s linear var(--motion-hover, 160ms);
+    }
+    .chip-row__arrow[data-hidden] > * {
+        pointer-events: none;
+    }
+    .chip-row[data-arrows="auto"] .chip-row__arrow {
+        display: none;
+    }
+    @media (any-pointer: fine) {
+        .chip-row[data-arrows="auto"] .chip-row__arrow {
+            display: flex;
+        }
+    }
+}

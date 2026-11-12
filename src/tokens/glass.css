@@ -52,7 +52,8 @@
  */
 
 :root,
-:host {
+:host,
+[data-theme="light"] {
     /* ─── Glass material ─────────────────────────────────────────────── */
     /* The default surface fill. White at 0.80 over the cream canvas is
      * effectively `--surface` when nothing is behind it, and a tinted

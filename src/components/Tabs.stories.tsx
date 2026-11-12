@@ -299,3 +299,78 @@ export const TextScale200: Story = {
         </RootScaled>
     ),
 }
+
+/* ─── AUTM-1792: the selected pill slides ────────────────────────────────
+ *
+ * `<TabsList slide>`: the pill moves to the tab you choose instead of jumping,
+ * one shared shape travelling on `--motion-tab` (450ms). Off by default. It is
+ * drawn as two round caps and a scaled bar, so nothing animates a width and
+ * the pill never squashes between a short label and a long one. Under reduced
+ * motion it jumps, as before. Try Day to Month and back, and the 200% text
+ * story above with `slide` added.
+ */
+const VIEWS = ['Day', 'Today', 'Week', 'Month', 'List']
+
+const Sliding = () => (
+    <Tabs defaultValue="Day">
+        <TabsList slide>
+            {VIEWS.map((v) => (
+                <TabsTrigger key={v} value={v}>
+                    {v}
+                </TabsTrigger>
+            ))}
+        </TabsList>
+        {VIEWS.map((v) => (
+            <TabsContent key={v} value={v}>
+                <Pane>The {v.toLowerCase()} view of the schedule.</Pane>
+            </TabsContent>
+        ))}
+    </Tabs>
+)
+
+export const SlidingPill: Story = {
+    name: 'Sliding pill (AUTM-1792)',
+    render: () => <Sliding />,
+}
+
+export const SlidingPillDark: Story = {
+    name: 'Sliding pill, dark (AUTM-1792)',
+    globals: { theme: 'dark' },
+    render: () => <Sliding />,
+}
+
+/* ─── 2026-11-07: a secondary switch ─────────────────────────────────────
+ *
+ * `<TabsList tone="secondary">`: a paper pill and an ink label on the band
+ * track, for a switch under a primary one (Bookings' Upcoming / Past under
+ * the view switcher), so a screen carries one purple selection, not two. */
+const Secondary = () => (
+    <div className="flex flex-col items-start gap-3">
+        <Tabs defaultValue="List">
+            <TabsList slide>
+                {['Day', 'Week', 'Month', 'List'].map((v) => (
+                    <TabsTrigger key={v} value={v}>
+                        {v}
+                    </TabsTrigger>
+                ))}
+            </TabsList>
+        </Tabs>
+        <Tabs defaultValue="upcoming">
+            <TabsList slide tone="secondary" aria-label="Upcoming or past bookings">
+                <TabsTrigger value="upcoming">Upcoming · 15</TabsTrigger>
+                <TabsTrigger value="past">Past · 48</TabsTrigger>
+            </TabsList>
+        </Tabs>
+    </div>
+)
+
+export const SecondaryTone: Story = {
+    name: 'Secondary tone (2026-11-07)',
+    render: () => <Secondary />,
+}
+
+export const SecondaryToneDark: Story = {
+    name: 'Secondary tone, dark',
+    globals: { theme: 'dark' },
+    render: () => <Secondary />,
+}

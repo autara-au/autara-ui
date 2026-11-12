@@ -74,25 +74,162 @@ import { cn } from '../lib/cn'
  */
 const Tabs = TabsPrimitive.Root
 
-const TabsList = React.forwardRef<
-    React.ComponentRef<typeof TabsPrimitive.List>,
-    React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
->(({ className, ...props }, ref) => (
-    <TabsPrimitive.List
-        ref={ref}
-        className={cn(
-            // `min-h-10`, not `h-10` — at 200% text scale a fixed height
-            // clips the labels instead of growing with them (AUTM-915).
-            /* AUTM-622 — 3.25rem, not 2.5rem. The list is the trigger's 44px
-             * floor plus its own 0.25rem padding on each side. Sized in rem
-             * and as a MINIMUM for the same reason the old value was: at 200%
-             * text scale a fixed height clips the label. */
-            'inline-flex min-h-12 items-center justify-center gap-1 rounded-full bg-[var(--band)] p-1 text-[var(--text-muted)]',
-            className
-        )}
-        {...props}
-    />
-))
+/** The selected trigger's box, relative to the list's padding edge. */
+type PillBox = { x: number; y: number; w: number; h: number }
+
+/**
+ * AUTM-1792: the selected pill SLIDES to the tab you choose. Don, 2026-10-09,
+ * asked for the motion of a dashboard he liked, where "the active pill slides
+ * to the new item (one shared element moving, not a fade)".
+ *
+ * Drawn transform-only, so nothing animates a width: two round caps at the
+ * pill's ends and a one-pixel bar between their centres scaled to the gap. A
+ * scaled bar has no corners to distort and the caps never scale, so the pill
+ * keeps its shape at every frame while all three move on one transition. The
+ * trigger's own fill steps aside (`data-slide="ready"` on the list) once the
+ * pill has measured, so a first paint, a server render and a reduced-motion
+ * user all see the plain selected fill and never an empty track.
+ */
+function SlidingPill() {
+    // The pill finds its list from its own host span: a child's layout effect
+    // runs before the parent's ref is attached, so a ref passed down from
+    // TabsList would still be null here on the first commit.
+    const hostRef = React.useRef<HTMLSpanElement | null>(null)
+    const [box, setBox] = React.useState<PillBox | null>(null)
+    const [moving, setMoving] = React.useState(false)
+
+    React.useLayoutEffect(() => {
+        const list = hostRef.current?.parentElement
+        if (!list) return
+        const measure = () => {
+            const active = list.querySelector<HTMLElement>('[role="tab"][data-state="active"]')
+            if (!active || active.offsetWidth === 0) {
+                setBox(null)
+                return
+            }
+            setBox((prev) => {
+                const next = {
+                    x: active.offsetLeft,
+                    y: active.offsetTop,
+                    w: active.offsetWidth,
+                    h: active.offsetHeight,
+                }
+                return prev &&
+                    prev.x === next.x &&
+                    prev.y === next.y &&
+                    prev.w === next.w &&
+                    prev.h === next.h
+                    ? prev
+                    : next
+            })
+        }
+        measure()
+        const mo = new MutationObserver(measure)
+        mo.observe(list, { subtree: true, attributes: true, attributeFilter: ['data-state'] })
+        const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(measure)
+        ro?.observe(list)
+        list.querySelectorAll('[role="tab"]').forEach((t) => ro?.observe(t))
+        return () => {
+            mo.disconnect()
+            ro?.disconnect()
+        }
+    }, [])
+
+    // Place the pill without a transition first, then let it move: a pill
+    // that slid in from the corner on first paint would be motion about
+    // nothing.
+    React.useEffect(() => {
+        if (!box || moving) return
+        const id = requestAnimationFrame(() => setMoving(true))
+        return () => cancelAnimationFrame(id)
+    }, [box, moving])
+
+    React.useEffect(() => {
+        const list = hostRef.current?.parentElement
+        if (!list) return
+        if (box) list.setAttribute('data-slide', 'ready')
+        else list.removeAttribute('data-slide')
+    }, [box])
+
+    const part = cn(
+        'absolute left-0 top-0 bg-[var(--selected)]',
+        moving &&
+            'transition-transform duration-[var(--motion-tab)] ease-[var(--motion-ease-out)] motion-reduce:transition-none'
+    )
+    return (
+        <span ref={hostRef} aria-hidden data-tabs-pill="" className="pointer-events-none absolute inset-0">
+            {box ? (
+                <>
+                    <span
+                        className={cn(part, 'rounded-full')}
+                        style={{ width: box.h, height: box.h, transform: `translate(${box.x}px, ${box.y}px)` }}
+                    />
+                    <span
+                        className={cn(part, 'origin-left')}
+                        style={{
+                            width: 1,
+                            height: box.h,
+                            transform: `translate(${box.x + box.h / 2}px, ${box.y}px) scaleX(${Math.max(box.w - box.h, 0)})`,
+                        }}
+                    />
+                    <span
+                        className={cn(part, 'rounded-full')}
+                        style={{
+                            width: box.h,
+                            height: box.h,
+                            transform: `translate(${box.x + box.w - box.h}px, ${box.y}px)`,
+                        }}
+                    />
+                </>
+            ) : null}
+        </span>
+    )
+}
+
+export interface TabsListProps extends React.ComponentPropsWithoutRef<typeof TabsPrimitive.List> {
+    /**
+     * AUTM-1792: the selected pill slides to the chosen tab instead of
+     * jumping. Off by default so no consumer changes until it asks.
+     */
+    slide?: boolean
+    /**
+     * `primary` (default): the selected tab is the Selected fill (purple).
+     * `secondary` (Don, 2026-11-07, the merchant app's quiet pass): a paper
+     * pill and an ink label on the band track, for a switch that sits under
+     * a primary one (Bookings' Upcoming / Past under Day / Week / Month /
+     * List), so a screen carries one purple selection, not two.
+     */
+    tone?: 'primary' | 'secondary'
+}
+
+const TabsList = React.forwardRef<React.ComponentRef<typeof TabsPrimitive.List>, TabsListProps>(
+    ({ className, slide = false, tone = 'primary', children, ...props }, ref) => {
+        return (
+            <TabsPrimitive.List
+                ref={ref}
+                className={cn(
+                    // `min-h-10`, not `h-10` — at 200% text scale a fixed height
+                    // clips the labels instead of growing with them (AUTM-915).
+                    /* AUTM-622 — 3.25rem, not 2.5rem. The list is the trigger's 44px
+                     * floor plus its own 0.25rem padding on each side. Sized in rem
+                     * and as a MINIMUM for the same reason the old value was: at 200%
+                     * text scale a fixed height clips the label. */
+                    'inline-flex min-h-12 items-center justify-center gap-1 rounded-full bg-[var(--band)] p-1 text-[var(--text-muted)]',
+                    slide && 'relative',
+                    // The pill and the trigger read --selected / --on-selected,
+                    // so the tone is those two, scoped to this list.
+                    tone === 'secondary' && '[--selected:var(--selected-quiet)] [--on-selected:var(--text-strong)]',
+                    className
+                )}
+                data-tone={tone}
+                {...props}
+            >
+                {slide ? <SlidingPill /> : null}
+                {children}
+            </TabsPrimitive.List>
+        )
+    }
+)
 TabsList.displayName = TabsPrimitive.List.displayName
 
 const TabsTrigger = React.forwardRef<
@@ -117,6 +254,9 @@ const TabsTrigger = React.forwardRef<
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]',
             'disabled:pointer-events-none disabled:opacity-50',
             'data-[state=active]:bg-[var(--selected)] data-[state=active]:font-bold data-[state=active]:text-[var(--on-selected)]',
+            // AUTM-1792: under a sliding pill the trigger's own fill steps
+            // aside, so the pill is what is seen moving.
+            'in-data-[slide=ready]:data-[state=active]:bg-transparent',
             className
         )}
         {...props}

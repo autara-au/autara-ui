@@ -18,7 +18,8 @@ import { InlineAlert } from './InlineAlert'
 /**
  * Dialog — Radix dialog on the cream canvas.
  *
- * - `--surface` (white) fill, `--text-strong` ink, hairline ring.
+ * - `--surface` (white) fill, `--text-strong` ink, no edge and no rules
+ *   (AUTM-2042, Don 2026-11-08: no hairlines).
  * - Ink overlay at 55% opacity, no backdrop blur — flat editorial scrim.
  * - Solar Bold close at the top-right.
  *
@@ -233,7 +234,7 @@ function AddressDialog({
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Cancel</Button>
-                    <Button variant="strong">Confirm address</Button>
+                    <Button>Confirm address</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -243,7 +244,7 @@ function AddressDialog({
 /**
  * In context: merchant-web's Business address dialog, the pattern this layout
  * graduates. A form and a map, taller than a phone. On a phone the body
- * scrolls under the title and the hairline appears under it once it does.
+ * scrolls under the title, with no rule drawn (AUTM-2042).
  */
 export const Responsive: Story = {
     name: 'Responsive, Business address in context',
@@ -258,7 +259,7 @@ export const ResponsiveFromTrigger: Story = {
     render: () => (
         <AddressDialog
             defaultOpen={false}
-            trigger={<Button variant="strong">Edit business address</Button>}
+            trigger={<Button>Edit business address</Button>}
         />
     ),
 }
@@ -274,7 +275,7 @@ export const ResponsiveDark: Story = {
 
 /**
  * A dialog that fits. Short content sizes the panel to itself: no empty
- * space, and no hairline under the title because nothing scrolls under it.
+ * space, and nothing between the title, the body and the actions but space.
  */
 export const ResponsiveShort: Story = {
     name: 'Responsive, content that fits',
@@ -296,7 +297,7 @@ export const ResponsiveShort: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Keep taking bookings</Button>
-                    <Button variant="strong">Pause</Button>
+                    <Button>Pause</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -312,7 +313,8 @@ const SUBURBS = [
 
 /**
  * Edge: a long list. Only the body scrolls; the title and both actions stay
- * on screen at every height. Scroll it to see the header's hairline arrive.
+ * on screen at every height. The rows part by space, with no rule between
+ * them, and none under the header once it scrolls (AUTM-2042).
  */
 export const ResponsiveLongList: Story = {
     name: 'Responsive, long list',
@@ -329,7 +331,7 @@ export const ResponsiveLongList: Story = {
                     <ul className="m-0 flex list-none flex-col p-0">
                         {SUBURBS.map((name, i) => (
                             <li key={name}>
-                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 border-b border-[var(--hairline)] py-2 text-base">
+                                <label className="flex min-h-11 cursor-pointer items-center justify-between gap-3 py-2 text-base">
                                     {name}
                                     <input type="checkbox" defaultChecked={i % 3 === 0} className="size-5 accent-[var(--accent-fill)]" />
                                 </label>
@@ -339,7 +341,7 @@ export const ResponsiveLongList: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Clear all</Button>
-                    <Button variant="strong">Save 8 suburbs</Button>
+                    <Button>Save 8 suburbs</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -371,7 +373,7 @@ export const ResponsiveLongCopy: Story = {
                 </DialogBody>
                 <DialogFooter>
                     <Button variant="quiet">Keep Saturday as it is</Button>
-                    <Button variant="strong">Ask customers to move to the following Saturday</Button>
+                    <Button>Ask customers to move to the following Saturday</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -397,5 +399,46 @@ export const ResponsiveText200: Story = {
             }
         }, [])
         return <AddressDialog />
+    },
+}
+
+/**
+ * AUTM-1768: opened from state, with no `DialogTrigger`, the way most
+ * consumer dialogs are (a Confirm button that sets `open`). Tab to "Confirm
+ * booking", press Enter, then Escape: focus lands back on "Confirm booking",
+ * not at the top of the page. Before this, Radix had no trigger to return to
+ * and focus fell to `<body>`.
+ */
+export const FocusReturnsWithoutTrigger: Story = {
+    name: 'Focus returns, opened from state',
+    render: function FocusReturnsWithoutTriggerStory() {
+        const [open, setOpen] = React.useState(false)
+        return (
+            <div className="flex flex-col items-start gap-3">
+                <Button variant="quiet">Message customer</Button>
+                <Button onClick={() => setOpen(true)}>
+                    Confirm booking
+                </Button>
+                <Button variant="quiet">Decline</Button>
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogContent layout="responsive">
+                        <DialogHeader>
+                            <DialogTitle>Confirm this booking?</DialogTitle>
+                            <DialogDescription>
+                                Sam is told straight away and the time is held for them.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant="quiet" onClick={() => setOpen(false)}>
+                                Not yet
+                            </Button>
+                            <Button onClick={() => setOpen(false)}>
+                                Confirm
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+            </div>
+        )
     },
 }

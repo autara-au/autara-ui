@@ -80,4 +80,19 @@ describe('SwatchRadioGroup (AUTM-1591)', () => {
             expect(contrast(o.color, o.ink), `${o.label} ${o.color} / ${o.ink}`).toBeGreaterThanOrEqual(4.5)
         }
     })
+
+    it('edges a swatch the page would swallow, chosen or not (AUTM-1870)', () => {
+        const options = [
+            { value: 'white', label: 'White', color: '#f7f7f5', ink: '#0e0a1a', edge: true },
+            { value: 'red', label: 'Red', color: '#b3202a', ink: '#ffffff' },
+        ]
+        const { rerender } = render(
+            <SwatchRadioGroup name="paint" label="Colour" options={options} value={null} onChange={() => {}} testId="p" />
+        )
+        expect(screen.getByTestId('p-white').style.boxShadow).toBe('inset 0 0 0 1px var(--border-strong)')
+        expect(screen.getByTestId('p-red').style.boxShadow).toBe('')
+        rerender(<SwatchRadioGroup name="paint" label="Colour" options={options} value="white" onChange={() => {}} testId="p" />)
+        expect(screen.getByTestId('p-white').style.boxShadow).toContain('inset 0 0 0 1px var(--border-strong)')
+        expect(screen.getByTestId('p-white').style.boxShadow).toContain('0 0 0 4px var(--text-strong)')
+    })
 })

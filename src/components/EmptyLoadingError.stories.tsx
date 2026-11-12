@@ -58,7 +58,7 @@ export const Sheet: Story = {
               icon={Calendar}
               title="Your book is clear"
               description="No jobs today, nothing waiting on you. The actions below are the quickest ways to line the next one up."
-              action={<Button variant="strong" size="sm">Share link</Button>}
+              action={<Button size="sm">Share link</Button>}
             />
           </Specimen>
           <Specimen name="Loading" component="Skeleton / AsyncSkeleton" note="Skeletons match the shape that lands; the aria-label says what is loading.">

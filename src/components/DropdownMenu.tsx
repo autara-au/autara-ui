@@ -9,9 +9,12 @@ import { cn } from '../lib/cn'
  * grammar. Used for kebab menus on table rows, context menus on
  * cards, and any "more actions" trigger.
  *
- * - **Content / SubContent**: portaled, hairline `--border-subtle`
- *   ring, `--surface` fill, no drop shadow, no backdrop blur (Autara
- *   house rule). Radix slide+fade animations preserved.
+ * - **Content / SubContent**: portaled, `--surface` fill, no backdrop
+ *   blur, lifted off the page by `.floating-surface` (a `--float-edge`
+ *   hairline and the purple-tinted `--float-shadow`, AUTM-1792: a menu
+ *   over paper with only a 0.08 hairline melted into the page). Pops open
+ *   (`.floating-panel--pop`: 92% and 6px toward the trigger, a small
+ *   overshoot, 300ms) and closes faster than it opened.
  * - **Item**: ink text by default; hover/keyboard focus tints to
  *   `--surface-elevated`. Destructive items use
  *   `data-destructive` (caller adds `className="text-[var(--color-autara-error)]"`).
@@ -34,9 +37,12 @@ const DropdownMenuSub = DropdownMenuPrimitive.Sub
 // utilities, and that plugin is not a dependency of this package or of any
 // consumer, so they emitted nothing and every menu appeared instantly.
 // `.floating-panel` is the real CSS, in `utilities/animations.css`.
+//
+// AUTM-1792: `floating-surface` is the lift (edge colour and shadow, in
+// utilities/glass.css), so this list carries the border WIDTH only.
 const SURFACE = cn(
-    'z-50 min-w-[10rem] overflow-hidden rounded-xl border border-[var(--border-subtle)] bg-[var(--surface)] p-1 text-[var(--text-strong)]',
-    'floating-panel'
+    'z-50 min-w-[10rem] overflow-hidden rounded-xl border bg-[var(--surface)] p-1 text-[var(--text-strong)]',
+    'floating-surface floating-panel floating-panel--pop'
 )
 
 // Shared item grammar for Item and SubTrigger.

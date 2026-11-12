@@ -367,3 +367,32 @@
 .service-card:hover {
     border-color: var(--glass-edge-hi);
 }
+
+/* ─── Floating surface — a panel lifted off the page (AUTM-1792) ──────────
+ *
+ * Menus, popovers, select lists and the account menu: anything portaled over
+ * the page and anchored to a trigger. The material is the panel's own (an
+ * opaque `--surface`, or `.glass-surface` on a Popover); this class adds the
+ * lift the house rule reserves for floating surfaces (tokens/shadows.css):
+ * a firmer hairline and a purple-tinted shadow, plus the glass 1px inset top
+ * highlight so a lifted panel still belongs to the glass family.
+ *
+ * Unlayered, like every utility in this package, and declared AFTER
+ * `.glass-surface` on purpose: the two are one class each, so source order is
+ * what lets this edge and shadow win on a Popover. It sets the edge COLOUR
+ * only; the panel keeps its own `border` width, so a consumer that draws no
+ * border still gets the shadow and not a surprise outline.
+ *
+ * Under forced colours the system draws its own edge and the shadow is
+ * dropped, which is what the platform expects of a popup. */
+.floating-surface {
+    border-color: var(--float-edge);
+    box-shadow: inset 0 1px 0 var(--glass-hi), var(--float-shadow);
+}
+
+@media (forced-colors: active) {
+    .floating-surface {
+        box-shadow: none;
+        border-color: CanvasText;
+    }
+}

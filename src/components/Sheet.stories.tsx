@@ -164,7 +164,7 @@ const OpenSheet: React.FC<{ side?: 'right' | 'bottom'; showHitArea?: boolean }> 
             </div>
             <SheetFooter>
                 <Button variant="quiet">Clear all</Button>
-                <Button variant="strong">Show 12 bookings</Button>
+                <Button>Show 12 bookings</Button>
             </SheetFooter>
         </SheetContent>
     </Sheet>
@@ -202,5 +202,43 @@ export const CloseText200: Story = {
             }
         }, [])
         return <OpenSheet />
+    },
+}
+
+/**
+ * AUTM-1768: a sheet opened from state, with no `SheetTrigger`. Close it with
+ * Escape or its own action and keyboard focus returns to "Pause new
+ * bookings", the control that opened it.
+ */
+export const FocusReturnsWithoutTrigger: Story = {
+    name: 'Focus returns, opened from state',
+    render: function FocusReturnsWithoutTriggerStory() {
+        const [open, setOpen] = React.useState(false)
+        return (
+            <div className="flex flex-col items-start gap-3">
+                <Button variant="quiet">Share your link</Button>
+                <Button onClick={() => setOpen(true)}>
+                    Pause new bookings
+                </Button>
+                <Sheet open={open} onOpenChange={setOpen}>
+                    <SheetContent side="bottom">
+                        <SheetHeader>
+                            <SheetTitle>Pause new bookings?</SheetTitle>
+                            <SheetDescription>
+                                Customers see you as away until you open again.
+                            </SheetDescription>
+                        </SheetHeader>
+                        <SheetFooter>
+                            <Button variant="quiet" onClick={() => setOpen(false)}>
+                                Keep taking bookings
+                            </Button>
+                            <Button onClick={() => setOpen(false)}>
+                                Pause
+                            </Button>
+                        </SheetFooter>
+                    </SheetContent>
+                </Sheet>
+            </div>
+        )
     },
 }

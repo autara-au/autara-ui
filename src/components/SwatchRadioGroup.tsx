@@ -35,6 +35,11 @@ export interface SwatchOption {
     color: string
     /** The tick's colour on this swatch (the palette's text colour for it). */
     ink: string
+    /**
+     * Draw a hairline round the swatch: for a colour with no edge of its own
+     * against the page (a white or silver car on white paper, AUTM-1870).
+     */
+    edge?: boolean
 }
 
 export interface SwatchRadioGroupProps {
@@ -56,13 +61,18 @@ export interface SwatchRadioGroupProps {
     compactColumns?: number
     /** `data-testid` on the fieldset; each swatch gets `${testId}-${value}`. */
     testId?: string
+    /**
+     * `md` (default) is the 44px swatch; `lg` is 56px, for a screen where the
+     * colour is the main thing to choose (AUTM-1870, the car's paint).
+     */
+    size?: 'md' | 'lg'
     className?: string
 }
 
-const Tick = ({ color }: { color: string }) => (
+const Tick = ({ color, size }: { color: string; size: number }) => (
     <svg
-        width="16"
-        height="16"
+        width={size}
+        height={size}
         viewBox="0 0 24 24"
         fill="none"
         stroke={color}
@@ -88,7 +98,9 @@ export function SwatchRadioGroup({
     compactColumns,
     testId,
     className,
+    size = 'md',
 }: SwatchRadioGroupProps) {
+    const px = size === 'lg' ? 56 : 44
     const descriptionId = React.useId()
     const wide = columns ?? Math.min(options.length, 10)
     const narrow = compactColumns ?? (options.length > 6 ? Math.ceil(options.length / 2) : options.length)
@@ -108,8 +120,8 @@ export function SwatchRadioGroup({
                 {label}
             </legend>
             <div
-                className="grid grid-cols-[repeat(var(--sw-narrow),44px)] gap-3 sm:grid-cols-[repeat(var(--sw-wide),44px)]"
-                style={{ '--sw-narrow': narrow, '--sw-wide': wide } as React.CSSProperties}
+                className="grid grid-cols-[repeat(var(--sw-narrow),var(--sw-size))] gap-3 sm:grid-cols-[repeat(var(--sw-wide),var(--sw-size))]"
+                style={{ '--sw-narrow': narrow, '--sw-wide': wide, '--sw-size': `${px}px` } as React.CSSProperties}
             >
                 {options.map((option) => {
                     const selected = option.value === value
@@ -120,7 +132,7 @@ export function SwatchRadioGroup({
                             data-testid={testId ? `${testId}-${option.value}` : undefined}
                             data-selected={selected || undefined}
                             className={cn(
-                                'relative grid size-[44px] cursor-pointer place-items-center rounded-full transition-shadow',
+                                'relative grid size-[var(--sw-size)] cursor-pointer place-items-center rounded-full transition-shadow',
                                 // Keyboard focus sits outside the selection ring, so the two
                                 // never read as one.
                                 'has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[6px] has-[:focus-visible]:outline-[var(--accent)]',
@@ -128,9 +140,13 @@ export function SwatchRadioGroup({
                             )}
                             style={{
                                 background: option.color,
-                                boxShadow: selected
-                                    ? '0 0 0 2px var(--paper), 0 0 0 4px var(--text-strong)'
-                                    : undefined,
+                                boxShadow:
+                                    [
+                                        selected ? '0 0 0 2px var(--paper), 0 0 0 4px var(--text-strong)' : '',
+                                        option.edge ? 'inset 0 0 0 1px var(--border-strong)' : '',
+                                    ]
+                                        .filter(Boolean)
+                                        .join(', ') || undefined,
                             }}
                         >
                             <input
@@ -142,7 +158,7 @@ export function SwatchRadioGroup({
                                 className="sr-only"
                             />
                             <span className="sr-only">{option.label}</span>
-                            {selected ? <Tick color={option.ink} /> : null}
+                            {selected ? <Tick color={option.ink} size={size === 'lg' ? 22 : 16} /> : null}
                         </label>
                     )
                 })}

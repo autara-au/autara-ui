@@ -16,7 +16,53 @@
  * resolves to `box-shadow: none` and produces the correct treatment.
  */
 
+/* ─── The one exception: a surface that floats over the page (AUTM-1792) ──
+ *
+ * Don, 2026-10-09, on the merchant portal's account menu: "there's no shadow
+ * or something here when open the menu, fix it". He was right, and the house
+ * test above agrees: Linear, Stripe and Cal.com all lift a menu. A menu, a
+ * popover or a select list is portaled OVER whatever the consumer has on the
+ * page, usually paper on paper, so the step between surfaces that carries
+ * depth everywhere else does not exist under it. With only a 0.08 hairline it
+ * reads as part of the page.
+ *
+ * So floating surfaces, and only those, take a lift: a hairline one legible
+ * step firmer than `--border-subtle`, and a soft shadow tinted with brand
+ * deep, never black (the Unified Design System rule). Cards, bands, tiles and
+ * every surface that sits IN the page stay flat; `--shadow-card` and the rest
+ * below remain `none`.
+ *
+ *   --float-edge    the hairline round a floating surface
+ *   --float-shadow  the lift under it, three layers: contact, key, ambient
+ *
+ * Use them through `.floating-surface` (utilities/glass.css) on a panel, or
+ * `shadow-float` on a capsule that has no edge of its own (Toast, Tooltip).
+ * Dark keys off `data-theme`, like every token: on ink the shadow is a deeper
+ * purple-black and the edge a light hairline, because a dark shadow alone
+ * barely separates two dark surfaces. */
+:root,
+:host,
+[data-theme="light"] {
+    --float-edge: rgba(46, 16, 112, 0.14);
+    --float-shadow:
+        0 1px 2px rgba(46, 16, 112, 0.08),
+        0 6px 16px -4px rgba(46, 16, 112, 0.14),
+        0 18px 40px -12px rgba(46, 16, 112, 0.22);
+}
+
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --float-edge: rgba(242, 239, 248, 0.18);
+    --float-shadow:
+        0 1px 2px rgba(8, 4, 20, 0.5),
+        0 8px 20px -4px rgba(8, 4, 20, 0.55),
+        0 22px 48px -12px rgba(8, 4, 20, 0.7);
+}
+
 @theme inline {
+    /* `shadow-float`: the lift alone, for a capsule with no edge. */
+    --shadow-float: var(--float-shadow);
+
     --shadow-card: none;
     --shadow-card-hover: none;
     --shadow-cta: none;

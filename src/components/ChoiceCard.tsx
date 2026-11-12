@@ -92,8 +92,10 @@ export function ChoiceGroup({
                 >
                     {children}
                 </div>
+                {/* AUTM-1538: announced when it appears (WCAG 4.1.3), as FormField's
+                    errors are; it was only reachable by walking to the group. */}
                 {error ? (
-                    <p id={errorId} className="mt-2 text-sm text-[var(--danger)]">
+                    <p id={errorId} role="alert" className="mt-2 text-sm text-[var(--danger)]">
                         {error}
                     </p>
                 ) : null}

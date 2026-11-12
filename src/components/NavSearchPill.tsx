@@ -110,11 +110,13 @@ export const NavSearchPill = React.forwardRef<
                         />
                     </React.Fragment>
                 ))}
+                {/* AUTM-2025: the 36 to 40px pill button keeps its look; the 44px floor
+                    (AUTM-622) is an unpainted hit area, as AUTM-1909 did for the pass. */}
                 <button
                     type="button"
                     onClick={onSubmit}
                     aria-label={submitAriaLabel}
-                    className="ml-1 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-4 text-[12.5px] font-medium text-white transition-colors hover:brightness-110 shrink-0"
+                    className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-1 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-4 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
                 >
                     <MagniferGlyph />
                     {submitLabel}
@@ -149,12 +151,12 @@ function PillField({
                 hideOnMobile ? 'hidden sm:flex' : 'flex',
             )}
         >
-            <span className="block text-[9px] font-medium uppercase tracking-[0.2em] text-[var(--text-subtle)] leading-none">
+            <span className="block text-[0.75rem] font-medium uppercase tracking-[0.2em] text-[var(--text-subtle)] leading-none">
                 {label}
             </span>
             <span
                 className={cn(
-                    'mt-0.5 block w-full truncate text-[12.5px] font-medium leading-tight',
+                    'mt-0.5 block w-full truncate text-[0.7812rem] font-medium leading-tight',
                     placeholder
                         ? 'text-[var(--text-subtle)]'
                         : 'text-[var(--text-strong)]',
