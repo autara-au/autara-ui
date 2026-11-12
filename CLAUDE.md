@@ -347,11 +347,17 @@ docs/
   a time and without bodies. Its messages keep the old form's words
   byte for byte ("Pick the type that's closest.", ASCII apostrophe): QA's
   AUTM-TC-700 matches them. The make marks (`src/lib/vehicle-make-logos.ts`)
-  are GENERATED from a Simple Icons package on disk by
-  `scripts/gen-vehicle-make-logos.mjs` (23 makes; the rest draw a monogram in
-  `VehicleMakeMark`). Simple Icons is deliberately not a dependency (3,400
-  icons for 23), and the marks are never hotlinked. Its data is CC0; the marks
-  are their makers' trademarks, shown only to name the customer's car.
+  are GENERATED from Simple Icons by `scripts/gen-vehicle-make-logos.mjs`
+  (42 of the 80 makes since AUTM-2147; the rest draw a monogram in
+  `VehicleMakeMark`). `simple-icons` is an exact-pinned devDependency only,
+  never a runtime one (3,400 icons for 42): bump it, run the script, commit the
+  generated file. Logos come from Simple Icons only and are never hotlinked.
+  Its data is CC0; the marks are their makers' trademarks, shown only to name
+  the customer's car. `hasVehicleMakeLogo` / `vehicleMakeLogoPath` take a make
+  as a booking stores it (any case, catalog aliases such as "VW"); a caller
+  that must not show a monogram (merchant-mobile's job ticket keeps its car
+  icon) asks `hasVehicleMakeLogo` first. Simple Icons' "proton" is Proton AG
+  and its "mahindra" is a group wordmark: both stay unmapped.
 - **Autara icons (AUTM-2114) are function declarations, never `icon(...)`
   factory calls, and never pick a colour.** The set Don approved in
   merchant-mobile was built with `export const X = icon(name, <>...</>)`;

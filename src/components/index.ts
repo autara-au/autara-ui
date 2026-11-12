@@ -417,7 +417,7 @@ export {
     type VehiclePickerField,
     type VehiclePickerErrors,
 } from './VehiclePicker'
-export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, type VehicleMakeMarkProps } from './VehicleMakeMark'
+export { VehicleMakeMark, vehicleMakeMonogram, hasVehicleMakeLogo, vehicleMakeLogoPath, type VehicleMakeMarkProps } from './VehicleMakeMark'
 export {
     VehicleCard,
     VehicleAddCard,

@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { cn } from '../lib/cn'
 import { VEHICLE_MAKE_LOGO_PATHS } from '../lib/vehicle-make-logos'
-import { vehicleSlug } from '../lib/vehicle-catalog'
+import { AU_VEHICLE_CATALOG, normalise, vehicleSlug } from '../lib/vehicle-catalog'
 
 /**
  * VehicleMakeMark: a car make's mark, monochrome (AUTM-1870; Don approved
@@ -13,6 +13,11 @@ import { vehicleSlug } from '../lib/vehicle-catalog'
  * Drawn in currentColor, so the consumer's text token tints it and it holds
  * in both themes. Decorative (aria-hidden): the make's name is always beside
  * it in words. Sized in em by default, so it grows with the reader's text.
+ *
+ * AUTM-2147: the make is looked up the way a booking stores it, typed by a
+ * person: any case, and by the catalog's aliases ("VW" is Volkswagen's mark,
+ * "Chevy" Chevrolet's). A caller that must not show a monogram (the merchant's
+ * job ticket keeps its car icon) asks hasVehicleMakeLogo() first.
  *
  * No hooks and no 'use client', so a server component can draw it.
  */
@@ -33,12 +38,29 @@ export function vehicleMakeMonogram(make: string): string {
     return name[0]!.toUpperCase()
 }
 
-export function hasVehicleMakeLogo(make: string): boolean {
-    return vehicleSlug(make) in VEHICLE_MAKE_LOGO_PATHS
+/**
+ * The Simple Icons path for a make as a person typed it ("toyota", "VW",
+ * "Rolls Royce"), or null when Simple Icons has no mark for it or the make
+ * is not one we list.
+ */
+export function vehicleMakeLogoPath(make: string | null | undefined): string | null {
+    if (!make) return null
+    const direct = VEHICLE_MAKE_LOGO_PATHS[vehicleSlug(make)]
+    if (direct) return direct
+    const key = normalise(make)
+    if (!key) return null
+    const entry = AU_VEHICLE_CATALOG.find(
+        (m) => normalise(m.name) === key || (m.aliases ?? []).some((alias) => normalise(alias) === key)
+    )
+    return entry ? (VEHICLE_MAKE_LOGO_PATHS[vehicleSlug(entry.name)] ?? null) : null
+}
+
+export function hasVehicleMakeLogo(make: string | null | undefined): boolean {
+    return vehicleMakeLogoPath(make) !== null
 }
 
 export function VehicleMakeMark({ make, className, testId }: VehicleMakeMarkProps) {
-    const path = VEHICLE_MAKE_LOGO_PATHS[vehicleSlug(make)]
+    const path = vehicleMakeLogoPath(make)
     const letters = path ? '' : vehicleMakeMonogram(make)
     return (
         <svg
