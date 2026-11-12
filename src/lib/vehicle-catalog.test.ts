@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { describe, expect, it } from 'vitest'
 import {
     AU_VEHICLE_CATALOG,
@@ -19,19 +20,60 @@ import {
  * (`src/functions/vehicles/vehicleData.ts`), so a car picked here is a catalog
  * car to the server's is_custom_make / is_custom_model check as well.
  */
+/**
+ * The catalog's every make and model name, one line per make ("Toyota:86|Aurion|..."),
+ * makes and models in plain sort order, hashed. customer-api's
+ * `tests/unit/vehicleData.test.ts` hashes its list (less "Other")
+ * the same way and pins the SAME value, so the two lists match name for name
+ * (AUTM-2005). Adding a make or model: add it to both lists, then change this
+ * value in both tests.
+ */
+const CATALOG_FINGERPRINT = '2cf7a971b0039aea'
+
+function catalogFingerprint(catalog: { name: string; models: { name: string }[] }[]): string {
+    const lines = catalog
+        .map((make) => `${make.name}:${make.models.map((m) => m.name).sort().join('|')}`)
+        .sort()
+    return createHash('sha256').update(lines.join('\n')).digest('hex').slice(0, 16)
+}
+
 describe('AU vehicle catalog', () => {
     it('carries customer-api\'s makes, spelled as the server spells them', () => {
         // customer-api's list, less its "Other" (the picker's Not listed is that).
-        // A make added there and not here is still saveable, typed: change both.
+        // AUTM-2005: every make sold in Australia (the Green Vehicle Guide) and the supercar and luxury makes.
         expect(AU_VEHICLE_CATALOG.map((m) => m.name).sort()).toEqual(
             [
-                'Alfa Romeo', 'Audi', 'BMW', 'BYD', 'Chery', 'Cupra', 'Ford', 'Genesis', 'GWM', 'Holden', 'Honda',
-                'Hyundai', 'Isuzu', 'Jaguar', 'Jeep', 'Kia', 'Land Rover', 'Lexus', 'Mazda', 'Mercedes-Benz', 'MG',
-                'MINI', 'Mitsubishi', 'Nissan', 'Peugeot', 'Porsche', 'RAM', 'Renault', 'Skoda', 'Subaru', 'Suzuki',
-                'Tesla', 'Toyota', 'Volkswagen', 'Volvo',
+                'Abarth', 'Alfa Romeo', 'Alpina', 'Alpine', 'Aston Martin', 'Audi', 'BMW', 'BYD', 'Bentley', 'Bugatti',
+                'Cadillac', 'Caterham', 'Chery', 'Chevrolet', 'Chrysler', 'Citroen', 'Cupra', 'Deepal', 'Denza',
+                'Dodge', 'Farizon', 'Ferrari', 'Fiat', 'Ford', 'Foton', 'GAC', 'GWM', 'Geely', 'Genesis', 'HSV',
+                'Holden', 'Honda', 'Hyundai', 'Ineos', 'Infiniti', 'Isuzu', 'Jaecoo', 'Jaguar', 'Jeep', 'Kia',
+                'Koenigsegg', 'LDV', 'Lamborghini', 'Land Rover', 'Leapmotor', 'Lexus', 'Lotus', 'MG', 'MINI',
+                'Mahindra', 'Maserati', 'Mazda', 'McLaren', 'Mercedes-Benz', 'Mitsubishi', 'Morgan', 'Nissan', 'Omoda',
+                'Opel', 'Pagani', 'Peugeot', 'Polestar', 'Porsche', 'Proton', 'RAM', 'Renault', 'Rolls-Royce', 'Saab',
+                'Skoda', 'Smart', 'SsangYong', 'Subaru', 'Suzuki', 'Tata', 'Tesla', 'Toyota', 'Volkswagen', 'Volvo',
+                'XPENG', 'Zeekr',
             ].sort()
         )
         expect(findVehicleMake('toyota')?.models.map((m) => m.name)).toContain('HiLux')
+    })
+
+    it('matches customer-api\'s list name for name (the shared fingerprint)', () => {
+        expect(catalogFingerprint(AU_VEHICLE_CATALOG)).toBe(CATALOG_FINGERPRINT)
+    })
+
+    it('never renames a make a saved car already carries (AUTM-1870\'s 35 stay as spelled)', () => {
+        const names = AU_VEHICLE_CATALOG.map((m) => m.name)
+        for (const make of [
+            'Alfa Romeo', 'Audi', 'BMW', 'BYD', 'Chery', 'Cupra', 'Ford', 'Genesis', 'GWM', 'Holden', 'Honda',
+            'Hyundai', 'Isuzu', 'Jaguar', 'Jeep', 'Kia', 'Land Rover', 'Lexus', 'Mazda', 'Mercedes-Benz', 'MG',
+            'MINI', 'Mitsubishi', 'Nissan', 'Peugeot', 'Porsche', 'RAM', 'Renault', 'Skoda', 'Subaru', 'Suzuki',
+            'Tesla', 'Toyota', 'Volkswagen', 'Volvo',
+        ]) {
+            expect(names, make).toContain(make)
+        }
+        /* One make per brand: the guide's Great Wall, Haval and KGM are aliases, not makes. */
+        expect(findVehicleMake('Great Wall')).toBeNull()
+        expect(findVehicleMake('Mercedes-AMG')).toBeNull()
     })
 
     it('gives every model a body customer-api\'s VehicleType declares, once per make', () => {
@@ -51,7 +93,7 @@ describe('AU vehicle catalog', () => {
             'Toyota', 'Ford', 'Mazda', 'Kia', 'Hyundai', 'Mitsubishi', 'MG', 'Tesla', 'BYD', 'Isuzu', 'Nissan', 'Subaru',
         ])
         const others = otherVehicleMakes().map((m) => m.name)
-        expect(others[0]).toBe('Alfa Romeo')
+        expect(others[0]).toBe('Abarth')
         expect(others).toHaveLength(AU_VEHICLE_CATALOG.length - 12)
     })
 
@@ -91,6 +133,20 @@ describe('searchVehicleCatalog: one box for make or model', () => {
         const toy = searchVehicleCatalog('toy')
         expect(toy.filter((r) => r.kind === 'model').every((r) => r.make === 'Toyota')).toBe(true)
         expect(toy).toContainEqual({ kind: 'make', make: 'Toyota' })
+    })
+
+    it('finds the AUTM-2005 makes by name, by what people call them, and by a model', () => {
+        for (const make of ['Ferrari', 'Lamborghini', 'McLaren', 'Aston Martin', 'Bentley', 'Rolls-Royce', 'Maserati', 'Lotus', 'Polestar', 'LDV', 'SsangYong']) {
+            expect(searchVehicleCatalog(make), make).toContainEqual({ kind: 'make', make })
+        }
+        expect(searchVehicleCatalog('lambo')).toContainEqual({ kind: 'make', make: 'Lamborghini' })
+        expect(searchVehicleCatalog('KGM')).toContainEqual({ kind: 'make', make: 'SsangYong' })
+        expect(searchVehicleCatalog('chevy')).toContainEqual({ kind: 'make', make: 'Chevrolet' })
+        expect(first('urus')).toMatchObject({ make: 'Lamborghini', model: 'Urus', body: 'SUV' })
+        expect(first('rolls cullinan')).toMatchObject({ make: 'Rolls-Royce', model: 'Cullinan' })
+        expect(first('polestar 2')).toMatchObject({ make: 'Polestar', model: '2' })
+        expect(first('grenadier')).toMatchObject({ make: 'Ineos', model: 'Grenadier' })
+        expect(inferVehicleBody('Ferrari', 'Portofino')).toBe('CONVERTIBLE')
     })
 
     it('caps the list, and has nothing for nothing', () => {
