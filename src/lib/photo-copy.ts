@@ -29,6 +29,17 @@ export const PHOTO_COPY = {
     erased: 'Photo no longer available',
     /** More photos picked than there is room for (PHOTO_LIMIT_REACHED). */
     overLimit: (limit: number) => `You can add up to ${limit} photos.`,
+    /**
+     * PHOTO_NOT_ALLOWED, as a fallback only (Don, 13 Nov). The API's own
+     * sentence says why for this photo (the deposit is not held yet, the
+     * chat is closed) and is the one to show when the error carries it.
+     */
+    notAllowed: "You can't add photos here right now.",
+    /**
+     * PHOTO_RATE_LIMITED, as a fallback only (Don, 13 Nov). The API's own
+     * rate-limit sentence is these same words.
+     */
+    rateLimited: "That's a lot of photos at once. Try again in a minute.",
 }
 
 /** The API's photo codes (merchant-api `appError.ts`, plan section 5). */
@@ -43,10 +54,15 @@ export type PhotoApiErrorCode =
     | 'PHOTO_RATE_LIMITED'
 
 /**
- * What to say for a preparePhoto refusal or an API photo code. Null for a
- * code the plan gives no words to (PHOTO_NOT_ALLOWED, PHOTO_RATE_LIMITED):
- * the screen that called decides, since only it knows why (the deposit is not
- * held yet, for one).
+ * What to say for a preparePhoto refusal or an API photo code, or null for a
+ * code it does not know (and PHOTO_LIMIT_REACHED without `limit`).
+ *
+ * For an API code this is the FALLBACK. When the API's error carries its own
+ * sentence (`message` in the payload, or the AppSync error's message), show
+ * that sentence and call this only when there is none: the API words some
+ * codes more specifically than one string can, PHOTO_NOT_ALLOWED above all,
+ * whose sentence says why for that photo. preparePhoto's codes have no server
+ * sentence; these words are the only ones.
  */
 export function photoErrorMessage(
     code: PreparePhotoErrorCode | PhotoApiErrorCode | (string & {}),
@@ -69,6 +85,10 @@ export function photoErrorMessage(
             return PHOTO_COPY.checkUnavailable
         case 'PHOTO_LIMIT_REACHED':
             return options.limit != null ? PHOTO_COPY.overLimit(options.limit) : null
+        case 'PHOTO_NOT_ALLOWED':
+            return PHOTO_COPY.notAllowed
+        case 'PHOTO_RATE_LIMITED':
+            return PHOTO_COPY.rateLimited
         default:
             return null
     }
