@@ -340,6 +340,11 @@ describe('photo copy', () => {
         expect(PHOTO_COPY.erased).toBe('Photo no longer available')
     })
 
+    it("has Don's fallbacks for the not-allowed and rate-limited codes (13 Nov), word for word", () => {
+        expect(PHOTO_COPY.notAllowed).toBe("You can't add photos here right now.")
+        expect(PHOTO_COPY.rateLimited).toBe("That's a lot of photos at once. Try again in a minute.")
+    })
+
     it('has no em or en dashes, no curly apostrophes and no emoji', () => {
         const all = Object.values(PHOTO_COPY).map((v) => (typeof v === 'function' ? v(3) : v))
         for (const line of all) {
@@ -358,7 +363,22 @@ describe('photo copy', () => {
         expect(photoErrorMessage('PHOTO_NOT_UPLOADED')).toBe(PHOTO_COPY.uploadFailed)
         expect(photoErrorMessage('PHOTO_LIMIT_REACHED', { limit: 3 })).toBe('You can add up to 3 photos.')
         expect(photoErrorMessage('PHOTO_LIMIT_REACHED')).toBeNull()
-        expect(photoErrorMessage('PHOTO_NOT_ALLOWED')).toBeNull()
-        expect(photoErrorMessage('PHOTO_RATE_LIMITED')).toBeNull()
+        expect(photoErrorMessage('PHOTO_NOT_ALLOWED')).toBe("You can't add photos here right now.")
+        expect(photoErrorMessage('PHOTO_RATE_LIMITED')).toBe("That's a lot of photos at once. Try again in a minute.")
+    })
+
+    it('says something for every API photo code, given the limit', () => {
+        const codes = [
+            'PHOTO_LIMIT_REACHED',
+            'PHOTO_TYPE_NOT_SUPPORTED',
+            'PHOTO_TOO_LARGE',
+            'PHOTO_TOO_SMALL',
+            'PHOTO_NOT_UPLOADED',
+            'PHOTO_NOT_ALLOWED',
+            'PHOTO_CHECK_FAILED',
+            'PHOTO_RATE_LIMITED',
+        ] as const
+        for (const code of codes) expect(photoErrorMessage(code, { limit: 4 }), code).toEqual(expect.any(String))
+        expect(photoErrorMessage('SOMETHING_ELSE')).toBeNull()
     })
 })
