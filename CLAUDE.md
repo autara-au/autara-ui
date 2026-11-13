@@ -380,6 +380,22 @@ docs/
   item. A Solar name merchant-mobile starts using goes into
   `solar-map.ts` (and the test's list) in the same change. Never JSX at a
   module's top level here: it compiles to an import-time `_jsx()` call.
+- **Photos (AUTM-1882): `preparePhoto` lives on the `/photo` subpath and the
+  root, never `/utilities`** (that subpath is the CSS). It decides by the
+  file's first bytes, never its name or MIME type, and strips APP1 to APP15
+  and COM from the canvas export, keeping JFIF and an ICC profile, as the
+  server does. Chromium writes an sRGB ICC APP2 into every canvas JPEG, so a
+  test that asserts "no metadata" must skip an `ICC_PROFILE` APP2. jsdom has
+  no decoder, canvas or `Blob.arrayBuffer`: `prepare-photo.test.ts` can only
+  check the order of the steps; the proof (GPS gone, orientation applied,
+  transparency on white) is `prepare-photo.browser.test.ts` on the fixtures
+  in `src/lib/__fixtures__/photos/` (regenerate with its `make-fixtures.py`).
+  On a photo, words and the upload ring sit on `--photo-scrim` and a
+  control's disc is `--photo-disc` (an ink scrim disc vanishes on the
+  viewer's ink margin); both are static in both themes and pinned by
+  `photo-contrast.test.ts`. The plan's words are `PHOTO_COPY`, ASCII
+  apostrophes. `MessageComposer canSend` replaces "the text is not empty",
+  for a photo-only message.
 - **Never put type or colour classes on an `h1` to `h6`; put them on an
   element inside it.** merchant-mobile (`src/main.css`) and customer-web
   (`src/app/globals.css`) both style headings with an UNLAYERED rule (colour

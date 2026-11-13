@@ -219,6 +219,20 @@
     --on-alert: #ffffff;
     /* Behind a dialog or a sheet. */
     --scrim: rgba(14, 10, 26, 0.42);
+    /* AUTM-1882: under anything drawn ON a photo (a photo tile's remove
+     * disc, its ring and its words, the viewer's previous and next). A photo
+     * can be any colour, so the scrim is held against the worst one, pure
+     * white: --on-photo over this scrim over white is 8.0:1, and the aqua
+     * upload ring is 5.6:1 there. STATIC in both themes, because the photo
+     * does not change with the theme. Pinned by photo-contrast.test.ts. */
+    --photo-scrim: rgba(14, 10, 26, 0.72);
+    --on-photo: #ffffff;
+    /* The disc of a control over a photo (a tile's remove, the viewer's
+     * previous and next): the dark icon disc at 90%. Its glyph reads at
+     * 4.5:1 over a white photo like the scrim's words, and unlike an ink
+     * scrim it still shows as a disc where there is no photo behind it (the
+     * viewer's ink margin, a refused tile's band). Static, as above. */
+    --photo-disc: rgba(58, 51, 80, 0.9);
     --hairline: rgba(17, 24, 39, 0.08);
     /* Inputs, the code boxes and the mobile social button: one legible edge. */
     --field-edge: rgba(14, 10, 26, 0.48);
@@ -426,6 +440,10 @@
     --alert: #e11d48;
     --on-alert: #ffffff;
     --scrim: rgba(0, 0, 0, 0.6);
+    /* AUTM-1882: the same as light, on purpose (see there). */
+    --photo-scrim: rgba(14, 10, 26, 0.72);
+    --on-photo: #ffffff;
+    --photo-disc: rgba(58, 51, 80, 0.9);
     --hairline: rgba(255, 255, 255, 0.1);
     --field-edge: rgba(255, 255, 255, 0.48);
     /* AUTM-1756: in dark the disc is a step LIGHTER than the surface, with
