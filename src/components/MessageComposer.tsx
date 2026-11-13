@@ -87,6 +87,20 @@ export interface MessageComposerProps {
   layout?: "dock" | "inset";
   /** `data-testid` on Send. */
   sendTestId?: string;
+  /**
+   * AUTM-1882: what goes with the message, drawn above the text (a
+   * PhotoAttachTray). In `inset` it sits inside the field, as Substack and
+   * Cursor put a picked photo in their composers; in `dock` above the row.
+   */
+  attachments?: ReactNode;
+  /**
+   * AUTM-1882: whether Send may go, in place of the default "the text is not
+   * empty". Pass it when photos can go without words, and to hold Send while
+   * a photo is still uploading or being checked:
+   * `canSend={photosReadyToSend(photos) || (text.trim() !== '' && !photosInFlight(photos))}`.
+   * Send still waits while `sending`.
+   */
+  canSend?: boolean;
   className?: string;
 }
 
@@ -120,9 +134,11 @@ export function MessageComposer({
   measureClassName = "max-w-[680px]",
   layout = "dock",
   sendTestId,
+  attachments,
+  canSend: canSendProp,
   className,
 }: MessageComposerProps) {
-  const canSend = value.trim().length > 0 && !sending;
+  const canSend = (canSendProp ?? value.trim().length > 0) && !sending;
   const countId = useId();
   const left = maxLength != null ? maxLength - value.length : null;
   const showCount = left != null && left <= NEAR_CAP;
@@ -187,9 +203,15 @@ export function MessageComposer({
             "mx-auto flex w-full items-end gap-1 rounded-[1.625rem] border border-[var(--field-edge)] bg-[var(--paper)] p-1",
             "transition-[border-color,box-shadow] duration-150",
             "hover:border-[var(--text-muted)] focus-within:border-[var(--accent)] focus-within:shadow-[inset_0_0_0_1px_var(--accent)] focus-within:hover:border-[var(--accent)]",
+            attachments != null && "flex-wrap",
             measureClassName,
           )}
         >
+          {attachments != null ? (
+            <div data-composer-attachments="" className="w-full basis-full px-1.5 pt-1.5">
+              {attachments}
+            </div>
+          ) : null}
           {leading ? <div className="flex shrink-0 items-end">{leading}</div> : null}
           <textarea
             ref={fieldRef}
@@ -234,6 +256,11 @@ export function MessageComposer({
         className,
       )}
     >
+      {attachments != null ? (
+        <div data-composer-attachments="" className={cn("mx-auto mb-2 w-full", measureClassName)}>
+          {attachments}
+        </div>
+      ) : null}
       <div className={cn("mx-auto flex w-full items-end gap-2", measureClassName)}>
         {leading}
         <Textarea

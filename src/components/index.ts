@@ -476,6 +476,25 @@ export { AppTabBar, type AppTabBarProps, type AppTabBarItem } from './AppTabBar'
 export { ActionBar, type ActionBarProps, type ActionBarAction, type ActionBarControl } from './ActionBar'
 // AUTM-1781: the slot where a screen shows its subject: a photo, a map, or initials on deep purple.
 export { MediaFrame, type MediaFrameProps } from './MediaFrame'
+// AUTM-1882 (AUTM-1810): customer and pro photos. A photo on its way in (the
+// tile, the composer's tray, a car's slots), photos in the thread, and the
+// full-screen viewer.
+export {
+    PhotoTile,
+    PhotoNotes,
+    photoOrdinal,
+    photoStateCopy,
+    isLongPhotoState,
+    useFocusAfterRemove,
+    type PhotoTileProps,
+    type PhotoTileState,
+    type PhotoFailure,
+    type PhotoItem,
+} from './PhotoTile'
+export { PhotoAttachTray, photosReadyToSend, photosInFlight, type PhotoAttachTrayProps } from './PhotoAttachTray'
+export { PhotoSlots, type PhotoSlotsProps } from './PhotoSlots'
+export { ChatPhotoBubble, chatPhotoLayout, type ChatPhotoBubbleProps, type ChatPhoto } from './ChatPhotoBubble'
+export { PhotoViewer, type PhotoViewerProps, type PhotoViewerPhoto } from './PhotoViewer'
 // AUTM-1799 (AUTM-1797, visual first): a booking drawn, not told. A date as a
 // calendar leaf and the time as a figure, the booking as a pass, place and car
 // as icon rows.

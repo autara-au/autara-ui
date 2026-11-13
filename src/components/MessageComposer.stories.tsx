@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { MessageComposer, type MessageComposerProps } from "./MessageComposer";
+import { PhotoAttachTray } from "./PhotoAttachTray";
 
 const meta = {
   title: "Molecules/MessageComposer",
@@ -128,5 +129,38 @@ export const InsetDark: Story = {
     <div data-theme="dark" className="bg-[var(--background)]">
       <Demo layout="inset" measureClassName="max-w-none" leading={PLUS} value="All done, ready to collect." />
     </div>
+  ),
+};
+
+/**
+ * AUTM-1882: photos ready to go with no words. `attachments` puts the tray
+ * inside the field above the text; `canSend` lets Send go without text once
+ * every photo is ready (`photosReadyToSend`), and holds it while one is still
+ * on its way. The full moment is Photos/PhotoAttachTray, In context.
+ */
+export const InsetWithPhotos: Story = {
+  render: () => (
+    <Demo
+      layout="inset"
+      placeholder="Message Sam"
+      canSend
+      attachments={
+        <PhotoAttachTray
+          items={[
+            {
+              id: "a",
+              state: "ready",
+              src: "https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&fit=crop&w=400&h=400&q=70",
+            },
+            {
+              id: "b",
+              state: "ready",
+              src: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=400&h=400&q=70",
+            },
+          ]}
+          onRemove={() => {}}
+        />
+      }
+    />
   ),
 };

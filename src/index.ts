@@ -110,6 +110,13 @@ export {
     ActionBar, type ActionBarProps, type ActionBarAction, type ActionBarControl,
     // CountUp is exported once, beside Tabs above (AUTM-1792; AUTM-1781 added its server-safe props).
     MediaFrame, initialsOf, type MediaFrameProps,
+    // AUTM-1882 (AUTM-1810): customer and pro photos.
+    PhotoTile, PhotoNotes, photoOrdinal, photoStateCopy, isLongPhotoState, useFocusAfterRemove,
+    type PhotoTileProps, type PhotoTileState, type PhotoFailure, type PhotoItem,
+    PhotoAttachTray, photosReadyToSend, photosInFlight, type PhotoAttachTrayProps,
+    PhotoSlots, type PhotoSlotsProps,
+    ChatPhotoBubble, chatPhotoLayout, type ChatPhotoBubbleProps, type ChatPhoto,
+    PhotoViewer, type PhotoViewerProps, type PhotoViewerPhoto,
     DateTile, WhenBlock, dateTileParts, type DateTileProps, type DateTileParts, type WhenBlockProps,
     BookingPass, type BookingPassProps,
     FactRows, type FactRowsProps, type FactRow,
@@ -358,3 +365,24 @@ export {
     type PackageSaving,
     type PackageSavingInput,
 } from './lib/package-listing'
+
+/* AUTM-1882: preparePhoto (re-encode to a metadata-free JPEG, 1600 px, before
+ * upload) and the photo states' words. Also the `@autara-au/autara-ui/photo`
+ * subpath, for an upload hook that does not want the component barrel. */
+export {
+    preparePhoto,
+    PreparePhotoError,
+    isPreparePhotoError,
+    sniffPhotoType,
+    fitPhotoSize,
+    stripJpegMetadata,
+    PHOTO_LIMITS,
+    PHOTO_ACCEPT,
+    PHOTO_COPY,
+    photoErrorMessage,
+    type PreparePhotoErrorCode,
+    type PreparePhotoOptions,
+    type PreparedPhoto,
+    type PhotoSourceType,
+    type PhotoApiErrorCode,
+} from './lib/photo'
