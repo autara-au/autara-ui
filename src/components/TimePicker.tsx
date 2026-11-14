@@ -176,7 +176,7 @@ export function TimePicker({
                             onChange(slot)
                         }}
                         className={cn(
-                            'flex min-h-[2.75rem] items-center justify-center rounded-[12px] border',
+                            'flex min-h-[2.75rem] items-center justify-center rounded-full',
                             // A time is one token; breaking "10:00 am" across
                             // two lines makes it read as two values and gives
                             // the grid ragged row heights.
@@ -185,11 +185,10 @@ export function TimePicker({
                             'focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2',
                             'focus-visible:ring-offset-[var(--background)]',
                             isSelected
-                                ? 'border-transparent bg-[var(--accent-fill)] font-medium text-[var(--on-accent)]'
-                                : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
-                            !isSelected &&
-                                !isDisabled &&
-                                'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)]',
+                                ? 'bg-[var(--accent-fill)] font-medium text-[var(--on-accent)]'
+                                : // AUTM-2140: the field's glass with the lit
+                                  // hairline; the glass does the hover step.
+                                  'glass-edge text-[var(--text-strong)]',
                             // Struck through as well as dimmed, so the state
                             // survives a greyscale screen and a low-contrast
                             // one. Opacity alone is not a signal.

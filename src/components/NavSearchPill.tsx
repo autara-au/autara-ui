@@ -91,7 +91,8 @@ export const NavSearchPill = React.forwardRef<
             )}
             {...divProps}
         >
-            <div className="flex w-full max-w-2xl items-center gap-2 rounded-2xl border border-[var(--border-subtle)] bg-white pl-2 pr-1.5 py-1.5">
+            {/* AUTM-2140: the field's glass pill with the lit hairline. */}
+            <div className="glass-edge flex w-full max-w-2xl items-center gap-2 rounded-full pl-2 pr-1.5 py-1.5">
                 {fields.map((f, i) => (
                     <React.Fragment key={f.label}>
                         {i > 0 ? (
@@ -116,7 +117,7 @@ export const NavSearchPill = React.forwardRef<
                     type="button"
                     onClick={onSubmit}
                     aria-label={submitAriaLabel}
-                    className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-1 inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-4 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
+                    className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-1 inline-flex h-9 items-center justify-center gap-1.5 rounded-full bg-[var(--color-autara-purple)] px-4 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
                 >
                     <MagniferGlyph />
                     {submitLabel}
@@ -147,11 +148,12 @@ function PillField({
             onClick={onClick}
             aria-label={ariaLabel}
             className={cn(
-                'group flex flex-1 min-w-0 flex-col items-start gap-0 rounded-xl px-3 py-1 text-left transition-colors hover:bg-[var(--surface-warm)]',
+                'group flex flex-1 min-w-0 flex-col items-start gap-0 rounded-full px-4 py-1 text-left transition-colors duration-[var(--motion-hover)] ease-[var(--motion-ease-out)] hover:bg-[var(--field-glass-hover)]',
                 hideOnMobile ? 'hidden sm:flex' : 'flex',
             )}
         >
-            <span className="block text-[0.75rem] font-medium uppercase tracking-[0.2em] text-[var(--text-subtle)] leading-none">
+            {/* Sentence case, no tracking (house rule since 2026-09-03). */}
+            <span className="block text-[0.75rem] font-medium text-[var(--text-subtle)] leading-none">
                 {label}
             </span>
             <span

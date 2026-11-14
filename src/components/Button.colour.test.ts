@@ -100,10 +100,9 @@ describe('SocialButton: provider colours read, and nothing mutes them', () => {
     })
 
     // Each provider's text on its fill, from social.css. Mobile dark is
-    // transparent, so it is measured on the dark page.
+    // transparent, so it is measured on the dark page. Google is the field's
+    // glass since AUTM-2140, measured below.
     it.each([
-        ['google light', '#1f1f1f', '#ffffff'],
-        ['google dark', '#e3e3e3', '#131314'],
         ['apple light', '#ffffff', '#000000'],
         ['apple dark', '#000000', '#ffffff'],
         ['mobile light', '#0e0a1a', '#ffffff'],
@@ -111,5 +110,16 @@ describe('SocialButton: provider colours read, and nothing mutes them', () => {
     ])('%s is at least 4.5:1', (_name, ink, fill) => {
         expect(SOCIAL.toLowerCase()).toContain(ink)
         expect(ratio(hex(ink), hex(fill))).toBeGreaterThanOrEqual(AA)
+    })
+
+    // AUTM-2140: Google is the field's glass (white at 78% in light, at 5.5%
+    // in dark) under the field's ink, on paper and on band alike.
+    it.each(THEMES)('google %s: the ink on the glass is at least 4.5:1 on paper and on band', (theme) => {
+        expect(SOCIAL).toMatch(/\.social-btn\[data-provider='google'\] \{[^}]*color: var\(--text-strong\);/)
+        const alpha = theme === 'light' ? 0.78 : 0.055
+        for (const ground of ['paper', 'band']) {
+            const glass = over([255, 255, 255], alpha, token(ground, theme))
+            expect(ratio(token('text-strong', theme), glass), `${theme} on ${ground}`).toBeGreaterThanOrEqual(AA)
+        }
     })
 })

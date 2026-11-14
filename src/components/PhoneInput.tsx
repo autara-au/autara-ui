@@ -17,8 +17,9 @@ import {
  * on the left, national number on the right, all inside one hairline
  * container.
  *
- * - **Container**: `--surface` fill, `--border-subtle` hairline,
- *   brand-purple halo on focus (matches `.field-input` grammar).
+ * - **Container**: the glass pill of Input (AUTM-2140): `.field-shell`
+ *   with the lit `.glass-edge`, the accent edge and tint on focus, the
+ *   danger edge when the number input carries `aria-invalid`.
  * - **Country chip**: flag emoji + dial code + Solar Bold chevron.
  *   Clicks open a Radix Select listing the available countries.
  * - **Input**: digits-only `type="tel"`. The component emits an E.164
@@ -168,16 +169,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
 
         return (
             <div
-                className={cn(
-                    'flex h-11 w-full items-stretch overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)] transition-colors',
-                    // Autara focus signature — cream tint + full
-                    // brand-purple border (matches .field-input). Clean,
-                    // symmetric; no halo, no one-sided bar.
-                    'focus-within:border-[var(--color-autara-purple)]',
-                    'focus-within:bg-[var(--surface-warm)]',
-                    disabled && 'opacity-50',
-                    className
-                )}
+                data-slot="field"
+                data-disabled={disabled ? '' : undefined}
+                className={cn('field-shell glass-edge', className)}
             >
                 <SelectPrimitive.Root
                     value={activeCountryIso}
@@ -193,11 +187,14 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                     <SelectPrimitive.Trigger
                         aria-label="Country"
                         className={cn(
-                            'flex shrink-0 items-center gap-1.5 pl-3.5 pr-2',
-                            'text-sm outline-none transition-colors',
-                            'hover:bg-[var(--surface-warm)]',
-                            'focus-visible:bg-[var(--surface-warm)]',
-                            'data-[state=open]:bg-[var(--surface-warm)]'
+                            // A quiet pill inside the field's pill: the
+                            // band step on hover, focus and open, rounded
+                            // so it never squares off the field's end.
+                            'my-1.5 ml-1.5 flex shrink-0 items-center gap-1.5 rounded-full pl-3 pr-2.5',
+                            'text-[0.9375rem] outline-none transition-colors duration-[var(--motion-hover)] ease-[var(--motion-ease-out)]',
+                            'hover:bg-[var(--field-glass-hover)]',
+                            'focus-visible:bg-[var(--field-glass-hover)]',
+                            'data-[state=open]:bg-[var(--field-glass-hover)]'
                         )}
                     >
                         <span className="text-base leading-none" aria-hidden>
@@ -283,11 +280,10 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                     onChange={handleDigitsChange}
                     placeholder={placeholder}
                     disabled={disabled}
-                    className={cn(
-                        'min-w-0 flex-1 bg-transparent px-3 text-sm text-[var(--text-strong)] outline-none',
-                        'placeholder:text-[var(--text-subtle)]',
-                        'disabled:cursor-not-allowed'
-                    )}
+                    // The shell's control: fills the rest of the pill. Its
+                    // start padding is the gap after the country segment.
+                    className="field-shell-control"
+                    style={{ paddingInlineStart: '0.625rem' }}
                     {...rest}
                 />
             </div>

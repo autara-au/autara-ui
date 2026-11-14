@@ -325,23 +325,25 @@ export function DatePicker({
                             }}
                             style={isClosed ? CLOSED_HATCH : undefined}
                             className={cn(
-                                'snap-start shrink-0 rounded-[12px] border px-3 py-2',
+                                'snap-start shrink-0 rounded-[1rem] px-3 py-2',
                                 'flex min-h-[3.25rem] min-w-[3.25rem] flex-col items-center justify-center gap-0.5',
                                 'transition-colors focus-visible:outline-none focus-visible:ring-2',
                                 'focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2',
                                 'focus-visible:ring-offset-[var(--background)]',
                                 isSelected
                                     ? // Rule 4: a solid fill, never a tint.
-                                      'border-transparent bg-[var(--accent-fill)] text-[var(--on-accent)]'
-                                    : isClosed
-                                      ? // AUTM-1633 — closed but still yours: muted ink over the hatch.
-                                        'border-dashed border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
-                                      : isFull
-                                        ? 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-muted)]'
-                                        : 'border-[var(--border-subtle)] bg-[var(--surface)] text-[var(--text-strong)]',
-                                !isSelected &&
-                                    !isDisabled &&
-                                    'hover:border-[var(--border-strong)] hover:bg-[var(--surface-elevated)]',
+                                      'bg-[var(--accent-fill)] text-[var(--on-accent)]'
+                                    : // AUTM-2140: every other day is the field's
+                                      // glass with the lit hairline, no ring at rest.
+                                      cn(
+                                          'glass-edge',
+                                          isClosed
+                                              ? // AUTM-1633 — closed but still yours: muted ink over the hatch, a dashed edge.
+                                                'border border-dashed border-[var(--border-subtle)] text-[var(--text-muted)]'
+                                              : isFull
+                                                ? 'text-[var(--text-muted)]'
+                                                : 'text-[var(--text-strong)]',
+                                      ),
                                 isDisabled && 'cursor-not-allowed opacity-40',
                             )}
                         >
@@ -383,8 +385,11 @@ export function DatePicker({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <Button
                     type="button"
-                    variant="quiet"
+                    variant="ghost"
                     size="sm"
+                    // AUTM-2140: the way to any date is a field too, on the
+                    // same glass and lit hairline as the days.
+                    className="glass-edge not-disabled:hover:bg-transparent"
                     disabled={disabled}
                     onClick={() => setMonthOpen(true)}
                     leadingIcon={<CalendarIcon />}

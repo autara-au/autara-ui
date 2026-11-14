@@ -38,7 +38,7 @@ const FieldStack = React.forwardRef<
         <div
             ref={ref}
             role="group"
-            className={cn('field-stack', className)}
+            className={cn('field-stack glass-edge', className)}
             {...props}
         />
     )

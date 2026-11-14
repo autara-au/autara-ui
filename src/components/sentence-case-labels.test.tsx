@@ -181,11 +181,14 @@ describe('AUTM-1483: each label renders in sentence case, on the scale', () => {
     })
 })
 
-/** AUTM-1093 owns these two, with a keep-or-delete decision. May shrink, never grow. */
-const AUTM_1093 = ['CategoryRail.tsx', 'NavSearchPill.tsx']
+/** AUTM-1093 owns these, with a keep-or-delete decision. May shrink, never grow.
+ * NavSearchPill came off under AUTM-2140: its labels are sentence case now. */
+const AUTM_1093 = ['CategoryRail.tsx']
 
 /** Components whose labels were swept to sentence case. May grow, never shrink. */
 const SWEPT = [
+    // AUTM-2140
+    'NavSearchPill.tsx',
     // AUTM-1483
     'AccountMenu.tsx',
     'CarouselHeader.tsx',

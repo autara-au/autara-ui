@@ -146,7 +146,10 @@ export function CommandMenu({
                     )}
                 >
                     <DialogPrimitive.Title className="sr-only">{label}</DialogPrimitive.Title>
-                    <div className="flex items-center gap-3 px-4 text-[var(--text-muted)]">
+                    {/* AUTM-2140: the search is the field's glass pill, inset in
+                        the panel, with the lit hairline; while it holds the
+                        caret (always, here) its edge is the accent. */}
+                    <div className="glass-edge field-group mx-3 mt-3 mb-1 flex min-h-13 cursor-text items-center gap-3 rounded-full px-[var(--field-pad)] text-[var(--text-muted)]">
                         <SearchGlyph />
                         <input
                             data-testid={testId ? `${testId}-input` : undefined}
@@ -165,7 +168,7 @@ export function CommandMenu({
                                 setActive(0)
                             }}
                             onKeyDown={onKeyDown}
-                            className="h-14 min-w-0 flex-1 bg-transparent text-base text-[var(--text-strong)] outline-none placeholder:text-[var(--text-subtle)]"
+                            className="h-13 min-w-0 flex-1 bg-transparent text-base text-[var(--text-strong)] caret-[var(--accent)] outline-none placeholder:text-[var(--text-subtle)]"
                         />
                         <kbd className="hidden rounded-md bg-[var(--band)] px-1.5 py-0.5 font-sans text-xs text-[var(--text-muted)] sm:inline">
                             esc

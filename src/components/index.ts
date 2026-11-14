@@ -451,6 +451,8 @@ export { DeviceFrame, type DeviceFrameProps, type DeviceKind } from './DeviceFra
 // the pointer, and a reveal that needs no script.
 export { BloomField, type BloomFieldProps } from './BloomField'
 export { LitGroup, type LitGroupProps } from './LitGroup'
+// AUTM-2140: the glass fields' lit edge, one tracker at the app's root.
+export { GlassEdgeTracker, useGlassEdge, GlassField, type GlassFieldProps } from './GlassEdge'
 export { Reveal, type RevealProps } from './Reveal'
 // AUTM-1679 — the marketing pages' motion: a pinned scroll story with its
 // indicator, and a disclosure that opens and closes smoothly.

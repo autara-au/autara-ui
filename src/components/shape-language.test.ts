@@ -73,7 +73,7 @@ const KEEPS: Record<string, string> = {
     'EmptyState.tsx': 'the 44px icon disc, canvas v44 "Empty" (AUTM-1594)',
     'LockedFeature.tsx': 'the optional icon disc (AUTM-1594)',
     'SwatchRadioGroup.tsx': 'colour swatches are 44px circles on canvas v50, a choice of colour, not an action (AUTM-1591)',
-    'DurationPicker.tsx': 'the Hours | Working days switch, canvas v44 "Segmented" drawn as Tabs draws it (AUTM-1575); the stepper uses Button\'s icon disc',
+    'DurationPicker.tsx': 'the Hours | Working days switch, canvas v44 "Segmented" drawn as Tabs draws it (AUTM-1575); the stepper uses Button\'s icon disc; the trigger is a field, the glass pill of Input (AUTM-2140)',
     'ServiceCard.tsx': 'the duration and working-days chips, MetaChip\'s 28px pill drawn on raised so it shows on the band card; the select indicator, a 24px state light like Radio\'s (AUTM-1694)',
     'AppTabBar.tsx': 'the customer app dock as designed (canvas AppBookings): an ink pill, the current tab a lime capsule (a state light), the count a disc (AUTM-1781)',
     'ActionBar.tsx': 'the customer app bar as designed (AppBookingDetail): pill buttons, the sheet\'s button shape, and 56px icon discs like IconButton (AUTM-1781)',
@@ -87,6 +87,16 @@ const KEEPS: Record<string, string> = {
     'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
     'PhotoTile.tsx': 'the remove control\'s disc on a photo, drawn at 24 to 28px inside a 44px target like Sheet\'s close disc (AUTM-1882)',
+    // AUTM-2140 (Don, 2026-11-14): "all the input should be change to that",
+    // the Jump to shape. A field is the glass pill: here is the value, type or
+    // tap to change it. A field, never an action.
+    'Select.tsx': 'the trigger is a field, the glass pill of Input (AUTM-2140)',
+    'PickerTrigger.tsx': 'a field that opens a sheet, the glass pill of Input (AUTM-2140)',
+    'TimePicker.tsx': 'a time is one value in a set, a pill on the field\'s glass like FilterChipRow\'s chips (AUTM-2140)',
+    'PhoneInput.tsx': 'the country segment is a quiet pill inside the field\'s pill, concentric with it (AUTM-2140)',
+    'CommandMenu.tsx': 'the search is a field, the glass pill of Input (AUTM-2140)',
+    'NavSearchPill.tsx': 'the search is a field, the glass pill of Input, its fields and Search button concentric with it (AUTM-2140)',
+    'CompactSearchPill.tsx': 'the search is a field, the glass pill of Input, its glyph and Go button concentric with it (AUTM-2140)',
 }
 
 /**
