@@ -9,6 +9,7 @@ import { SearchInput } from '../components/SearchInput'
 import type { AutaraIconComponent } from './AutaraIcon'
 import * as ObjectGlyphs from './object-glyphs'
 import * as UtilityGlyphs from './utility-glyphs'
+import * as CategoryGlyphs from './category-glyphs'
 import {
     AccountIcon,
     AppearanceIcon,
@@ -63,7 +64,7 @@ export default meta
 
 type Story = StoryObj
 
-type Entry = { name: string; Icon: AutaraIconComponent; kind: 'object' | 'utility'; solar: string[]; bold: boolean }
+type Entry = { name: string; Icon: AutaraIconComponent; kind: 'object' | 'category' | 'utility'; solar: string[]; bold: boolean }
 
 const solarFor = (name: string) =>
     Object.entries(SOLAR_TO_AUTARA)
@@ -83,8 +84,12 @@ const entry = (kind: Entry['kind']) => ([name, Icon]: [string, AutaraIconCompone
 
 const ENTRIES: Entry[] = [
     ...Object.entries(ObjectGlyphs).map(entry('object')),
+    ...Object.entries(CategoryGlyphs).map(entry('category')),
     ...Object.entries(UtilityGlyphs).map(entry('utility')),
 ]
+
+const KINDS = ['object', 'category', 'utility'] as const
+const KIND_LABEL = { object: 'Objects', category: 'Service categories', utility: 'Utility' } as const
 
 const SIZES = [16, 20, 22, 32] as const
 const SURFACES = [
@@ -128,6 +133,7 @@ function IconSheet({ initialQuery = '' }: { initialQuery?: string }) {
     const shown = useMemo(() => ENTRIES.filter((e) => matches(e, query)), [query])
     const groups = [
         { kind: 'object', title: 'Objects, Linear and Bold' },
+        { kind: 'category', title: 'Service categories, Linear and Bold' },
         { kind: 'utility', title: 'Utility, Linear (the closed ones have a Bold twin)' },
     ] as const
 
@@ -239,10 +245,10 @@ export const LinearAndBold: Story = {
                     <h2>
                         <span className="text-sm font-bold">{theme === 'light' ? 'Light' : 'Dark'}</span>
                     </h2>
-                    {(['object', 'utility'] as const).map((kind) => (
+                    {KINDS.map((kind) => (
                         <div key={kind} className="mt-4">
                             <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[var(--text-muted)]">
-                                {kind === 'object' ? 'Objects' : 'Utility'}
+                                {KIND_LABEL[kind]}
                             </p>
                             <div
                                 className="grid gap-x-2 gap-y-4"
@@ -275,7 +281,7 @@ export const Family: Story = {
         <div className="grid gap-6 p-6 md:grid-cols-2">
             {(['light', 'dark'] as const).map((theme) => (
                 <div key={theme} data-theme={theme} className="rounded-2xl p-5" style={surfaceStyle('paper')}>
-                    {(['object', 'utility'] as const).map((kind) => (
+                    {KINDS.map((kind) => (
                         <div key={kind} className="mb-4 grid grid-cols-10 gap-x-2 gap-y-4">
                             {ENTRIES.filter((e) => e.kind === kind).map(({ name, Icon }) => (
                                 <span key={name} title={name} className="grid place-items-center">
@@ -299,6 +305,63 @@ export const Detail: Story = {
                     <Icon size={48} />
                     <figcaption className="text-xs text-[var(--text-muted)]">{name.replace(/Icon$/, '')}</figcaption>
                 </figure>
+            ))}
+        </div>
+    ),
+}
+
+/**
+ * AUTM-2140 (R8 section C, Don's pick 2026-11-14): one icon per service
+ * category, named as QA's ten active categories are. Categories are
+ * admin-managed rows, so the consumer maps its category to the export; this
+ * is that map. Line at rest, the Bold twin in lime on hero when chosen, as
+ * ChoiceChips `layout="tiles"` draws them.
+ */
+const CATEGORY_ICONS: { name: string; exportName: string; Icon: AutaraIconComponent }[] = [
+    { name: 'Exterior Car Care & Detailing', exportName: 'CategoryExteriorIcon', Icon: CategoryGlyphs.CategoryExteriorIcon },
+    { name: 'Interior Detailing & Protection', exportName: 'CategoryInteriorIcon', Icon: CategoryGlyphs.CategoryInteriorIcon },
+    { name: 'Protection & Restoration', exportName: 'CategoryProtectionIcon', Icon: CategoryGlyphs.CategoryProtectionIcon },
+    { name: 'Exterior Styling & Body Modifications', exportName: 'CategoryStylingIcon', Icon: CategoryGlyphs.CategoryStylingIcon },
+    { name: 'Graphics, Decals & Light-Up Aesthetic Mods', exportName: 'CategoryGraphicsIcon', Icon: CategoryGlyphs.CategoryGraphicsIcon },
+    { name: 'Interior Customisation & Comfort Upgrades', exportName: 'CategoryComfortIcon', Icon: CategoryGlyphs.CategoryComfortIcon },
+    { name: 'Infotainment, Electronics & Cluster Upgrades', exportName: 'CategoryElectronicsIcon', Icon: CategoryGlyphs.CategoryElectronicsIcon },
+    { name: 'Performance & Sound Appearance Mods', exportName: 'CategoryPerformanceIcon', Icon: CategoryGlyphs.CategoryPerformanceIcon },
+    { name: 'Luxury & Lifestyle Add-ons', exportName: 'CategoryLuxuryIcon', Icon: CategoryGlyphs.CategoryLuxuryIcon },
+    { name: 'Fleet & Business Services', exportName: 'CategoryFleetIcon', Icon: CategoryGlyphs.CategoryFleetIcon },
+]
+
+export const ServiceCategories: Story = {
+    render: () => (
+        <div className="grid gap-6 p-6 lg:grid-cols-2">
+            {(['light', 'dark'] as const).map((theme) => (
+                <section
+                    key={theme}
+                    data-theme={theme}
+                    data-testid={`icon-categories-${theme}`}
+                    className="grid gap-3 rounded-2xl p-5"
+                    style={{ ...surfaceStyle('band'), gridTemplateColumns: 'repeat(auto-fill, minmax(15rem, 1fr))' }}
+                >
+                    {CATEGORY_ICONS.map(({ name, exportName, Icon }) => (
+                        <figure key={name} className="m-0 grid gap-3 rounded-2xl p-4" style={surfaceStyle('raised')}>
+                            <span className="flex items-center gap-3">
+                                <Icon size={48} />
+                                <Icon size={48} active />
+                                <span
+                                    className="ml-auto grid size-11 place-items-center rounded-full"
+                                    style={{ background: 'var(--hero)', color: 'var(--lime)' }}
+                                >
+                                    <Icon size={24} active />
+                                </span>
+                            </span>
+                            <figcaption className="text-sm font-medium leading-snug">
+                                {name}
+                                <span className="block text-xs font-normal text-[var(--text-muted)]">
+                                    {exportName}
+                                </span>
+                            </figcaption>
+                        </figure>
+                    ))}
+                </section>
             ))}
         </div>
     ),
