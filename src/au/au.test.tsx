@@ -37,7 +37,8 @@ describe('AU (AUTM-2184): the native pieces on the web', () => {
     })
 
     it('named steps are a list with the current one marked', () => {
-        const { container } = render(<AU.Steps done={1} labels={['Requested', 'Accepted', 'In progress', 'Done']} />)
+        const { container } = render(<AU.Steps done={1} labels={['Requested', 'Accepted', 'In progress', 'Done']} aria-label="Where your booking is" />)
+        expect(container.querySelector('ol')?.getAttribute('aria-label')).toBe('Where your booking is')
         expect(container.querySelectorAll('li')).toHaveLength(4)
         expect(container.querySelector('[aria-current="step"]')?.textContent).toBe('Accepted')
     })

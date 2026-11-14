@@ -72,6 +72,8 @@ export interface TicketProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
     stepLabels?: string[]
     /** A test id for Steps. */
     stepsTestId?: string
+    /** The steps' accessible name ("Where your booking is"). */
+    stepsLabel?: string
     /** Drawn in place of the title (a block that brings its own heading). */
     headline?: React.ReactNode
     children?: React.ReactNode
@@ -90,6 +92,7 @@ export function Ticket({
     titleProps,
     stepLabels,
     stepsTestId,
+    stepsLabel,
     headline,
     className,
     children,
@@ -112,7 +115,7 @@ export function Ticket({
                     {meridiem ? <span className="au-ticket__meridiem">{meridiem}</span> : null}
                 </div>
             ) : null}
-            {stepsDone !== undefined ? <Steps done={stepsDone} labels={stepLabels} data-testid={stepsTestId} /> : null}
+            {stepsDone !== undefined ? <Steps done={stepsDone} labels={stepLabels} data-testid={stepsTestId} aria-label={stepsLabel} /> : null}
             {headline ?? (
                 <Title {...titleProps} className={cn('au-ticket__title', titleProps?.className)}>
                     {title}
