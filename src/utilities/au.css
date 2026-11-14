@@ -1,0 +1,914 @@
+/* ─── AU: the native apps' pieces, for the web twin (AUTM-2184) ──────────
+ *
+ * The stylesheet for `src/au/` (the `@autara-au/autara-ui/au` subpath, and
+ * `AU` from the package root). Each block is the web side of a SwiftUI view
+ * in `autara-ios/Design/Components.swift` or `autara-ios/Customer/`, with the
+ * same name, so one screen reads the same in both apps. Values come from
+ * `tokens/au.css`; sizes are rem so the reader's text size moves them
+ * (Dynamic Type on iOS, 200% text here).
+ *
+ * Shape follows the native app, not the 2026-09 Glass rule: buttons, chips,
+ * the dock and discs are capsules and circles, as in Swift (`in: .capsule`).
+ * A capsule's radius is half its height in rem, so at 200% text a tall box
+ * becomes a rounded rectangle rather than a blob (as Button does).
+ *
+ * Motion: one curve (`--au-ease`), 520ms for things arriving and 160ms for a
+ * press, transform and opacity only, everything inside
+ * `prefers-reduced-motion: no-preference`, so a reduced-motion reader gets
+ * the finished state at once and nothing waits invisible on a delay.
+ */
+
+/* ── The room and the card ─────────────────────────────────────────────── */
+
+.au-room {
+    background: var(--au-room);
+    color: var(--au-ink);
+}
+
+/* `.card()`: white, 26pt continuous corners, padding by the caller. */
+.au-card {
+    background: var(--au-card);
+    border-radius: var(--au-card-radius);
+    padding: 1rem;
+    color: var(--au-ink);
+    min-width: 0;
+}
+.au-card[data-pad='8'] { padding: 0.5rem; }
+.au-card[data-pad='12'] { padding: 0.75rem; }
+.au-card[data-pad='20'] { padding: 1.25rem; }
+.au-card[data-pad='24'] { padding: 1.5rem; }
+.au-card[data-pad='0'] { padding: 0; }
+
+/* ── The hero: the thing in front of you, one per screen ───────────────── */
+
+/* `HeroFill` / `.hero()`: flat ink for the customer app (AppTheme.ink), the
+ * deep purple plate under [data-au-theme="merchant"]. */
+.au-hero {
+    background: var(--au-hero);
+    color: var(--au-hero-ink);
+    border-radius: var(--au-plate-radius);
+    min-width: 0;
+}
+
+/* `Plate`: the merchant app's deep purple plate. The brand texture is the
+ * app's own image (`--au-plate-texture: url(...)`); without one it is the
+ * flat deep purple, which keeps white and lime at full contrast. */
+.au-plate {
+    background-color: var(--au-deep);
+    background-image: var(--au-plate-texture, none);
+    background-size: cover;
+    background-position: center;
+    color: #ffffff;
+    border-radius: var(--au-plate-radius);
+}
+
+/* ── Ticket: the booking as one big lime time ──────────────────────────── */
+
+.au-ticket {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    container-type: inline-size;
+}
+.au-ticket__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+}
+.au-ticket__caption {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--au-hero-soft);
+}
+/* Inline, not flex: the time and its meridiem read as one phrase ("9:00
+ * am") to a screen reader and in innerText, and still share a baseline. */
+.au-ticket__when {
+    display: block;
+    margin: -0.5rem 0;
+    line-height: 1;
+}
+/* 84pt Black on the phone (AUText.hero), and never wider than the ticket:
+ * the container unit takes over when 200% text would push it out. */
+.au-ticket__time {
+    font-size: min(5.25rem, 28cqi);
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    font-variant-numeric: tabular-nums;
+    color: var(--au-hero-figure);
+    white-space: nowrap;
+    display: inline-block;
+}
+.au-ticket__time[data-size='large'] {
+    font-size: min(6rem, 30cqi);
+}
+.au-ticket__meridiem {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 1.375rem;
+    font-weight: 500;
+    color: var(--au-hero-soft);
+}
+.au-ticket__title {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--au-hero-ink);
+    overflow-wrap: anywhere;
+    margin: 0;
+}
+
+/* ── Steps: requested, accepted, in progress, done ─────────────────────── */
+
+.au-steps {
+    display: flex;
+    gap: 0.25rem;
+}
+.au-steps__bar {
+    flex: 1 1 0;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--au-step-rest);
+}
+.au-steps__bar[data-state='done'] { background: var(--au-step-done); }
+.au-steps__bar[data-state='live'] { background: var(--au-step-live); }
+
+/* ── Badge, on the hero ────────────────────────────────────────────────── */
+
+.au-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 1.75rem;
+    padding: 0.125rem 0.75rem;
+    border-radius: 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    background: var(--au-hero-chip);
+    color: var(--au-hero-ink);
+}
+.au-badge[data-kind='inFlight'] {
+    background: var(--au-aqua);
+    color: var(--au-on-lime);
+}
+/* Off the hero (a row on a card): lime for done, the room's well for the rest. */
+.au-badge[data-kind='done'] {
+    background: var(--au-lime);
+    color: var(--au-on-lime);
+}
+.au-badge[data-kind='needsYou'] {
+    /* The fill grade of the act purple: --au-act is text grade and lifts to
+     * lavender in dark, under 2:1 with a white label. */
+    background: var(--accent-fill, #4e1bbd);
+    color: #ffffff;
+}
+.au-badge[data-kind='quiet'] {
+    background: var(--au-well);
+    color: var(--au-ink);
+}
+
+/* ── Avatar: initials in a 44pt disc ───────────────────────────────────── */
+
+.au-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    overflow: hidden;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    background: var(--au-tile);
+    color: var(--au-tile-figure);
+}
+.au-avatar[data-on-plate] {
+    background: var(--au-hero-ink);
+    color: var(--au-hero);
+}
+.au-avatar[data-size='68'] {
+    width: 4.25rem;
+    height: 4.25rem;
+    font-size: 1.375rem;
+    font-weight: 900;
+}
+.au-avatar[data-size='64'] {
+    width: 4rem;
+    height: 4rem;
+    font-size: 1.25rem;
+}
+.au-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ── Buttons: lime is the one primary ──────────────────────────────────── */
+
+.au-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    padding: 0.5rem 1.25rem;
+    border: 0;
+    border-radius: 1.5rem;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--au-lime);
+    color: var(--au-on-lime);
+    -webkit-tap-highlight-color: transparent;
+}
+.au-btn[data-kind='quiet'] {
+    background: var(--au-press);
+    color: var(--au-ink);
+}
+.au-btn[data-kind='onPlate'] {
+    background: var(--au-hero-chip);
+    color: var(--au-hero-ink);
+}
+.au-btn[data-kind='onHero'] {
+    background: var(--au-hero-ink);
+    color: var(--au-hero);
+}
+.au-btn[data-kind='card'] {
+    background: var(--au-card);
+    color: var(--au-ink);
+}
+.au-btn[data-height='44'] { min-height: 2.75rem; border-radius: 1.375rem; }
+.au-btn[data-height='52'] { min-height: 3.25rem; border-radius: 1.625rem; }
+.au-btn[data-height='54'] { min-height: 3.375rem; border-radius: 1.6875rem; }
+.au-btn[data-wide] {
+    display: flex;
+    width: 100%;
+    padding-inline: 0.75rem;
+    font-size: 1.0625rem;
+}
+.au-btn[aria-disabled='true'],
+.au-btn:disabled {
+    cursor: not-allowed;
+}
+
+/* ── Chip: a choice in a row of choices; the selected one is the tile ──── */
+
+.au-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+    min-height: 2.75rem;
+    padding: 0.375rem 1rem;
+    border: 0;
+    border-radius: 1.375rem;
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    background: var(--au-card);
+    color: var(--au-ink);
+    -webkit-tap-highlight-color: transparent;
+}
+.au-chip[data-on] {
+    background: var(--au-tile);
+    color: var(--au-tile-figure);
+}
+/* A fact, not a choice (the pro's rating, Comes to you): 40pt, medium. */
+.au-chip[data-fact] {
+    min-height: 2.5rem;
+    font-weight: 500;
+    cursor: default;
+}
+
+/* ── RegoPlate: a car's rego drawn as a small number plate ─────────────── */
+
+.au-rego {
+    display: inline-flex;
+    align-items: center;
+    flex: none;
+    padding: 0.25rem 0.4375rem;
+    border: 1.5px solid var(--au-rego-ink);
+    border-radius: 5px;
+    background: var(--au-rego);
+    color: var(--au-rego-ink);
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+/* ── DiscRow: a disc, a label, a value (Wise's row grammar) ────────────── */
+
+.au-disc-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 3.5rem;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    color: var(--au-ink);
+}
+a.au-disc-row,
+button.au-disc-row {
+    cursor: pointer;
+}
+.au-disc {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--au-well);
+    color: var(--au-ink);
+}
+.au-disc-row__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.au-disc-row__title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+.au-disc-row__detail {
+    font-size: 0.9375rem;
+    line-height: 1.3;
+    color: var(--au-muted);
+    overflow-wrap: anywhere;
+}
+.au-disc-row__trailing {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: none;
+    color: var(--au-muted);
+    font-size: 0.9375rem;
+}
+.au-disc-row__trailing > svg {
+    color: var(--au-subtle);
+}
+/* Rows on one card, split by the well's tone, inset past the disc. */
+.au-rows > * + * {
+    border-top: 1px solid var(--au-well);
+}
+.au-rows[data-inset] > * + * {
+    margin-left: 3.75rem;
+}
+
+/* ── SectionTitle and PageTitle ────────────────────────────────────────── */
+
+.au-section-title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0;
+}
+.au-section-title__text {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--au-ink);
+}
+.au-section-title__link {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--au-act);
+    text-decoration: none;
+    min-height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+}
+/* Bold, not Black: on the web 900 is for display figures and sheet titles
+ * only (workspace brand rule, Don 2026-10-02). Native draws it Black; the
+ * difference is recorded in knowledge/project_native_apps_2026_11_02.md. */
+.au-page-title {
+    margin: 0;
+    padding-top: 0.75rem;
+    font-size: 2.125rem;
+    font-weight: 700;
+    letter-spacing: -0.024em;
+    line-height: 1.1;
+    color: var(--au-ink);
+    overflow-wrap: anywhere;
+}
+
+/* ── CircleButton: a white circle holding one icon, always labelled ────── */
+
+.au-circle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    background: var(--au-card);
+    color: var(--au-ink);
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+}
+.au-circle-btn[data-fill='well'] { background: var(--au-well); }
+.au-circle-btn[data-size='48'] { width: 3rem; height: 3rem; }
+.au-circle-btn__dot {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.625rem;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--au-alert);
+    box-shadow: 0 0 0 2px var(--au-card);
+}
+
+/* ── MakeMark: the car as its maker's badge, in a white disc ───────────── */
+
+.au-make-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    color: var(--au-ink);
+}
+.au-make-mark[data-disc] {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: var(--au-card);
+}
+.au-make-mark > svg {
+    width: 1.375rem;
+    height: 1.375rem;
+}
+
+/* ── Photo: a pro's picture, or their initials on a quiet tile ─────────── */
+
+.au-photo {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    background: var(--au-press);
+    min-width: 0;
+}
+.au-photo > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.au-photo__initials {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    font-size: 1.375rem;
+    font-weight: 900;
+    color: var(--au-muted);
+    overflow: hidden;
+}
+
+/* ── The dock: four icon slots and a search disc, floating ─────────────── */
+
+.au-dock {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 30rem;
+    margin-inline: auto;
+    padding-inline: var(--au-gutter);
+    pointer-events: none;
+}
+.au-dock > * {
+    pointer-events: auto;
+}
+/* The native dock is Liquid Glass (`.glassEffect(.regular)`): white glass
+ * over whatever scrolls under it, with a hair of an edge so it holds on the
+ * room. Without backdrop-filter it is a solid card. */
+.au-dock__glass {
+    background: var(--au-card);
+    box-shadow: var(--float-shadow);
+}
+@supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    .au-dock__glass {
+        background: color-mix(in srgb, var(--au-card) 72%, transparent);
+        -webkit-backdrop-filter: blur(20px) saturate(1.6);
+        backdrop-filter: blur(20px) saturate(1.6);
+    }
+}
+.au-dock__tabs {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(var(--au-dock-count, 4), minmax(0, 1fr));
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 3.875rem;
+    padding: 0 0.5rem;
+    border-radius: 1.9375rem;
+    align-items: center;
+}
+.au-dock__tile {
+    position: absolute;
+    top: 50%;
+    left: 0.5rem;
+    width: calc((100% - 1rem) / var(--au-dock-count, 4));
+    height: 3rem;
+    margin-top: -1.5rem;
+    border-radius: 1.5rem;
+    background: var(--au-tile);
+    transform: translateX(calc(var(--au-dock-index, 0) * 100%));
+    pointer-events: none;
+}
+.au-dock__tile[hidden] { display: none; }
+.au-dock__tab {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 3rem;
+    color: var(--au-muted);
+    text-decoration: none;
+    border-radius: 1.5rem;
+    -webkit-tap-highlight-color: transparent;
+}
+.au-dock__tab[aria-current='page'] {
+    color: var(--au-tile-figure);
+}
+.au-dock__tab > svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.au-dock__count {
+    position: absolute;
+    top: 0.375rem;
+    left: 50%;
+    margin-left: 0.375rem;
+    min-width: 1.125rem;
+    height: 1.125rem;
+    padding: 0 0.3125rem;
+    border-radius: 0.5625rem;
+    /* Something waiting on you: the act purple's fill (white on it is 9.5:1;
+     * white on the alert red would be 3.9:1, too faint at this size). */
+    background: var(--accent-fill, #4e1bbd);
+    color: #ffffff;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1.125rem;
+    text-align: center;
+}
+.au-dock__search {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 3.875rem;
+    height: 3.875rem;
+    border-radius: 50%;
+    color: var(--au-ink);
+    text-decoration: none;
+    border: 0;
+    cursor: pointer;
+}
+.au-dock__search > svg {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* ── Chat: bubbles, events and the one-field composer ──────────────────── */
+
+.au-thread {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.au-bubble-row {
+    display: flex;
+    min-width: 0;
+}
+.au-bubble-row[data-mine] {
+    justify-content: flex-end;
+}
+.au-bubble {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: min(calc(100% - 3.5rem), 34rem);
+    padding: 0.6875rem 1rem;
+    border-radius: 1.375rem;
+    background: var(--au-card);
+    color: var(--au-ink);
+    font-size: 1rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.au-bubble[data-mine] {
+    background: var(--au-tile);
+    color: var(--au-tile-label);
+}
+.au-bubble[data-photos] {
+    padding: 0.5rem;
+}
+.au-bubble__meta {
+    font-size: 0.75rem;
+    color: var(--au-subtle);
+    padding-inline: 0.25rem;
+}
+.au-bubble[data-mine] .au-bubble__meta {
+    color: color-mix(in srgb, var(--au-tile-label) 72%, transparent);
+}
+.au-event {
+    align-self: center;
+    padding: 0.5rem 0;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--au-subtle);
+    text-align: center;
+}
+.au-composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+}
+.au-composer__field {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 3rem;
+    max-height: 9rem;
+    padding: 0.8125rem 1rem;
+    border: 0;
+    border-radius: 1.5rem;
+    background: var(--au-card);
+    color: var(--au-ink);
+    font: inherit;
+    font-size: 1rem;
+    line-height: 1.375rem;
+    resize: none;
+    field-sizing: content;
+    outline: none;
+}
+.au-composer__field::placeholder {
+    color: var(--au-subtle);
+}
+.au-composer__field:focus-visible {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--au-act) 75%, transparent);
+}
+.au-composer__send {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 3rem;
+    height: 3rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--au-card);
+    color: var(--au-subtle);
+    cursor: pointer;
+}
+.au-composer__send[data-ready] {
+    background: var(--au-lime);
+    color: var(--au-on-lime);
+}
+
+/* ── Photo tiles: a service, a pro ─────────────────────────────────────── */
+
+.au-service-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--au-card-radius);
+    background: var(--au-card);
+    color: var(--au-ink);
+    text-decoration: none;
+    text-align: left;
+    border: 0;
+    font: inherit;
+    min-width: 0;
+    cursor: pointer;
+}
+.au-service-card__photo {
+    aspect-ratio: 16 / 10;
+    border-radius: 1rem;
+}
+.au-service-card__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 0.25rem 0.25rem;
+    min-width: 0;
+}
+.au-service-card__name {
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.25;
+    min-height: 2.5em;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.au-service-card__length {
+    font-size: 0.8125rem;
+    color: var(--au-muted);
+}
+.au-service-card__price {
+    font-size: 1.0625rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+}
+
+.au-pro-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-radius: var(--au-card-radius);
+    background: var(--au-card);
+    color: var(--au-ink);
+    text-decoration: none;
+    min-width: 0;
+}
+.au-pro-card__photo {
+    aspect-ratio: 212 / 148;
+    border-radius: 1.25rem;
+}
+.au-pro-card__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    padding: 0 0.5rem 0.25rem;
+    min-width: 0;
+}
+.au-pro-card__name {
+    font-size: 1rem;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.au-pro-card__line {
+    font-size: 0.9375rem;
+    color: var(--au-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A rail of cards that scrolls across, snapping to each. */
+.au-rail {
+    display: flex;
+    gap: 0.75rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--au-gutter);
+    padding-inline: var(--au-gutter);
+    margin-inline: calc(-1 * var(--au-gutter));
+}
+.au-rail > * {
+    scroll-snap-align: start;
+    flex: none;
+}
+
+/* ── Skeleton blocks (Loadable's loading branch) ───────────────────────── */
+
+.au-skeleton {
+    background: var(--au-press);
+    border-radius: var(--au-card-radius);
+}
+.au-skeleton[data-shape='plate'] {
+    border-radius: var(--au-plate-radius);
+}
+
+/* ── Focus: a key reaching a control sees the accent ring ──────────────── */
+
+.au-btn:focus-visible,
+.au-chip:focus-visible,
+.au-circle-btn:focus-visible,
+.au-disc-row:focus-visible,
+.au-dock__tab:focus-visible,
+.au-dock__search:focus-visible,
+.au-composer__send:focus-visible,
+.au-service-card:focus-visible,
+.au-pro-card:focus-visible,
+.au-section-title__link:focus-visible {
+    outline: 2px solid var(--accent, var(--au-act));
+    outline-offset: 3px;
+}
+
+/* ── Motion ────────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: no-preference) {
+    /* A press: 97% and back, on the touch duration (AUButtonStyle). */
+    .au-btn,
+    .au-chip,
+    .au-circle-btn,
+    .au-composer__send,
+    .au-dock__search {
+        transition:
+            transform var(--au-touch) var(--au-ease),
+            opacity var(--au-touch) var(--au-ease),
+            background-color var(--au-touch) var(--au-ease),
+            color var(--au-touch) var(--au-ease);
+    }
+    .au-btn:active:not([aria-disabled='true']):not(:disabled) {
+        transform: scale(0.97);
+        opacity: 0.9;
+    }
+    .au-chip:active,
+    .au-circle-btn:active,
+    .au-composer__send:active,
+    .au-dock__search:active {
+        transform: scale(0.97);
+    }
+    /* PressStyle: a whole card or tile, 98%. */
+    .au-service-card,
+    .au-pro-card,
+    a.au-card,
+    button.au-card {
+        transition: transform var(--au-touch) var(--au-ease);
+    }
+    .au-service-card:active,
+    .au-pro-card:active,
+    a.au-card:active,
+    button.au-card:active {
+        transform: scale(0.98);
+    }
+
+    /* The dock's tile slides between tabs and settles (auSlide). */
+    .au-dock__tile {
+        transition: transform var(--au-slide) cubic-bezier(0.3, 1.2, 0.5, 1);
+    }
+    .au-dock__tab > svg {
+        transition: transform var(--au-touch) var(--au-ease);
+    }
+    .au-dock__tab[aria-current='page'] > svg {
+        transform: scale(1.08);
+    }
+
+    /* Rise: content arrives a beat after the last piece. */
+    .au-rise {
+        animation: au-rise var(--au-move) var(--au-ease) both;
+        animation-delay: calc(var(--au-rise-index, 0) * 60ms);
+    }
+
+    /* Pulse: a slow breath on whatever is happening now. */
+    .au-steps__bar[data-state='live'],
+    .au-pulse {
+        animation: au-pulse 0.9s ease-in-out infinite alternate;
+    }
+}
+
+@keyframes au-rise {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes au-pulse {
+    from { opacity: 1; }
+    to { opacity: 0.35; }
+}

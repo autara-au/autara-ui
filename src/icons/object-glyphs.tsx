@@ -29,6 +29,21 @@ export function TodayIcon(props: AutaraIconProps) {
     )
 }
 
+/**
+ * A house with its door: Home, the customer app's first tab (AUTM-2184). The
+ * same paths as the native app's `ic-home` (autara-ios/Design/Icons.xcassets),
+ * so both docks draw one glyph.
+ */
+export function HomeIcon(props: AutaraIconProps) {
+    return (
+        <AutaraIcon glyph="home" {...props}
+            bold={<path fillRule="evenodd" clipRule="evenodd" d="M4 10.6 12 4l8 6.6V18.5A2 2 0 0 1 18 20.5h-3.25V15.5h-5.5v5H6A2 2 0 0 1 4 18.5Z" />}
+        >
+            <path d="M4 10.6 12 4l8 6.6V18.5A2 2 0 0 1 18 20.5h-3.25V15.5h-5.5v5H6A2 2 0 0 1 4 18.5Z" />
+        </AutaraIcon>
+    )
+}
+
 /** A calendar with the booked slot: bookings, a date, availability. */
 export function BookingsIcon(props: AutaraIconProps) {
     return (

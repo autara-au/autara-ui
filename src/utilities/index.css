@@ -28,3 +28,5 @@
 @import "./row-actions.css";
 /* AUTM-1800: a pro's public profile, shared by customer-web and the portal preview. */
 @import "./merchant-profile.css";
+/* AUTM-2184: the native apps' pieces (src/au, the `au` subpath). */
+@import "./au.css";

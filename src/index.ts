@@ -393,3 +393,7 @@ export {
 /* AUTM-2140: the glass fields' tracker for a non-React shell; React apps
  * render `<GlassEdgeTracker />` instead. */
 export { installGlassEdge, GLASS_EDGE_REACH } from './lib/glass-edge'
+
+/* AUTM-2184: the native apps' pieces under their Swift names, as one namespace
+ * (`AU.Ticket`), since several names are taken in the root. Also the `/au` subpath. */
+export * as AU from './au'

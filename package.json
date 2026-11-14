@@ -27,6 +27,10 @@
       "types": "./dist/icons/index.d.ts",
       "default": "./dist/icons/index.js"
     },
+    "./au": {
+      "types": "./dist/au/index.d.ts",
+      "default": "./dist/au/index.js"
+    },
     "./photo": {
       "types": "./dist/lib/photo.d.ts",
       "default": "./dist/lib/photo.js"

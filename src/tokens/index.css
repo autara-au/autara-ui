@@ -11,6 +11,8 @@
 /* AUTM-1739 — the page track and its gutter, and the scrollbar colours. */
 @import "./layout.css";
 @import "./scrollbar.css";
+/* AUTM-2184: the native apps' tokens (--au-*), for the web twin of autara-ios. */
+@import "./au.css";
 
 /* ─── Dark variant (AUTM-734) ────────────────────────────────────────────
  * `dark:` utilities key off the `data-theme` attribute, NOT the OS

@@ -1,0 +1,101 @@
+/* ─── AU: the native apps' tokens, for the web twin (AUTM-2184) ──────────
+ *
+ * The same values as `autara-ios/Design/Tokens.swift` (`AU` and
+ * `AppTheme.ink`), under the same names with an `--au-` prefix, so a screen
+ * on autara.au and the same screen in the native customer app are built from
+ * one list. Change a value here and in Tokens.swift together; a difference
+ * that has to stay is written down in the workspace's
+ * knowledge/project_native_apps_2026_11_02.md.
+ *
+ * The rule they carry (Stone, AUTM-2130): the grey is the room, never the
+ * tiles. The page is the room, cards are white, and on a card the next step
+ * down (an icon disc, a field) is the room's tone again.
+ *
+ * The hero is the app's own accent, one per screen. The customer app's is
+ * flat ink with the lime figure (Don, 2026-11-15, `AppTheme.ink`): no
+ * gradient and no texture. The merchant app's is the deep purple plate;
+ * `[data-au-theme="merchant"]` on any ancestor switches the hero and the
+ * selected tile to it, as `AU.theme` does at launch in Swift.
+ *
+ * Only `--au-*` names, so nothing here touches the existing semantic tokens.
+ */
+
+:root,
+:host {
+    /* Surfaces */
+    --au-room: #f4f2ee;
+    --au-card: #ffffff;
+    --au-well: #f4f2ee;
+    --au-press: #e9e6df;
+    /* Text */
+    --au-ink: #0e0a1a;
+    --au-muted: #4d4a45;
+    --au-subtle: #66625b;
+    /* Brand: purple acts, aqua in flight, lime done and the one primary */
+    --au-act: #4e1bbd;
+    --au-deep: #2e1070;
+    --au-lime: #d4ff4f;
+    --au-aqua: #4ceaff;
+    --au-on-lime: #0e0a1a;
+    --au-rego: #ffd84a;
+    --au-rego-ink: #161616;
+    --au-alert: #e5484d;
+
+    /* The hero and the selected tile: AppTheme.ink */
+    --au-hero: #14101f;
+    --au-hero-ink: #ffffff;
+    --au-hero-soft: rgba(255, 255, 255, 0.75);
+    --au-hero-figure: #d4ff4f;
+    --au-hero-chip: rgba(255, 255, 255, 0.13);
+    --au-step-done: #d4ff4f;
+    --au-step-live: #4ceaff;
+    --au-step-rest: rgba(255, 255, 255, 0.2);
+    --au-tile: #14101f;
+    --au-tile-figure: #d4ff4f;
+    --au-tile-label: #ffffff;
+
+    /* One spacing grid: every gap and padding a multiple of 4. */
+    --au-gutter: 20px;
+    --au-gap: 16px;
+    --au-min-target: 44px;
+    --au-card-radius: 26px;
+    --au-plate-radius: 32px;
+
+    /* One curve, two durations: 520ms for big moves, 160ms for touches
+     * (Animation.auMove / .auTouch). The curve is the house ease-out. */
+    --au-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --au-move: 520ms;
+    --au-touch: 160ms;
+    --au-slide: 420ms;
+}
+
+/* Dark: neutral greys with purple as an accent only (Tokens.swift `dyn`). */
+[data-theme='dark'] {
+    --au-room: #0b0b0c;
+    --au-card: #1b1b1d;
+    --au-well: #262628;
+    --au-press: #303033;
+    --au-ink: #f6f6f7;
+    --au-muted: #b9b9be;
+    --au-subtle: #b0b0b6;
+    --au-act: #b9a2ff;
+    --au-hero: #242427;
+    --au-tile: #d4ff4f;
+    --au-tile-figure: #0e0a1a;
+    --au-tile-label: #0e0a1a;
+}
+
+/* The merchant app's hero: the deep purple plate (AppTheme.merchant). */
+[data-au-theme='merchant'] {
+    --au-hero: #2e1070;
+    --au-hero-soft: rgba(255, 255, 255, 0.8);
+    --au-hero-chip: rgba(255, 255, 255, 0.15);
+    --au-tile: #2e1070;
+    --au-tile-figure: #d4ff4f;
+    --au-tile-label: #ffffff;
+}
+
+[data-theme='dark'] [data-au-theme='merchant'],
+[data-theme='dark'][data-au-theme='merchant'] {
+    --au-tile: #6d3df0;
+}
