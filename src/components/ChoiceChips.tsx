@@ -34,6 +34,18 @@ import { ChipRow } from './ChipRow'
  * An option can be `disabled` with a `reason` (read to a screen reader, struck
  * through on screen), the TimePicker's rule: opacity alone is not a signal.
  *
+ * `layout="tiles"` (AUTM-2140 R8, Don's pick C2 "Icon tiles, two columns",
+ * 2026-11-14): for ten long names (the service categories) that chips cannot
+ * set calmly. Two even columns, one under 32rem of container (and so at 200%
+ * text, since the query is in rem); each tile at least 64px tall, the
+ * option's `icon` at 24px in a disc on the left, the label wrapping as it
+ * needs (never clamped, so nothing is lost at large text), on the band fill
+ * the chips use. Chosen: the hero fill, `selectedIcon` (the Bold twin) in
+ * lime in the disc, a lime check at the end. Same radiogroup, keyboard
+ * model, `invalid`, `disabled` with `reason` and per-option `testId` as the
+ * chips: only the drawing changes. `icon` and `selectedIcon` are ignored by
+ * `wrap` and `row`.
+ *
  * References: Fresha's time slots and Airbnb's times under each item (steal:
  * the choice is the chip, one tap); Wise's amount presets (adapt: chips that
  * fill, editable after).
@@ -47,6 +59,10 @@ export interface ChoiceChipOption<V extends string = string> {
     /** Why a disabled option is out, for a screen reader. */
     reason?: string
     testId?: string
+    /** `layout="tiles"` only: the icon at rest, drawn 24px in the tile's disc. Ignored by `wrap` and `row`. */
+    icon?: React.ReactNode
+    /** `layout="tiles"` only: the icon when chosen (the Bold twin), in lime. Falls back to `icon`. */
+    selectedIcon?: React.ReactNode
 }
 
 export interface ChoiceChipsAction {
@@ -69,7 +85,8 @@ export interface ChoiceChipsProps<V extends string = string> {
     labelledBy?: string
     /** An id whose text says more about the choice (a rule, a reason). */
     describedBy?: string
-    layout?: 'wrap' | 'row'
+    /** `wrap` (default), `row` (one scrolling row) or `tiles` (two columns of icon tiles). */
+    layout?: 'wrap' | 'row' | 'tiles'
     /** One trailing chip that is an action, not a choice. */
     action?: ChoiceChipsAction
     invalid?: boolean
@@ -82,15 +99,19 @@ export interface ChoiceChipsProps<V extends string = string> {
 const CHIP =
     'inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-[1.375rem] px-[min(1.125rem,5vw)] py-2 text-[0.9375rem] leading-tight font-medium whitespace-nowrap transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]'
 
-function Tick() {
+/** A tile: 64px tall at least, the label free to wrap, the chip's focus ring. */
+const TILE =
+    'flex min-h-16 w-full items-center gap-3.5 rounded-[1.25rem] py-2.5 pr-4 text-left text-[0.9375rem] leading-snug font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]'
+
+function Tick({ size = 16, className = '-ml-0.5' }: { size?: number; className?: string }) {
     return (
         <svg
             aria-hidden="true"
             viewBox="0 0 24 24"
-            width="16"
-            height="16"
+            width={size}
+            height={size}
             fill="currentColor"
-            className="-ml-0.5 shrink-0"
+            className={cn('shrink-0', className)}
             // The non-colour mark of the chosen option (WCAG 1.4.1), the same
             // hook the merchant app's tiles carry, so one check reads both.
             data-selected-mark=""
@@ -165,10 +186,28 @@ export function ChoiceChips<V extends string = string>({
     }
 
     const row = layout === 'row'
+    const tiles = layout === 'tiles'
 
     const chipButtons = options.map((o, i) => {
         const checked = o.value === value
         const off = disabled || !!o.disabled
+        const look = tiles
+            ? cn(
+                  TILE,
+                  'motion-press-row',
+                  o.icon != null ? 'pl-2.5' : 'pl-4',
+                  checked
+                      ? 'bg-[var(--hero)] text-[var(--on-deep)]'
+                      : 'bg-[var(--band)] text-[var(--text-strong)] not-aria-disabled:hover:bg-[var(--band-press)]',
+              )
+            : cn(
+                  CHIP,
+                  'motion-press',
+                  checked
+                      ? 'bg-[var(--selected)] text-[var(--on-selected)]'
+                      : 'bg-[var(--band)] text-[var(--text-strong)] not-aria-disabled:hover:bg-[var(--band-press)]',
+              )
+        const reason = off && o.reason ? <span className="sr-only">, {o.reason}</span> : null
         return (
             <button
                 key={o.value}
@@ -185,18 +224,36 @@ export function ChoiceChips<V extends string = string>({
                     setFocusIndex(i)
                     onChange(o.value)
                 }}
-                className={cn(
-                    CHIP,
-                    'motion-press',
-                    checked
-                        ? 'bg-[var(--selected)] text-[var(--on-selected)]'
-                        : 'bg-[var(--band)] text-[var(--text-strong)] not-aria-disabled:hover:bg-[var(--band-press)]',
-                    off && 'cursor-not-allowed text-[var(--text-muted)] line-through opacity-50',
-                )}
+                data-tile={tiles ? '' : undefined}
+                className={cn(look, off && 'cursor-not-allowed text-[var(--text-muted)] line-through opacity-50')}
             >
-                {checked ? <Tick /> : null}
-                {o.label}
-                {off && o.reason ? <span className="sr-only">, {o.reason}</span> : null}
+                {tiles ? (
+                    <>
+                        {o.icon != null ? (
+                            <span
+                                aria-hidden="true"
+                                data-slot="tile-icon"
+                                className={cn(
+                                    'grid size-11 shrink-0 place-items-center rounded-full transition-colors duration-150 [&>svg]:size-6',
+                                    checked
+                                        ? 'bg-[var(--icon-disc-ondark)] text-[var(--lime)]'
+                                        : 'bg-[var(--raised)] text-[var(--text-subtle)]',
+                                )}
+                            >
+                                {checked ? (o.selectedIcon ?? o.icon) : o.icon}
+                            </span>
+                        ) : null}
+                        <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">{o.label}</span>
+                        {checked ? <Tick size={22} className="text-[var(--lime)]" /> : null}
+                        {reason}
+                    </>
+                ) : (
+                    <>
+                        {checked ? <Tick /> : null}
+                        {o.label}
+                        {reason}
+                    </>
+                )}
             </button>
         )
     })
@@ -212,8 +269,26 @@ export function ChoiceChips<V extends string = string>({
     }
 
     return (
-        <div className={cn('flex items-center gap-2', row ? 'flex-nowrap' : 'flex-wrap', className)}>
-            {row ? (
+        <div
+            className={cn(
+                'flex items-center gap-2',
+                row ? 'flex-nowrap' : 'flex-wrap',
+                // The tiles' columns follow the width they have, not the screen.
+                tiles && '@container w-full',
+                className,
+            )}
+        >
+            {tiles ? (
+                <div
+                    ref={groupRef}
+                    role="radiogroup"
+                    aria-label={labelledBy ? undefined : label}
+                    className="grid w-full grid-cols-1 gap-2 @min-[32rem]:grid-cols-2"
+                    {...groupProps}
+                >
+                    {chipButtons}
+                </div>
+            ) : row ? (
                 <ChipRow
                     ref={groupRef}
                     role="radiogroup"

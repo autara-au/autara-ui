@@ -59,6 +59,7 @@ const KEEPS: Record<string, string> = {
     'Tabs.tsx': 'the segmented track and its pills, canvas v44 "Segmented" (AUTM-1594)',
     'FilterChipRow.tsx': 'filter chips are pills on canvas v44 (AUTM-1594), superseding the 8px chip rung',
     'ChoiceCard.tsx': 'the 40px icon disc beside the label, a glyph in a circle like StepCard (AUTM-1594)',
+    'ChoiceChips.tsx': 'layout="tiles", the 44px icon disc on each tile, a glyph in a circle like ChoiceCard (AUTM-2140 R8, Don\'s pick C2)',
     'MetaChip.tsx': 'meta chips are 28px pills on canvas v44 (AUTM-1594), superseding the 8px chip rung',
     'StatusDot.tsx': 'the 8px state light itself (AUTM-1594), the meaning round was reserved for',
     'StatTile.tsx': 'the 28px icon disc beside the label (AUTM-1594)',
