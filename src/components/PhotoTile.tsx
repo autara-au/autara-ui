@@ -37,7 +37,11 @@ import { Spinner } from './Spinner'
  * drawn as a `--photo-disc` disc with a white cross (24px tucked into the
  * corner of a tray tile, 28px from 6.5rem), named "Remove
  * photo 2 of 3" from `index` and `total`. Present in every state, so a stuck
- * or refused photo can always be taken back out.
+ * or refused photo can always be taken back out. On a tile under 6.5rem (the
+ * 4.5rem tray tile) the 44px target sits 10px out past the corner, the disc
+ * still 4px inside it: inside the tile it would cover the centre, and a tap
+ * on a failed photo's middle, where its retry glyph is, removed the photo
+ * (AUTM-2165, measured: "72px tile, centre hits Remove photo 1 of 3").
  *
  * Words on a small tile. A tile is a size container: the short captions
  * (Uploading photo, Checking photo, Photo no longer available) show from
@@ -293,6 +297,7 @@ export const PhotoTile = React.forwardRef<HTMLDivElement, PhotoTileProps>(functi
 
             {glyph || captionClass ? (
                 <div
+                    data-photo-content=""
                     className={cn(
                         'pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1.5 p-2 text-center',
                         onPhoto ? 'text-[var(--on-photo)]' : 'text-[var(--text-strong)]'
@@ -345,11 +350,13 @@ export const PhotoTile = React.forwardRef<HTMLDivElement, PhotoTileProps>(functi
                     data-testid={removeTestId}
                     aria-label={removeLabel ?? `Remove ${ordinal}`}
                     onClick={onRemove}
-                    // The target is 44px in the corner. The disc in it is 24px
-                    // tucked 4px from the corner on a tray tile (so it clears the
-                    // ring and the glyph), and 28px in the middle of the target
-                    // from 6.5rem.
-                    className="group/remove motion-press absolute top-0 right-0 z-20 grid size-11 cursor-pointer place-items-start justify-items-end rounded-full p-1 outline-none @min-[6.5rem]:place-items-center @min-[6.5rem]:p-0"
+                    // The target is 44px. On a tray tile (under 6.5rem) it sits
+                    // 10px out past the corner, so the tile's centre stays the
+                    // tile's own action (retry, open), and the 24px disc is
+                    // tucked 4px from the tile's corner (14px into the target).
+                    // From 6.5rem the target is in the corner, the 28px disc in
+                    // its middle.
+                    className="group/remove motion-press absolute -top-2.5 -right-2.5 z-20 grid size-11 cursor-pointer place-items-start justify-items-end rounded-full pt-3.5 pr-3.5 outline-none @min-[6.5rem]:top-0 @min-[6.5rem]:right-0 @min-[6.5rem]:place-items-center @min-[6.5rem]:p-0"
                 >
                     <span
                         aria-hidden="true"
