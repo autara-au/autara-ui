@@ -17,7 +17,8 @@ import { cn } from "../lib/cn";
  *     thread measure (`measureClassName`, shared with MessageThread). No
  *     rule above it (AUTM-2042, Don 2026-11-08: no hairlines): the field's
  *     own edge marks it.
- *   - Field uses the canonical `.field-textarea` focus signature (warm-cream
+ *   - Field is the glass of Input (AUTM-2140), its focus the accent edge (was the
+ *     canonical `.field-textarea` focus signature: warm-cream
  *     tint + solid brand-purple border, no halo) via `Textarea`, forced to a
  *     compact single-row min height that grows to a cap.
  *   - Send is the house primary: `variant="primary"`. AUTM-1221 changed
@@ -200,9 +201,10 @@ export function MessageComposer({
           data-composer-field=""
           aria-busy={sending || undefined}
           className={cn(
-            "mx-auto flex w-full items-end gap-1 rounded-[1.625rem] border border-[var(--field-edge)] bg-[var(--paper)] p-1",
-            "transition-[border-color,box-shadow] duration-150",
-            "hover:border-[var(--text-muted)] focus-within:border-[var(--accent)] focus-within:shadow-[inset_0_0_0_1px_var(--accent)] focus-within:hover:border-[var(--accent)]",
+            // AUTM-2140: the field's glass with the lit hairline; focus is the
+            // accent edge and tint (`field-group`: the shell's states, this
+            // row's own layout).
+            "glass-edge field-group mx-auto flex w-full items-end gap-1 rounded-[1.625rem] p-1",
             attachments != null && "flex-wrap",
             measureClassName,
           )}

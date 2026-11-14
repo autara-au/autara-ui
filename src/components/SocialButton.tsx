@@ -11,8 +11,12 @@ import { AutaraLoader } from './AutaraLoader'
  * - 52px (3.25rem, so it grows with text), the pill, a 17px Medium label:
  *   the same height as the primary button and the input above it.
  * - A 20px mark 12px from the label, the two centred together as one unit.
- * - Google and Apple follow their providers' colours, in light and dark.
- *   Mobile is Autara's own: paper with the field's 1px edge and a phone mark.
+ * - Google is the field's glass (AUTM-2140, Don 2026-11-14): the same
+ *   `.glass-edge` fill and lit hairline as the input above it, with Google's
+ *   own G. Apple stays the one solid button, black in light and white in
+ *   dark (house rule: no other black button). Mobile is Autara's own: paper
+ *   with the field's 1px edge and a phone mark.
+ * - Keyboard focus is a 2px accent outline 3px out, on every provider.
  * - Busy: the pressed button swaps its mark for the turning Autara mark
  *   (AutaraLoader, 20px, in the label's colour) and keeps its label, so the
  *   width and the accessible name hold; it is aria-busy and disabled at full
@@ -106,7 +110,7 @@ export const SocialButton = React.forwardRef<HTMLButtonElement, SocialButtonProp
             aria-disabled={disabled || undefined}
             data-provider={provider}
             data-theme={theme}
-            className={cn('social-btn', press && 'motion-press', className)}
+            className={cn('social-btn', provider === 'google' && 'glass-edge', press && 'motion-press', className)}
             {...props}
         >
             <span className="social-btn__inner">

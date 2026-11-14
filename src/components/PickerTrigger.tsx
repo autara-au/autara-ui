@@ -5,9 +5,9 @@ import { cn } from "../lib/cn";
  * PickerTrigger — the field that opens a PickerSheet (AUTM-1594, canvas v44
  * "Picker trigger (replaces Select)").
  *
- * It looks like the sheet's field (52px, 14px, the field edge on paper, 17px
- * text, a chevron at the end) because to the person filling the form it IS a
- * field: here is the value, tap to change it. It is a button underneath,
+ * It looks like Input (AUTM-2140: the 52px glass pill with the lit hairline,
+ * 17px text, a chevron at the end) because to the person filling the form it
+ * IS a field: here is the value, tap to change it. It is a button underneath,
  * announced as opening a dialog, because a picker opens a sheet, never a
  * native dropdown, in the merchant app.
  *
@@ -59,12 +59,11 @@ export const PickerTrigger = forwardRef<HTMLButtonElement, PickerTriggerProps>(
         aria-invalid={ariaInvalid}
         data-placeholder={empty ? "" : undefined}
         className={cn(
-          "flex min-h-13 w-full items-center justify-between gap-2 rounded-autara-md border bg-[var(--paper)] px-4 py-2 text-left text-[1.0625rem] text-[var(--text-strong)] transition-colors",
-          "border-[var(--field-edge)] hover:not-disabled:border-[var(--text-muted)]",
-          "focus-visible:outline-none focus-visible:border-[var(--accent)] focus-visible:shadow-[inset_0_0_0_1px_var(--accent)]",
-          "aria-expanded:border-[var(--accent)] aria-expanded:shadow-[inset_0_0_0_1px_var(--accent)]",
-          "aria-invalid:border-[var(--danger)] aria-invalid:shadow-[inset_0_0_0_1px_var(--danger)]",
-          "disabled:cursor-not-allowed disabled:border-[var(--hairline)] disabled:opacity-60",
+          // AUTM-2140: `glass-edge` is the glass and lit hairline,
+          // `field-trigger` the states (focus-visible or expanded: the accent
+          // edge and tint; aria-invalid: the danger edge; disabled: dims).
+          "glass-edge field-trigger flex min-h-13 w-full items-center justify-between gap-2 rounded-full px-[var(--field-pad)] py-2 text-left text-[1.0625rem] text-[var(--text-strong)]",
+          "focus-visible:outline-none disabled:cursor-not-allowed",
           className,
         )}
       >

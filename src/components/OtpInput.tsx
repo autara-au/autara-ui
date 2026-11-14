@@ -19,11 +19,13 @@ import {
  *     drops the whole code in and it's split across the boxes.
  *   - Arrow keys move between boxes.
  *
- * Aesthetic (AUTM-1594, canvas v44 "Code"): 44 x 56 boxes on paper with the
- * field edge, 14px radius, the digit 22px Bold; focus is the field's 2px
- * accent ring, an error the danger border. No tint, no shadow. The digit
- * size is set inline in `rem` so it (a) survives a consumer's global
+ * Aesthetic (AUTM-2140): each 44 x 56 box is its own glass field, the
+ * shell and lit hairline of Input (`.field-shell.glass-edge`), rounded to
+ * the pill's corner; the digit is 22px Bold. Focus is the accent edge and
+ * tint, an error the danger edge, no halo, no shadow. The digit size is set
+ * inline in `rem` so it (a) survives a consumer's global
  * `input[type]{font-size}` rule and (b) still scales with OS Dynamic Type.
+ * Each box keeps its own `<input>` (and its aria-label), as before.
  *
  * Reset pattern: change the React `key` to remount — clears the boxes and
  * refocuses the first one (e.g. after a rejected code).
@@ -130,31 +132,36 @@ export function OtpInput({
       className="flex items-center justify-center gap-2.5"
     >
       {Array.from({ length }).map((_, i) => (
-        <input
+        <span
           // Index key is stable — the box set never reorders.
           key={i}
-          ref={(el) => {
-            inputsRef.current[i] = el;
-          }}
-          type="text"
-          inputMode="numeric"
-          autoComplete={i === 0 ? "one-time-code" : "off"}
-          maxLength={1}
-          disabled={disabled}
-          aria-label={`Digit ${i + 1} of ${length}`}
-          aria-invalid={invalid || undefined}
-          value={digits[i] ?? ""}
-          onChange={(e) => handleChange(i, e.target.value)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          onPaste={handlePaste}
-          onFocus={(e) => e.currentTarget.select()}
-          style={{ fontSize: "1.375rem" }}
-          className={`h-14 w-11 rounded-autara-md border bg-[var(--paper)] text-center font-bold tabular-nums text-[var(--text-strong)] caret-[var(--accent)] transition-colors duration-150 focus:outline-none disabled:opacity-60 ${
-            invalid
-              ? "border-[var(--danger)] focus:shadow-[inset_0_0_0_1px_var(--danger)]"
-              : "border-[var(--field-edge)] focus:border-[var(--accent)] focus:shadow-[inset_0_0_0_1px_var(--accent)]"
-          }`}
-        />
+          data-slot="field"
+          data-invalid={invalid ? "" : undefined}
+          data-disabled={disabled ? "" : undefined}
+          // Type on the shell: the control inherits it (forms.css), and an
+          // unlayered control rule would outrank a utility on the input.
+          className="field-shell glass-edge h-14 w-11 shrink-0 text-center font-bold tabular-nums"
+        >
+          <input
+            ref={(el) => {
+              inputsRef.current[i] = el;
+            }}
+            type="text"
+            inputMode="numeric"
+            autoComplete={i === 0 ? "one-time-code" : "off"}
+            maxLength={1}
+            disabled={disabled}
+            aria-label={`Digit ${i + 1} of ${length}`}
+            aria-invalid={invalid || undefined}
+            value={digits[i] ?? ""}
+            onChange={(e) => handleChange(i, e.target.value)}
+            onKeyDown={(e) => handleKeyDown(i, e)}
+            onPaste={handlePaste}
+            onFocus={(e) => e.currentTarget.select()}
+            style={{ fontSize: "1.375rem", paddingInline: 0 }}
+            className="field-shell-control"
+          />
+        </span>
       ))}
     </div>
   );

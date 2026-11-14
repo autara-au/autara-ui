@@ -7,10 +7,10 @@ import { cn } from '../lib/cn'
 /**
  * Select — Radix select primitive in the Autara cream-canvas grammar.
  *
- * - **Trigger**: 44 high, hairline `--border-subtle`, `--surface` fill,
- *   ink text, Solar Bold chevron. 4 px brand-purple halo on focus —
- *   same focus grammar as `Input` so triggers and inputs read as one
- *   field family.
+ * - **Trigger**: Input's glass pill (AUTM-2140): 52 high, fully round, glass
+ *   with the lit hairline, no ring at rest; focus or open is the accent
+ *   edge and tint, an error the danger edge. Triggers and inputs read as
+ *   one field family.
  * - **Content**: portaled, hairline edge, no drop shadow, no backdrop
  *   blur (Autara house rule).
  * - **Item**: muted text → ink on hover/focus; checked item carries a
@@ -72,17 +72,14 @@ const SelectTrigger = React.forwardRef<
     <SelectPrimitive.Trigger
         ref={ref}
         className={cn(
-            // AUTM-1594: the sheet's field (and PickerTrigger's look) — 52px,
-            // 14px, the field edge on paper; focus or open is a 2px accent
-            // ring with no halo; an error is the danger edge.
-            'flex min-h-13 w-full items-center justify-between gap-2 rounded-autara-md border border-[var(--field-edge)] bg-[var(--paper)] px-4 text-[1.0625rem] text-[var(--text-strong)] outline-none transition-colors',
-            'placeholder:text-[var(--text-subtle)]',
-            'hover:border-[var(--text-muted)]',
+            // AUTM-2140: the glass pill (Input's field): `glass-edge` draws
+            // the glass and the lit hairline, `field-trigger` the states —
+            // focus-visible or open is the accent edge and tint (no halo),
+            // aria-invalid the danger edge, disabled dims. Layout stays in
+            // utilities so a consumer's className still merges over it.
+            'glass-edge field-trigger flex min-h-13 w-full items-center justify-between gap-2 rounded-full px-[var(--field-pad)] text-[1.0625rem] text-[var(--text-strong)] outline-none',
             'data-[placeholder]:text-[var(--text-subtle)]',
-            'focus-visible:border-[var(--accent)] focus-visible:shadow-[inset_0_0_0_1px_var(--accent)]',
-            'data-[state=open]:border-[var(--accent)] data-[state=open]:shadow-[inset_0_0_0_1px_var(--accent)]',
-            'aria-invalid:border-[var(--danger)] aria-invalid:shadow-[inset_0_0_0_1px_var(--danger)]',
-            'disabled:cursor-not-allowed disabled:border-[var(--hairline)] disabled:text-[var(--text-subtle)] disabled:opacity-60',
+            'disabled:cursor-not-allowed',
             /*
               AUTM-418 — single-line truncation via `truncate`, NOT `line-clamp-1`.
 

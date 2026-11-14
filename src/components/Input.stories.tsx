@@ -8,12 +8,13 @@ import { GradientGround } from "./GlassSurface";
  * `<input className="field-input">` usage in customer-web /
  * merchant-mobile form-heavy surfaces.
  *
- * Visual rules:
- *   - 44 × full-width pill on cream surface (`size="md"`, default).
- *   - 48 × full-width on hero / onboarding panels (`size="lg"`).
- *   - Focus: warm-cream tint + solid brand-purple border. No halo (AUT-686).
- *   - Red border when `aria-invalid="true"`.
- *   - Disabled fills with `--surface-warm` and dims text.
+ * Visual rules (AUTM-2140, the glass pill; every state in both themes is in
+ * Foundations/Glass fields):
+ *   - 52px, fully round, glass with a 1px top lip, no ring at rest.
+ *   - The hairline lights under the cursor (`<GlassEdgeTracker />`).
+ *   - Focus: the accent edge at 75% and a faint tint. No halo.
+ *   - The danger edge when `aria-invalid="true"`.
+ *   - Disabled dims to 60%.
  */
 const meta = {
   title: "Atoms/Input",

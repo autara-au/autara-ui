@@ -52,29 +52,25 @@
 .social-btn__label { min-width: 0; overflow-wrap: break-word; text-wrap: balance; }
 
 .social-btn:focus-visible {
-    outline: 3px solid #4e1bbd;
+    /* AUTM-2140: the concept's keyboard ring, 2px accent 3px out. */
+    outline: 2px solid var(--accent);
     outline-offset: 3px;
 }
-.social-btn[data-theme='dark']:focus-visible { outline-color: #d4ff4f; }
 /* AUTM-1719: disabled keeps the provider's real colours (no 50% wash); the
  * not-allowed cursor, aria-disabled and the absent hover and press say it.
  * Busy keeps them too, with the progress cursor. */
 .social-btn:disabled { cursor: not-allowed; }
 .social-btn[aria-busy='true'] { cursor: progress; }
 
-/* Google: white, #747775 edge, #1F1F1F text; dark #131314, #8E918F, #E3E3E3. */
+/* Google (AUTM-2140): the field's glass. `.glass-edge` (forms.css) draws
+ * the fill, the lip and the lit hairline on the pseudo-elements; the button
+ * itself paints nothing, and its label takes the field's ink. The hover step
+ * is the glass's own. */
 .social-btn[data-provider='google'] {
-    background: #ffffff;
-    box-shadow: inset 0 0 0 1px #747775;
-    color: #1f1f1f;
+    background: transparent;
+    box-shadow: none;
+    color: var(--text-strong);
 }
-.social-btn[data-provider='google']:hover:not(:disabled) { background: #f2f2f2; }
-.social-btn[data-provider='google'][data-theme='dark'] {
-    background: #131314;
-    box-shadow: inset 0 0 0 1px #8e918f;
-    color: #e3e3e3;
-}
-.social-btn[data-provider='google'][data-theme='dark']:hover:not(:disabled) { background: #1f1f20; }
 
 /* Apple: black with the white mark; dark, white with the black mark. */
 .social-btn[data-provider='apple'] { background: #000000; color: #ffffff; }

@@ -130,8 +130,9 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
                     <p
                         id={descriptionId}
                         className={cn(
-                            // AUTM-1594: the sheet's hint is 14px at 72% ink.
-                            'text-sm',
+                            // AUTM-2140: the inputs concept's help line, 13px
+                            // at 72% ink, 8px under the field.
+                            'text-[0.8125rem] leading-snug',
                             theme === 'dark'
                                 ? 'text-white/60'
                                 : 'text-[var(--text-muted)]'
@@ -144,7 +145,7 @@ const FormField = React.forwardRef<HTMLDivElement, FormFieldProps>(
                     <p
                         id={errorId}
                         role="alert"
-                        className="text-sm text-[var(--danger)]"
+                        className="text-[0.8125rem] leading-snug text-[var(--danger)]"
                     >
                         {error}
                     </p>

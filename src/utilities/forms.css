@@ -1,235 +1,512 @@
 /* ─── Autara Form Styles ─────────────────────────────────────────────────
  *
- * AUTM-1594 — canvas v44's "Fields": one field family. 52px, 14px radius,
- * a 1px field edge (`--field-edge`, 48% ink) on paper, 17px text. Focus is
- * a 2px accent ring and nothing else (no tint, no halo); an error is a
- * danger border plus a message under the field; disabled is a hairline
- * edge at 60%. Apply `.field-input` to any text-style control.
+ * AUTM-2140 (Don, 2026-11-14): the glass pill. "the new UI input should
+ * something like glassy and shiniing hairline when scrolling, with premium
+ * look and rounded corners like others. see the jump to search. all the
+ * input should be change to that." He approved shape A of the concept
+ * (fully round, the Jump to shape) and then, on it: no ring at rest ("the
+ * outline is not good"), a hairline light that follows the cursor across
+ * the fields ("the shine line should be move on the inputs outline"), and
+ * no outer focus halo ("still i can see the ugly ring there").
  *
- * The 2px focus is the 1px border plus a 1px inset ring in the same colour,
- * so the text does not move by a pixel when the field takes focus.
+ * The family, all 52px, all on the same glass:
+ *   - `.glass-edge`  the shared material. Glass fill with backdrop blur and
+ *     a 1px inset top lip on `::after`; on `::before`, a 1px ring drawn with
+ *     a mask that holds three layers: the cursor light (a radial at
+ *     `--edge-x` / `--edge-y`, lit by `[data-edge-lit]`), the scroll glint
+ *     (a conic from `--edge-sheen`), and the resting hair (`--field-hair`,
+ *     transparent). `installGlassEdge()` (lib/glass-edge.ts) is the one
+ *     pointer and scroll listener that sets those properties; without it the
+ *     material is still glass, with the glint parked and no light.
+ *   - `.field-shell` the box of a text field. An `<input>` cannot draw a
+ *     pseudo-element, so Input, Textarea, NativeSelect, PhoneInput and each
+ *     OtpInput digit render a shell around a borderless `.field-shell-control`.
+ *     The shell is the field: it takes the consumer's className (margins,
+ *     width, flex), and the control inherits its type (size, alignment,
+ *     numerals), so `text-center tabular-nums` on Input still lands.
+ *   - `.field-group` the shell's states without its layout, for a container
+ *     whose own layout must win (MessageComposer's inset field).
+ *   - `.field-trigger` a button that is a field (Select, PickerTrigger, a
+ *     country picker): focus is `:focus-visible` or open, never mouse focus.
+ *   - `.field-input` a bare control with no shell (a consumer's own
+ *     `<input className="field-input">`): the same glass and the same focus
+ *     and error edges, drawn with inset shadows, but no moving light.
  *
- * v1.0.x shipped `.input-light` with a similar treatment but smaller
- * 3px halo; that class is aliased below for backwards compat and is
- * deprecated. New code should use `.field-input`.
+ * States: hover steps the fill toward `--band-press` (hover-capable
+ * pointers only, so nothing sticks after a tap); focus is the edge in the
+ * accent at 75% and a faint accent tint, no halo, no outline (measured in
+ * merchant-mobile against what the field sits on: 5.4:1 in light, 6.2:1 in
+ * dark, so WCAG 1.4.11's 3:1 holds at 1px and the edge stays 1px); an error
+ * is the edge in the danger at 70% plus the message (3.9:1 light, 5.0:1
+ * dark); disabled dims to 60% and takes no light.
  *
- * `.merchant-form` (dark, marketing) is retained — used on the
- * customer-web hero forms and onboarding marketing pages where the
- * surface is dark. Don't use it on app-internal surfaces.
+ * Motion: the light fades on `--motion-hover` and the fill steps on it, on
+ * the one `--motion-ease-out`. Both transitions sit on the pseudo-elements,
+ * so a host's own transition list (`motion-press`) is never replaced.
+ *
+ * `.merchant-form` (dark, marketing) is retained below for customer-web's
+ * hero forms. Don't use it on app surfaces.
  */
 
-/* ─── Canonical input ───────────────────────────────────────────────── */
+/* ─── Tokens ─────────────────────────────────────────────────────────── */
 
-.field-input {
-    display: block;
-    width: 100%;
-    /* rem (not px) so input height + text scale with the consumer's root
-     * font-size — i.e. with OS Dynamic Type. 2.75rem/0.875rem/1rem are
-     * identical to the old 44px/14px/16px at a 16px root: zero visual
-     * change, just unfrozen for accessibility text scaling. */
-    height: 3.25rem;
-    padding: 0 1rem;
-    border-radius: var(--radius-autara-md);
-    background: var(--paper);
-    /* AUTM-713 — was a hardcoded rgba(17,24,39,0.10) while every other
-       bordered control used the 0.08 token, so text fields sat a shade
-       darker than the Select, MultiSelect and FieldStack beside them. Now
-       the token: fields track the ladder instead of diverging from it. */
-    border: 1px solid var(--field-edge);
+/* Registered so the cursor light can fade: an unregistered custom property
+ * swaps at once. Inherits, because the ring is a pseudo-element of the
+ * element whose value changes. */
+@property --edge-spot {
+    syntax: '<color>';
+    inherits: true;
+    initial-value: transparent;
+}
+
+/* Light. Every accent- or band-derived value is declared again in the dark
+ * block, so a theme island (`[data-theme]` on any element) resolves them
+ * against its own accent rather than inheriting the root's. A consumer
+ * re-points `--field-glass` / `--field-glass-hover` on a surface where white
+ * glass would vanish (a field on a white card in light). */
+:root,
+[data-theme="light"] {
+    --field-height: 3.25rem;
+    --field-pad: 1.125rem;
+    --field-radius: 999px;
+    /* Half the field's height: a one-line textarea still reads as the pill
+     * and a taller one keeps the same corner. */
+    --field-radius-multi: 1.625rem;
+    --field-edge-width: 1px;
+    --field-blur: 18px;
+    --field-saturate: 150%;
+    --field-glass: rgb(255 255 255 / 0.78);
+    --field-glass-hover: color-mix(in srgb, var(--band-press) 55%, transparent);
+    --field-glass-focus: color-mix(in srgb, var(--accent) 5%, #ffffff);
+    --field-lip: rgb(255 255 255 / 0.9);
+    /* The resting hair: none (Don picked "no ring at rest"). */
+    --field-hair: transparent;
+    --field-shine: color-mix(in srgb, var(--accent) 60%, transparent);
+    --field-glint: color-mix(in srgb, var(--accent) 22%, transparent);
+    --field-focus-edge: color-mix(in srgb, var(--accent) 75%, transparent);
+    --field-error-edge: color-mix(in srgb, var(--danger) 70%, transparent);
+}
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --field-glass: rgb(255 255 255 / 0.055);
+    --field-glass-hover: color-mix(in srgb, var(--band-press) 55%, transparent);
+    --field-glass-focus: color-mix(in srgb, var(--accent) 9%, rgb(255 255 255 / 0.05));
+    --field-lip: rgb(255 255 255 / 0.06);
+    --field-hair: transparent;
+    --field-shine: rgb(255 255 255 / 0.7);
+    --field-glint: rgb(255 255 255 / 0.28);
+    --field-focus-edge: color-mix(in srgb, var(--accent) 75%, transparent);
+    --field-error-edge: color-mix(in srgb, var(--danger) 70%, transparent);
+}
+
+/* ─── The material: glass with a lit edge ────────────────────────────── */
+
+.glass-edge {
+    position: relative;
+    isolation: isolate;
+    --edge-spot: transparent;
+    --edge-fill: var(--field-glass);
+    --edge-ring: var(--field-hair);
+    --edge-glint: var(--field-glint);
+}
+.glass-edge[data-edge-lit] {
+    --edge-spot: var(--field-shine);
+}
+/* The glass: fill, blur, the 1px top lip. No drop shadow. */
+.glass-edge::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: inherit;
+    pointer-events: none;
+    background-color: var(--edge-fill);
+    -webkit-backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    box-shadow: inset 0 1px 0 var(--field-lip);
+    transition: background-color var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
+}
+/* The edge: a 1px ring cut out with a mask. Top to bottom: the cursor
+ * light (about 90px, at the pointer), the scroll glint, the resting hair
+ * (or the focus or error edge). */
+.glass-edge::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    padding: var(--field-edge-width);
+    pointer-events: none;
+    background:
+        radial-gradient(90px circle at var(--edge-x, -999px) var(--edge-y, -999px), var(--edge-spot), transparent 70%),
+        conic-gradient(
+            from var(--edge-sheen, 210deg),
+            transparent 0deg,
+            var(--edge-glint) 40deg,
+            transparent 90deg,
+            transparent 360deg
+        ),
+        linear-gradient(var(--edge-ring), var(--edge-ring));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    transition: --edge-spot var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
+}
+@media (hover: hover) {
+    .glass-edge:hover:not(:disabled, [aria-disabled="true"], [data-disabled], :focus-within, [aria-expanded="true"]) {
+        --edge-fill: var(--field-glass-hover);
+    }
+}
+/* `data-field-hover` and `data-field-focus` force the hover and focus looks,
+ * for a story or a visual test that shows every state at once. */
+.glass-edge[data-field-hover] {
+    --edge-fill: var(--field-glass-hover);
+}
+/* An inert control takes no light. */
+.glass-edge:is(:disabled, [aria-disabled="true"], [data-disabled]) {
+    --edge-spot: transparent;
+}
+
+/* ─── Field states (shells and triggers) ─────────────────────────────── */
+
+/* Focus: the accent edge and a faint tint. The glint steps aside so the
+ * edge reads as one colour; the cursor light stays on top. */
+.field-shell:focus-within,
+.field-group:focus-within,
+.field-trigger:is(:focus-visible, [aria-expanded="true"], [data-state="open"]),
+.glass-edge[data-field-focus] {
+    outline: none;
+    --edge-fill: var(--field-glass-focus);
+    --edge-ring: var(--field-focus-edge);
+    --edge-glint: transparent;
+}
+/* Error, after focus so it holds while the field is being corrected. */
+.field-shell:is([data-invalid], [aria-invalid="true"], :has(> .field-shell-control[aria-invalid="true"])),
+.field-group:is([data-invalid], [aria-invalid="true"]),
+.field-trigger[aria-invalid="true"] {
+    --edge-ring: var(--field-error-edge);
+    --edge-glint: transparent;
+}
+.field-shell:is([data-disabled], :has(> .field-shell-control:disabled)),
+.field-trigger:disabled {
+    --edge-spot: transparent;
+    color: var(--text-subtle);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* ─── The shell: the box of a text field ─────────────────────────────── */
+
+/* No width, no flex: a block-level flex box fills its line on its own, and
+ * a consumer's `flex-1`, `w-24` or `mt-3` lands on the field it can see. */
+.field-shell {
+    display: flex;
+    align-items: center;
+    min-height: var(--field-height);
+    border-radius: var(--field-radius);
     color: var(--text-strong);
     font-family: inherit;
     font-size: 1.0625rem;
     line-height: 1.4;
-    transition: border-color 150ms ease, box-shadow 150ms ease,
-        background-color 150ms ease;
+    cursor: text;
+}
+/* A textarea, or a group that wraps (MultiSelect's chips): the 26px corner.
+ * A shell's control stretches to its height on its own (align-self). */
+.field-shell--multi {
+    border-radius: var(--field-radius-multi);
+}
+/* The control fills the shell, padding included, so a press anywhere on the
+ * pill lands in the input. It inherits the shell's type. */
+.field-shell-control {
+    flex: 1 1 auto;
+    align-self: stretch;
+    width: 100%;
+    min-width: 0;
+    min-height: var(--field-height);
+    margin: 0;
+    padding: 0 var(--field-pad);
+    border: 0;
+    border-radius: inherit;
+    background: transparent;
+    box-shadow: none;
+    outline: none;
+    color: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+    text-align: inherit;
+    text-transform: inherit;
+    font-variant-numeric: inherit;
+    caret-color: var(--accent);
+    appearance: none;
+    -webkit-appearance: none;
+}
+.field-shell-control:focus,
+.field-shell-control:focus-visible {
+    outline: none;
+}
+.field-shell-control::placeholder {
+    color: var(--text-subtle);
+}
+.field-shell-control:disabled {
+    cursor: not-allowed;
+}
+/* Autofill paints its own fill over the glass; hold it off. */
+.field-shell-control:-webkit-autofill,
+.field-shell-control:-webkit-autofill:hover,
+.field-shell-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-strong);
+    transition: background-color 600000s 0s, color 600000s 0s;
+}
+.field-shell-control--multi {
+    display: block;
+    min-height: 6rem;
+    padding: 0.875rem var(--field-pad);
+    line-height: 1.5;
+    resize: vertical;
+}
+/* A leading glyph sits over the control's own padding, so the whole pill
+ * still focuses the input. */
+.field-shell-leading {
+    position: absolute;
+    inset-inline-start: var(--field-pad);
+    top: 50%;
+    translate: 0 -50%;
+    display: inline-grid;
+    place-items: center;
+    color: var(--text-subtle);
+    pointer-events: none;
+}
+.field-shell:has(> .field-shell-leading) > .field-shell-control {
+    padding-inline-start: calc(var(--field-pad) + 1.75rem);
+}
+.field-shell-trailing {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-inline-end: var(--field-pad);
+    color: var(--text-muted);
+}
+.field-shell:has(> .field-shell-trailing) > .field-shell-control {
+    padding-inline-end: 0.625rem;
+}
+
+/* Native date / time controls keep the value vertically centred.
+ * WebKit (iOS WKWebView, desktop Chrome and Safari) lays the value out via
+ * ::-webkit-date-and-time-value, which floats to the TOP of a fixed-height
+ * input instead of centring like typed text, so a date field beside a text
+ * field reads as misaligned. A flex box centres the value child. */
+:is(.field-input, .field-shell-control):is(
+        [type="date"],
+        [type="time"],
+        [type="datetime-local"],
+        [type="month"],
+        [type="week"]
+    ) {
+    display: flex;
+    align-items: center;
+}
+:is(.field-input, .field-shell-control)::-webkit-date-and-time-value {
+    margin: 0;
+    text-align: left;
+}
+:is(.field-input, .field-shell-control)::-webkit-calendar-picker-indicator {
+    margin-inline-start: auto;
+}
+
+/* ─── The bare field: a control with no shell ────────────────────────── */
+
+/* The same glass and the same edges as the shell, drawn with inset shadows
+ * because an `<input>` has no pseudo-elements. It takes no cursor light;
+ * wrap the control in `.field-shell.glass-edge` (or use Input) for that. */
+.field-input {
+    display: block;
+    width: 100%;
+    height: var(--field-height);
+    padding: 0 var(--field-pad);
+    border: 0;
+    border-radius: var(--field-radius);
+    background-color: var(--field-glass);
+    -webkit-backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    box-shadow: inset 0 1px 0 var(--field-lip);
+    color: var(--text-strong);
+    font-family: inherit;
+    font-size: 1.0625rem;
+    line-height: 1.4;
+    caret-color: var(--accent);
+    transition: background-color var(--motion-hover, 160ms) var(--motion-ease-out, ease-out),
+        box-shadow var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
     appearance: none;
     -webkit-appearance: none;
 }
 .field-input::placeholder {
     color: var(--text-subtle);
 }
-.field-input:hover:not(:disabled):not(:focus) {
-    border-color: var(--text-muted);
+@media (hover: hover) {
+    .field-input:hover:not(:disabled):not(:focus) {
+        background-color: var(--field-glass-hover);
+    }
 }
-/* Focus (AUTM-1594): a 2px accent ring, the border plus a 1px inset in the
- * same colour. No tint: the sheet keeps the field on paper while typing. */
 .field-input:focus,
 .field-input:focus-visible {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
+    outline-color: transparent;
+    background-color: var(--field-glass-focus);
+    box-shadow: inset 0 0 0 var(--field-edge-width) var(--field-focus-edge), inset 0 1px 0 var(--field-lip);
+}
+.field-input[aria-invalid="true"],
+.field-input[aria-invalid="true"]:focus,
+.field-input[aria-invalid="true"]:focus-visible {
+    box-shadow: inset 0 0 0 var(--field-edge-width) var(--field-error-edge), inset 0 1px 0 var(--field-lip);
 }
 .field-input:disabled {
-    border-color: var(--hairline);
     color: var(--text-subtle);
     opacity: 0.6;
     cursor: not-allowed;
 }
-.field-input[aria-invalid="true"] {
-    border-color: var(--danger);
-}
-.field-input[aria-invalid="true"]:focus,
-.field-input[aria-invalid="true"]:focus-visible {
-    border-color: var(--danger);
-    box-shadow: inset 0 0 0 1px var(--danger);
-}
 
-/* AUTM-1594: there is one field height now, so `--lg` is the base field.
- * Kept so a consumer passing size="lg" is not broken by the bump. */
-.field-input--lg {
-    height: 3.25rem;
-    padding: 0 1rem;
-    border-radius: var(--radius-autara-md);
-    font-size: 1.0625rem;
-}
-
-/* ─── Glass field — AUTM-948 ─────────────────────────────────────────────
- *
- * For a field sitting DIRECTLY on the gradient ground: a nav search box, a
- * hero capture form, a filter bar over a bloom. An opaque `--surface` field
- * there punches a white slab through the material.
- *
- * The default `.field-input` stays opaque, deliberately. A field inside a
- * glass card should NOT itself be glass — two stacked translucencies read as
- * mud, and the card underneath already supplies the blur. Opt in only where
- * the field is the outermost surface.
- *
- * Focus keeps the house signature (warm tint + solid purple border) rather
- * than inventing a second one; only the resting fill changes.
- */
+/* `--lg` and `--glass` are the base field now (one height since AUTM-1594,
+ * glass everywhere since AUTM-2140). Kept so `size="lg"` and
+ * `surface="glass"` still compile to something. */
+.field-input--lg,
 .field-input--glass,
 .field-textarea--glass {
-    background: var(--glass-fill);
-    /* GPU work — see the note at the top of `utilities/glass.css`. A page
-     * with a dozen glass fields is a dozen compositing surfaces. */
-    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-    -webkit-backdrop-filter: blur(var(--glass-blur))
-        saturate(var(--glass-saturate));
-    border-color: var(--glass-edge);
-    box-shadow: inset 0 1px 0 var(--glass-hi);
+    border-radius: var(--field-radius);
 }
-.field-input--glass:hover:not(:disabled):not(:focus),
-.field-textarea--glass:hover:not(:disabled):not(:focus) {
-    border-color: var(--glass-edge-hi);
-}
-.field-input--glass:focus,
-.field-input--glass:focus-visible,
-.field-textarea--glass:focus,
-.field-textarea--glass:focus-visible {
-    background: var(--glass-fill-strong);
-    border-color: var(--accent);
-}
-@media (prefers-reduced-transparency: reduce) {
-    .field-input--glass,
-    .field-textarea--glass {
-        background: var(--surface);
-        backdrop-filter: none;
-        -webkit-backdrop-filter: none;
-    }
+.field-textarea--glass {
+    border-radius: var(--field-radius-multi);
 }
 
-/* Native date / time controls — keep the value vertically centered.
- * WebKit (iOS WKWebView + desktop Chrome/Safari) lays the value out via
- * ::-webkit-date-and-time-value, which floats to the TOP of a fixed-
- * height block input instead of centering like typed text — so a
- * `<Input type="date">` sitting in a row next to a text field reads as
- * misaligned (the value clings to the top edge of the 44px box).
- * Making the control a flex box centers the value child; zeroing the
- * value's intrinsic margin and trailing-aligning the picker indicator
- * restores parity with the text inputs alongside it. Composes with
- * `.field-input--lg` automatically. */
-.field-input[type="date"],
-.field-input[type="time"],
-.field-input[type="datetime-local"],
-.field-input[type="month"],
-.field-input[type="week"] {
-    display: flex;
-    align-items: center;
-}
-.field-input::-webkit-date-and-time-value {
-    margin: 0;
-    text-align: left;
-}
-.field-input::-webkit-calendar-picker-indicator {
-    margin-inline-start: auto;
-}
-
-/* Textarea variant — same look, multi-line height. */
+/* The bare multi-line field. */
 .field-textarea {
     display: block;
     width: 100%;
     min-height: 6rem;
-    padding: 0.875rem 1rem;
-    border-radius: var(--radius-autara-md);
-    background: var(--paper);
-    /* AUTM-713 — was a hardcoded rgba(17,24,39,0.10) while every other
-       bordered control used the 0.08 token, so text fields sat a shade
-       darker than the Select, MultiSelect and FieldStack beside them. Now
-       the token: fields track the ladder instead of diverging from it. */
-    border: 1px solid var(--field-edge);
+    padding: 0.875rem var(--field-pad);
+    border: 0;
+    border-radius: var(--field-radius-multi);
+    background-color: var(--field-glass);
+    -webkit-backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    box-shadow: inset 0 1px 0 var(--field-lip);
     color: var(--text-strong);
     font-family: inherit;
     font-size: 1.0625rem;
     line-height: 1.5;
+    caret-color: var(--accent);
     resize: vertical;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
+    transition: background-color var(--motion-hover, 160ms) var(--motion-ease-out, ease-out),
+        box-shadow var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
 }
 .field-textarea::placeholder {
     color: var(--text-subtle);
 }
-.field-textarea:hover:not(:disabled):not(:focus) {
-    border-color: var(--text-muted);
+@media (hover: hover) {
+    .field-textarea:hover:not(:disabled):not(:focus) {
+        background-color: var(--field-glass-hover);
+    }
 }
 .field-textarea:focus,
 .field-textarea:focus-visible {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: inset 0 0 0 1px var(--accent);
+    outline-color: transparent;
+    background-color: var(--field-glass-focus);
+    box-shadow: inset 0 0 0 var(--field-edge-width) var(--field-focus-edge), inset 0 1px 0 var(--field-lip);
+}
+.field-textarea[aria-invalid="true"],
+.field-textarea[aria-invalid="true"]:focus,
+.field-textarea[aria-invalid="true"]:focus-visible {
+    box-shadow: inset 0 0 0 var(--field-edge-width) var(--field-error-edge), inset 0 1px 0 var(--field-lip);
 }
 .field-textarea:disabled {
-    border-color: var(--hairline);
     color: var(--text-subtle);
     opacity: 0.6;
     cursor: not-allowed;
 }
-.field-textarea[aria-invalid="true"] {
-    border-color: var(--danger);
+
+/* ─── When the glass cannot be glass ─────────────────────────────────── */
+
+/* Asked for less transparency: an opaque fill, and the resting hair, so the
+ * field still has an edge without the blur behind it. */
+@media (prefers-reduced-transparency: reduce) {
+    .glass-edge,
+    .field-input,
+    .field-textarea {
+        --field-glass: var(--paper);
+        --field-hair: var(--field-edge);
+    }
+    .glass-edge::after,
+    .field-input,
+    .field-textarea {
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+    }
+    .field-input,
+    .field-textarea {
+        box-shadow: inset 0 0 0 1px var(--field-edge);
+    }
 }
-.field-textarea[aria-invalid="true"]:focus,
-.field-textarea[aria-invalid="true"]:focus-visible {
-    border-color: var(--danger);
-    box-shadow: inset 0 0 0 1px var(--danger);
+/* Forced colours drop backgrounds and masks: a real system border instead. */
+@media (forced-colors: active) {
+    .glass-edge::before,
+    .glass-edge::after {
+        display: none;
+    }
+    .glass-edge,
+    .field-input,
+    .field-textarea {
+        border: 1px solid CanvasText;
+    }
+    .field-shell:focus-within,
+    .field-trigger:focus-visible,
+    .field-input:focus,
+    .field-textarea:focus {
+        outline: 2px solid Highlight;
+        outline-offset: 0;
+    }
 }
 
-/* Force outline-none on inputs that own their focus treatment (matches
- * customer-web's global rule). Without this they'd get a doubled purple
- * outline from the global *:focus-visible rule. */
-.field-input:focus-visible,
-.field-textarea:focus-visible {
-    outline-color: transparent;
-}
-
-/* ─── Field stack — unified field-group grammar (AUT-683) ─────────────
+/* ─── Field stack: the grouped-card grammar (AUT-683, AUTM-2140) ───────
  *
- * The grouped-card form grammar for marketing / conversion forms
- * (waitlist, lead capture): every field lives inside ONE hairline
- * container with internal hairline dividers — the stack IS the card,
- * so never nest it inside another bordered panel. Each cell carries a
- * sentence-case micro-label + a borderless input.
+ * For marketing and conversion forms (waitlist, lead capture): every field
+ * lives inside ONE container, the stack IS the card, so never nest it in
+ * another panel. Each cell carries a sentence-case label and a borderless
+ * input.
  *
- * Focus signature: the whole cell tints warm-cream and gets a 3px
- * inset brand-purple bar. (The canonical 4px halo would clip against
- * the container's `overflow: hidden`, so the bar replaces it in this
- * grammar.) Invalid swaps bar + tint to error red.
- *
- * App-internal forms (onboarding wizard, checkout) keep `.field-input`.
+ * AUTM-2140: the container is the field glass, rounded like a multi-line
+ * field. FieldStack adds `.glass-edge` for the lit edge; a consumer using
+ * the bare class gets the same glass with the edge drawn as an inset shadow.
+ * Focus tints the cell and turns the container's edge to the accent, with
+ * the label in the accent; the 3px inset bar is gone (no one-sided bars).
+ * An error does the same in the danger.
  */
 
 .field-stack {
-    background: var(--surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-autara-lg);
+    border-radius: var(--field-radius-multi);
     overflow: hidden;
+    background-color: var(--field-glass);
+    -webkit-backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    backdrop-filter: blur(var(--field-blur)) saturate(var(--field-saturate));
+    box-shadow: inset 0 1px 0 var(--field-lip);
+}
+.field-stack:focus-within {
+    box-shadow: inset 0 0 0 var(--field-edge-width) var(--field-focus-edge), inset 0 1px 0 var(--field-lip);
+}
+.field-stack.glass-edge,
+.field-stack.glass-edge:focus-within {
+    background-color: transparent;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+}
+.field-stack.glass-edge:focus-within {
+    --edge-ring: var(--field-focus-edge);
+    --edge-glint: transparent;
+}
+.field-stack.glass-edge:has([aria-invalid='true']) {
+    --edge-ring: var(--field-error-edge);
+    --edge-glint: transparent;
 }
 .field-stack > * + * {
     border-top: 1px solid var(--border-subtle);
@@ -245,14 +522,13 @@
 
 .field-stack-cell {
     display: block;
-    min-height: 64px;
-    padding: 11px 16px 12px;
+    min-height: 4rem;
+    padding: 0.6875rem var(--field-pad) 0.75rem;
     cursor: text;
-    transition: background-color 150ms ease, box-shadow 150ms ease;
+    transition: background-color var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
 }
 .field-stack-cell:focus-within {
-    background: var(--surface-warm);
-    box-shadow: inset 3px 0 0 var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 /* AUTM-1483: sentence case, weight 500, no letterspacing, in rem so it
@@ -265,7 +541,7 @@
     font-size: 0.75rem;
     font-weight: 500;
     color: var(--text-subtle);
-    transition: color 150ms ease;
+    transition: color var(--motion-hover, 160ms) var(--motion-ease-out, ease-out);
 }
 .field-stack-cell:focus-within .field-stack-label {
     color: var(--accent);
@@ -280,8 +556,9 @@
     border: none;
     color: var(--text-strong);
     font-family: inherit;
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.4;
+    caret-color: var(--accent);
     appearance: none;
     -webkit-appearance: none;
 }
@@ -298,12 +575,11 @@
     cursor: not-allowed;
 }
 
-/* Invalid state rides on aria-invalid, mirroring `.field-input`.
- * Declared after :focus-within so the error treatment wins while the
- * field is being corrected. */
+/* Invalid state rides on aria-invalid, mirroring the fields. Declared after
+ * :focus-within so the error treatment wins while the field is being
+ * corrected. */
 .field-stack-cell:has([aria-invalid='true']) {
-    background: var(--intent-error-soft);
-    box-shadow: inset 3px 0 0 var(--color-autara-error);
+    background: color-mix(in srgb, var(--danger) 8%, transparent);
 }
 .field-stack-cell:has([aria-invalid='true']) .field-stack-label {
     color: var(--intent-error-text);
@@ -312,7 +588,7 @@
 .field-stack-error {
     display: block;
     margin-top: 4px;
-    font-size: 12px;
+    font-size: 0.8125rem;
     line-height: 1.4;
     color: var(--intent-error-text);
 }

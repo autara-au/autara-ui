@@ -451,6 +451,8 @@ export { DeviceFrame, type DeviceFrameProps, type DeviceKind } from './DeviceFra
 // the pointer, and a reveal that needs no script.
 export { BloomField, type BloomFieldProps } from './BloomField'
 export { LitGroup, type LitGroupProps } from './LitGroup'
+// AUTM-2140: the glass fields' lit edge, one tracker at the app's root.
+export { GlassEdgeTracker, useGlassEdge, GlassField, type GlassFieldProps } from './GlassEdge'
 export { Reveal, type RevealProps } from './Reveal'
 // AUTM-1679 — the marketing pages' motion: a pinned scroll story with its
 // indicator, and a disclosure that opens and closes smoothly.
@@ -495,6 +497,8 @@ export { PhotoAttachTray, photosReadyToSend, photosInFlight, type PhotoAttachTra
 export { PhotoSlots, type PhotoSlotsProps } from './PhotoSlots'
 export { ChatPhotoBubble, chatPhotoLayout, type ChatPhotoBubbleProps, type ChatPhoto } from './ChatPhotoBubble'
 export { PhotoViewer, type PhotoViewerProps, type PhotoViewerPhoto } from './PhotoViewer'
+// AUTM-2165 / AUTM-2166: the hidden camera and library pickers behind a chooser's rows.
+export { PhotoPickers, useCanTakePhoto, type PhotoPickersProps, type PhotoPickersHandle } from './PhotoPickers'
 // AUTM-1799 (AUTM-1797, visual first): a booking drawn, not told. A date as a
 // calendar leaf and the time as a figure, the booking as a pass, place and car
 // as icon rows.

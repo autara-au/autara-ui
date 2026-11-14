@@ -211,6 +211,28 @@ describe('targets', () => {
         expect(rect(screen.getByRole('button', { name: 'Add a photo' })).height).toBeGreaterThanOrEqual(44)
     })
 
+    it("a failed 4.5rem tray tile's centre is its retry, not the remove (AUTM-2165)", async () => {
+        render(
+            <Page>
+                <PhotoAttachTray
+                    items={[{ id: 'f', state: 'failed', failure: 'check', src: BLUE }]}
+                    onRemove={() => {}}
+                    onRetry={() => {}}
+                />
+            </Page>
+        )
+        const tile = document.querySelector<HTMLElement>('[data-photo-state="failed"]')!
+        const r = rect(tile)
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        expect(hit?.getAttribute('data-tile-action')).toBe('retry')
+        const remove = rect(screen.getByRole('button', { name: /^Remove photo/ }))
+        expect(Math.round(remove.width)).toBeGreaterThanOrEqual(44)
+        // The disc is still drawn inside the tile's corner.
+        const disc = rect(screen.getByRole('button', { name: /^Remove photo/ }).firstElementChild as HTMLElement)
+        expect(disc.right).toBeLessThanOrEqual(r.right)
+        expect(disc.top).toBeGreaterThanOrEqual(r.top)
+    })
+
     it("the viewer's close, previous and next are at least 44px", async () => {
         render(
             <PhotoViewer
@@ -267,7 +289,12 @@ describe('200% text', () => {
         render(<PhotoAttachTray items={EVERY_STATE.slice(0, 4)} message={PHOTO_COPY.overLimit(4)} onRemove={() => {}} />)
         const tiles = screen.getAllByRole('group')
         expect(Math.round(rect(tiles[0]).width)).toBe(144)
-        for (const tile of tiles) expect(tile.scrollWidth).toBeLessThanOrEqual(tile.clientWidth + 1)
+        // The glyph and words, not the tile: the remove's 44px target sits past
+        // a tray tile's corner on purpose (AUTM-2165).
+        for (const content of document.querySelectorAll<HTMLElement>('[data-photo-content]')) {
+            expect(content.scrollWidth).toBeLessThanOrEqual(content.clientWidth + 1)
+            expect(content.scrollHeight).toBeLessThanOrEqual(content.clientHeight + 1)
+        }
         expect(screen.getByText('You can add up to 4 photos.')).toBeVisible()
     })
 

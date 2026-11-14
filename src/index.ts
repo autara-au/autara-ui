@@ -25,6 +25,8 @@ export {
     // AUTM-1475 — web revamp foundations
     BloomField, type BloomFieldProps,
     LitGroup, type LitGroupProps,
+    // AUTM-2140 — the glass fields' lit edge: one tracker at the app's root.
+    GlassEdgeTracker, useGlassEdge, GlassField, type GlassFieldProps,
     Reveal, type RevealProps,
     // AUTM-1679 — a pinned scroll story with its indicator, and a disclosure
     // that opens and closes smoothly.
@@ -117,6 +119,7 @@ export {
     PhotoSlots, type PhotoSlotsProps,
     ChatPhotoBubble, chatPhotoLayout, type ChatPhotoBubbleProps, type ChatPhoto,
     PhotoViewer, type PhotoViewerProps, type PhotoViewerPhoto,
+    PhotoPickers, useCanTakePhoto, type PhotoPickersProps, type PhotoPickersHandle,
     DateTile, WhenBlock, dateTileParts, type DateTileProps, type DateTileParts, type WhenBlockProps,
     BookingPass, type BookingPassProps,
     FactRows, type FactRowsProps, type FactRow,
@@ -386,3 +389,7 @@ export {
     type PhotoSourceType,
     type PhotoApiErrorCode,
 } from './lib/photo'
+
+/* AUTM-2140: the glass fields' tracker for a non-React shell; React apps
+ * render `<GlassEdgeTracker />` instead. */
+export { installGlassEdge, GLASS_EDGE_REACH } from './lib/glass-edge'

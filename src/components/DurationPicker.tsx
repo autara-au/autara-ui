@@ -6,6 +6,7 @@ import { cn } from '../lib/cn'
 import { useLabelFor } from '../lib/use-label-for'
 import { Button } from './Button'
 import { IconButton } from './IconButton'
+import { Input } from './Input'
 import {
     Dialog,
     DialogBody,
@@ -391,17 +392,14 @@ export function DurationPicker({
                 data-testid={testId}
                 data-value={minutes ?? undefined}
                 className={cn(
-                    // AUTM-1594: the sheet's field, 52px, the field edge on
-                    // paper. `min-h` so it grows at 200% text.
-                    'flex min-h-13 w-full items-center justify-between gap-2 rounded-autara-md border bg-[var(--paper)] px-4 py-2 text-left',
-                    'text-[1.0625rem] tabular-nums transition-colors',
-                    'duration-[var(--motion-panel-in)] ease-[var(--motion-ease-out)]',
-                    'focus-visible:outline-none focus-visible:border-[var(--accent)] focus-visible:shadow-[inset_0_0_0_1px_var(--accent)]',
-                    'aria-expanded:border-[var(--accent)] aria-expanded:shadow-[inset_0_0_0_1px_var(--accent)]',
-                    invalid
-                        ? 'border-[var(--danger)] shadow-[inset_0_0_0_1px_var(--danger)]'
-                        : ['border-[var(--field-edge)]', !disabled && 'hover:border-[var(--text-muted)]'],
-                    'disabled:cursor-not-allowed disabled:border-[var(--hairline)] disabled:opacity-60',
+                    // AUTM-2140: Input's glass pill. `glass-edge` is the glass
+                    // and the lit hairline, `field-trigger` the states (focus
+                    // or open: the accent edge and tint; aria-invalid: the
+                    // danger edge; disabled: dims). `min-h` so it grows at
+                    // 200% text.
+                    'glass-edge field-trigger flex min-h-13 w-full items-center justify-between gap-2 rounded-full px-[var(--field-pad)] py-2 text-left',
+                    'text-[1.0625rem] tabular-nums',
+                    'focus-visible:outline-none disabled:cursor-not-allowed',
                     className,
                 )}
             >
@@ -780,7 +778,9 @@ function DurationSheet({
                             >
                                 Type a length
                             </label>
-                            <input
+                            {/* AUTM-2140: the library's glass field, where this was
+                                a hand-built input with the old edge. */}
+                            <Input
                                 ref={typedRef}
                                 id={typedId}
                                 type="text"
@@ -798,14 +798,7 @@ function DurationSheet({
                                 aria-invalid={problem !== null && typed.trim() !== '' ? true : undefined}
                                 aria-describedby={typedHintId}
                                 data-testid={testId ? `${testId}-manual` : undefined}
-                                className={cn(
-                                    'mt-2 min-h-13 w-full rounded-autara-md border bg-[var(--paper)] px-4',
-                                    'text-[1.0625rem] text-[var(--text-strong)] tabular-nums outline-none',
-                                    'placeholder:text-[var(--text-subtle)]',
-                                    problem !== null && typed.trim() !== ''
-                                        ? 'border-[var(--danger)] shadow-[inset_0_0_0_1px_var(--danger)]'
-                                        : 'border-[var(--field-edge)] focus:border-[var(--accent)] focus:shadow-[inset_0_0_0_1px_var(--accent)]',
-                                )}
+                                className="mt-2 tabular-nums"
                             />
                             <p
                                 id={typedHintId}

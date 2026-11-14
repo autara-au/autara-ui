@@ -10,10 +10,12 @@ import { cn } from '../lib/cn'
  * form that posts it needs a hidden input. A vehicle make, a cancel
  * reason, a state code: those want the native control (AUTM-1185).
  *
- * Same skin as `Input`: the `.field-input` utility for the hairline, the
- * focus treatment and the `aria-invalid` ring, plus a Solar chevron on the
- * right. `size` mirrors Input (`md` 44px, `lg` 48px); the native `size`
- * attribute (visible rows) is deliberately not exposed.
+ * Same skin as `Input` (AUTM-2140): the span is the glass pill
+ * (`.field-shell.glass-edge`, the lit hairline, the accent edge on focus and
+ * the danger edge when the select carries `aria-invalid`), the select its
+ * borderless control, a Solar chevron on the right. `className` styles the
+ * field; `size` is kept for compatibility (one field height); the native
+ * `size` attribute (visible rows) is deliberately not exposed.
  *
  * `placeholder` renders a disabled, empty first option so an unset select
  * reads as a prompt rather than as the first real choice.
@@ -28,19 +30,24 @@ export interface NativeSelectProps
 
 const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
     (
-        { className, size = 'md', placeholder, testId, children, value, defaultValue, ...props },
+        { className, size: _size = 'md', placeholder, testId, children, value, defaultValue, ...props },
         ref,
     ) => {
         const controlled = value !== undefined
         return (
-            <span className={cn('relative block w-full', className)}>
+            <span
+                data-slot="field"
+                data-disabled={props.disabled ? '' : undefined}
+                className={cn('field-shell glass-edge', className)}
+            >
                 <select
                     ref={ref}
                     data-testid={testId}
-                    className={cn(
-                        'field-input appearance-none pr-10',
-                        size === 'lg' && 'field-input--lg',
-                    )}
+                    data-slot="control"
+                    className="field-shell-control cursor-pointer"
+                    // Room for the chevron. Inline: the control's rule is
+                    // unlayered and would outrank a utility.
+                    style={{ paddingInlineEnd: '2.75rem' }}
                     value={controlled ? value : undefined}
                     defaultValue={
                         !controlled
@@ -67,7 +74,7 @@ const NativeSelect = React.forwardRef<HTMLSelectElement, NativeSelectProps>(
                     strokeWidth={1.8}
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
+                    className="pointer-events-none absolute right-[var(--field-pad)] top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
                 >
                     <path d="m6 9 6 6 6-6" />
                 </svg>

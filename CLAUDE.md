@@ -129,8 +129,10 @@ docs/
   never hardcode `#4E1BBD` for text or borders, since it vanishes on dark.
   *Corrected 2026-10-23 (AUTM-2025): this said primary CTAs are solid black
   (`BrandButton variant="dark"`), which AUTM-1838 retired.*
-- **No glass, no gradients** on product surfaces (AUTM-1594). `glass.css`
-  and `gradients.css` still ship for old consumers; do not use them in new work.
+- **No glass, no gradients** on product surfaces (AUTM-1594), with one
+  exception: **every field is glass** (AUTM-2140, Don 2026-11-14, see the
+  gotcha below). `glass.css` and `gradients.css` still ship for old
+  consumers; do not use them in new work.
 - **Motion**: one ease-out (`--motion-ease-out`), transform and opacity only,
   durations from the `--motion-*` tokens (`src/lib/motion-tokens.ts` in JS),
   and reduced motion honoured. A JS animation must honour it itself
@@ -143,13 +145,13 @@ docs/
   and the package did exactly that, so every bold label in every consumer
   rendered Black and a 900 heading had no face of its own. The weight to
   file mapping now lives in each consumer's own @font-face.*
-- **Focus signature (v2.4): warm-cream tint + solid brand-purple border, NO
-  halo** on focused inputs (`.field-input`). Corrected 2026-09-01 — this line
-  used to claim a "4px brand-purple halo", and `src/utilities/forms.css` says
-  in its own rule: "a clean, symmetric ring, no outer halo and no one-sided
-  bar". The stale claim propagated into merchant-mobile's CLAUDE.md and into an
-  agent brief before the code was checked. Read the rule, not the prose.
-  signature focus ring
+- **Focus signature (AUTM-2140): the field's 1px edge in the accent at 75%
+  and a faint accent tint, NO halo, no outline.** A button reached by the
+  keyboard keeps a 2px accent outline 3px out. Corrected 2026-11-14: this
+  said "warm-cream tint + solid brand-purple border" (v2.4), and before
+  2026-09-01 "a 4px brand-purple halo"; both propagated into consumer docs
+  and agent briefs before the code was checked. Read the rule in
+  `src/utilities/forms.css`, not the prose.
 - **Editorial eyebrow** — uppercase 11px, `letter-spacing: 0.22em`,
   with a hairline tick (`::before`) — anchors every section heading
 
@@ -178,6 +180,27 @@ docs/
   Consumer budget is under 2 ms a frame on the iPad Pro 11", measured on the
   device: over that, ship `GradientGround`. Count live fields on a page with
   `document.querySelectorAll('[data-ground="live"]')`.
+- **Every field is the glass pill, and an `<input>` cannot draw it**
+  (AUTM-2140, Don 2026-11-14, shape A of the inputs concept). `.glass-edge`
+  is the material (glass and lip on `::after`, the masked 1px ring on
+  `::before` holding the cursor light, the scroll glint and the resting
+  hair). Input, Textarea, NativeSelect, PhoneInput and each OtpInput digit
+  therefore render a `.field-shell` around a borderless `.field-shell-control`:
+  **`className` and `style` go on the shell** (the field you see: margins,
+  width, flex; type set there is inherited by the control), every other prop
+  (ref, id, aria, `data-testid`) on the control. A consumer rule that targeted
+  `.field-input.X` on an Input must target `.field-shell.X` now; the shell's
+  rules are unlayered (as `.field-input` was), so a utility that sets the
+  same property on the control loses, so put type on `className`. Button
+  fields (Select, PickerTrigger, DurationPicker) carry `glass-edge
+  field-trigger`, whose focus look is `:focus-visible` or open, never mouse
+  focus. A bare `.field-input` gets the same glass and edges as inset
+  shadows but no light. The light needs `<GlassEdgeTracker />` once at the
+  app's root (`lib/glass-edge.ts`: one listener set, rAF-coalesced, reads
+  then writes, touch ignored, reduced motion parks the glint); without it
+  the fields are glass with the glint parked. In light, white glass vanishes
+  on a white card: re-point `--field-glass` on the field for that surface
+  (merchant-mobile maps it to its `--field-fill`).
 - **`GlassSurface lit` does nothing outside a `LitGroup`.** The group is the
   one pointer listener; it sets `--lx` / `--ly` / `--lo` on every `[data-lit]`
   descendant. Nine tiles, one handler. Touch pointers are ignored, so a

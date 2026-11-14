@@ -91,10 +91,11 @@ export const CompactSearchPill = React.forwardRef<
             {...divProps}
         >
             <div className="mx-auto max-w-5xl">
-                <div className="flex items-center gap-2 rounded-2xl border border-[var(--border-subtle)] bg-white/95 backdrop-blur-md pl-3 pr-1.5 py-1.5">
+                {/* AUTM-2140: the field's glass pill with the lit hairline. */}
+                <div className="glass-edge flex items-center gap-2 rounded-full pl-2 pr-1.5 py-1.5">
                     <span
                         aria-hidden
-                        className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-[var(--color-autara-purple)]/10 text-[var(--color-autara-purple)]"
+                        className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-[var(--accent)]"
                     >
                         <MagniferGlyph />
                     </span>
@@ -123,7 +124,7 @@ export const CompactSearchPill = React.forwardRef<
                     <button
                         type="button"
                         onClick={onSubmit}
-                        className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[var(--color-autara-purple)] px-3.5 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
+                        className="relative before:absolute before:left-1/2 before:top-1/2 before:h-11 before:w-full before:min-w-11 before:-translate-x-1/2 before:-translate-y-1/2 before:content-[''] ml-auto inline-flex h-10 items-center justify-center gap-1.5 rounded-full bg-[var(--color-autara-purple)] px-3.5 text-[0.7812rem] font-medium text-white transition-colors hover:brightness-110 shrink-0"
                         aria-label="Search the marketplace"
                     >
                         {submitLabel}

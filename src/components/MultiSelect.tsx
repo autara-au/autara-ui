@@ -7,9 +7,9 @@ import { cn } from '../lib/cn'
 
 /**
  * MultiSelect — token-style multi-value picker on the Autara cream
- * canvas. Container matches the `.field-input` grammar (hairline
- * border, 4 px brand-purple halo on focus-within, aria-invalid red
- * ring). Chips reuse the brand-tinted MetaChip grammar.
+ * canvas. Container is Input's glass as a multi-line field (AUTM-2140:
+ * the lit hairline, the accent edge and tint on focus-within, the danger
+ * edge on aria-invalid). Chips reuse the brand-tinted MetaChip grammar.
  *
  * Behaviour kept from the v1.0.x implementation:
  *   - Free-text filter typed inline alongside the chips
@@ -143,16 +143,15 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                         inputRef.current?.focus()
                         setIsOpen(true)
                     }}
+                    data-invalid={invalid ? '' : undefined}
+                    data-disabled={disabled ? '' : undefined}
                     className={cn(
-                        'flex min-h-11 w-full flex-wrap items-center gap-1.5 rounded-lg border bg-[var(--surface)] px-2.5 py-1.5 text-sm transition-colors',
-                        'cursor-text',
-                        // Autara focus signature — cream tint + 3px inset
-                        // brand-purple bar (matches .field-input / FieldStack).
-                        invalid
-                            ? 'border-[var(--color-autara-error)] focus-within:bg-[var(--intent-error-soft)]'
-                            : 'border-[var(--border-subtle)] hover:border-[var(--border-strong)] focus-within:border-[var(--accent)] focus-within:bg-[var(--surface-warm)]',
-                        disabled &&
-                            'cursor-not-allowed bg-[var(--surface-warm)] opacity-70'
+                        // AUTM-2140: Input's glass, as a multi-line field
+                        // (chips wrap, so the 26px corner, not the pill).
+                        // The shell's states: the accent edge and tint on
+                        // focus, the danger edge on aria-invalid, dimmed
+                        // when disabled.
+                        'field-shell field-shell--multi glass-edge flex-wrap items-center gap-1.5 px-3 py-2 text-[0.9375rem]'
                     )}
                 >
                     {selected.map((val) => (
@@ -206,7 +205,7 @@ const MultiSelect = React.forwardRef<HTMLDivElement, MultiSelectProps>(
                         placeholder={selected.length === 0 ? placeholder : ''}
                         disabled={disabled}
                         className={cn(
-                            'min-w-[80px] flex-1 bg-transparent text-sm text-[var(--text-strong)] outline-none',
+                            'min-w-[80px] flex-1 bg-transparent px-1.5 text-[var(--text-strong)] outline-none',
                             'placeholder:text-[var(--text-subtle)]',
                             'disabled:cursor-not-allowed'
                         )}

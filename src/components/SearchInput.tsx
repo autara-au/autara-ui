@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Input, type InputProps } from './Input'
-import { cn } from '../lib/cn'
 
 /**
  * SearchInput — `Input` with a leading Solar Linear magnifier glyph.
@@ -22,12 +21,11 @@ export interface SearchInputProps extends Omit<InputProps, 'icon'> {
 
 const MagniferGlyph = () => (
     <svg
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-subtle)]"
     >
         <circle
             cx="11"
@@ -46,25 +44,10 @@ const MagniferGlyph = () => (
 )
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-    ({ className, placeholder = 'Search', ...props }, ref) => {
-        return (
-            <div className="relative">
-                <MagniferGlyph />
-                <Input
-                    ref={ref}
-                    placeholder={placeholder}
-                    // `pl-9!` important — `.field-input` declares
-                    // `padding: 0 14px` unlayered (forms.css), which
-                    // beats Tailwind v4's `@layer utilities` `pl-9`
-                    // and hides the placeholder under the absolute
-                    // glyph at left-3. The `!` modifier lifts our
-                    // override above the layer. Permanent fix: move
-                    // `.field-input` padding into a Tailwind layer.
-                    className={cn('pl-9!', className)}
-                    {...props}
-                />
-            </div>
-        )
+    ({ placeholder = 'Search', leadingIcon, ...props }, ref) => {
+        // AUTM-2140: the glyph is Input's `leadingIcon`, inside the glass
+        // pill, so the old absolute glyph and its `pl-9!` override are gone.
+        return <Input ref={ref} placeholder={placeholder} leadingIcon={leadingIcon ?? <MagniferGlyph />} {...props} />
     },
 )
 SearchInput.displayName = 'SearchInput'

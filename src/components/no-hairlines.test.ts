@@ -9,9 +9,8 @@ import { resolve } from 'node:path'
  *
  * A source scan, as `floating-surface.test.ts` is, because jsdom draws
  * nothing. Kept on purpose, and so not scanned for: form input borders
- * (PhoneInput's field, `--field-edge`, the disabled `--hairline` edge on
- * Select, PickerTrigger and DurationPicker), focus rings, and a calendar's
- * hour rules.
+ * (`--field-edge`, the glass fields' `.glass-edge` hairline), focus rings,
+ * and a calendar's hour rules.
  */
 
 const read = (file: string) =>
@@ -52,9 +51,11 @@ describe('no hairlines (AUTM-2042)', () => {
         expect(read(file)).not.toMatch(LINE)
     })
 
-    it("PhoneInput keeps its field's border and loses only the rule inside it", () => {
+    it("PhoneInput is the field's glass, with no rule inside it", () => {
+        // AUTM-2140: the glass pill; the edge is `.glass-edge`'s hairline,
+        // transparent at rest, and the country segment has no divider.
         const src = read('PhoneInput.tsx')
-        expect(src).toContain('rounded-lg border border-[var(--border-subtle)] bg-[var(--surface)]')
+        expect(src).toContain("'field-shell glass-edge'")
         expect(src).not.toContain('border-r border-[var(--border-subtle)]')
     })
 

@@ -95,7 +95,10 @@ describe('NativeSelect', () => {
         expect(el.value).toBe('')
         expect(el.options[0].disabled).toBe(true)
         expect(el.getAttribute('aria-invalid')).toBe('true')
-        expect(el.className).toContain('field-input')
+        // AUTM-2140: the select is the glass shell's control; the shell (its
+        // parent) is the field you see, and draws the danger edge.
+        expect(el.className).toContain('field-shell-control')
+        expect(el.parentElement?.className).toContain('field-shell glass-edge')
     })
 })
 
