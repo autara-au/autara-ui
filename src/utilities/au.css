@@ -405,14 +405,14 @@ button.au-disc-row {
     display: inline-flex;
     align-items: center;
 }
-/* Bold, not Black: on the web 900 is for display figures and sheet titles
- * only (workspace brand rule, Don 2026-10-02). Native draws it Black; the
- * difference is recorded in knowledge/project_native_apps_2026_11_02.md. */
+/* Black, as the native PageTitle: Don, 2026-11-15, page titles are Black
+ * on every platform (the 900 rule now reads display figures, page titles,
+ * and dialog and sheet titles). */
 .au-page-title {
     margin: 0;
     padding-top: 0.75rem;
     font-size: 2.125rem;
-    font-weight: 700;
+    font-weight: 900;
     letter-spacing: -0.024em;
     line-height: 1.1;
     color: var(--au-ink);

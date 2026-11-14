@@ -140,7 +140,8 @@ docs/
 - **Satoshi typography** — NOT bundled since AUTM-1724: the tokens name the
   family and every consumer self-hosts the faces (see Known gotchas). Use
   weights 400 / 500 / 700 for body and UI; 700 is Satoshi Bold. 900 is
-  Satoshi Black, for display figures and dialog and sheet titles (Don,
+  Satoshi Black, for display figures, page titles (Don, 2026-11-15, AUTM-2184:
+  as the native apps draw them) and dialog and sheet titles (Don,
   2026-10-02). Never 300, 600 or 800. *Corrected 2026-10-01 (AUTM-1568): this said "Black mapped to 700",
   and the package did exactly that, so every bold label in every consumer
   rendered Black and a 900 heading had no face of its own. The weight to
