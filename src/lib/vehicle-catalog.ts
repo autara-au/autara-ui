@@ -810,5 +810,7 @@ export function vehicleSlug(text: string): string {
         .normalize('NFD')
         .replace(/[̀-ͯ]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
+        // One dash at most at either end after the line above, so no `+`:
+        // `-+$` backtracks on a long run of dashes (CodeQL, AUTM-2184).
+        .replace(/^-|-$/g, '')
 }
