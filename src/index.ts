@@ -119,6 +119,7 @@ export {
     PhotoSlots, type PhotoSlotsProps,
     ChatPhotoBubble, chatPhotoLayout, type ChatPhotoBubbleProps, type ChatPhoto,
     PhotoViewer, type PhotoViewerProps, type PhotoViewerPhoto,
+    PhotoPickers, useCanTakePhoto, type PhotoPickersProps, type PhotoPickersHandle,
     DateTile, WhenBlock, dateTileParts, type DateTileProps, type DateTileParts, type WhenBlockProps,
     BookingPass, type BookingPassProps,
     FactRows, type FactRowsProps, type FactRow,
