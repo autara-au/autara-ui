@@ -4,6 +4,7 @@ import type { ReactElement } from 'react'
 import * as Icons from './index'
 import * as ObjectGlyphs from './object-glyphs'
 import * as UtilityGlyphs from './utility-glyphs'
+import * as CategoryGlyphs from './category-glyphs'
 import { SOLAR_TO_AUTARA } from './solar-map'
 import type { AutaraIconComponent } from './AutaraIcon'
 import * as Root from '../index'
@@ -15,6 +16,7 @@ const all = Object.entries(Icons).filter(
 )
 const objects = Object.entries(ObjectGlyphs) as Entry[]
 const utility = Object.entries(UtilityGlyphs) as Entry[]
+const category = Object.entries(CategoryGlyphs) as Entry[]
 
 /**
  * The utility glyphs with a Bold twin: the closed ones (Don, 2026-11-09,
@@ -26,7 +28,7 @@ const UTILITY_BOLD = [
     'CloseCircleIcon', 'CheckCircleIcon', 'AddCircleIcon', 'RemoveCircleIcon', 'ErrorIcon', 'WarningIcon',
     'BlockedIcon', 'PlayIcon', 'PauseIcon', 'LockIcon', 'MoreIcon',
 ]
-const withBold = [...objects, ...utility.filter(([name]) => UTILITY_BOLD.includes(name))]
+const withBold = [...objects, ...category, ...utility.filter(([name]) => UTILITY_BOLD.includes(name))]
 const lineOnly = utility.filter(([name]) => !UTILITY_BOLD.includes(name))
 
 /** The 19 merchant-mobile's rail and menus draw (approved 2026-11-08, AUTM-2042); the 2026-11-09 redraw kept the names. */
@@ -34,6 +36,13 @@ const APPROVED = [
     'TodayIcon', 'BookingsIcon', 'InboxIcon', 'CustomersIcon', 'ServicesIcon', 'PackagesIcon',
     'EarningsIcon', 'InvoicesIcon', 'SettingsIcon', 'AccountIcon', 'HelpIcon', 'SignOutIcon',
     'AppearanceIcon', 'NotificationsIcon', 'ShareIcon', 'MoreIcon', 'LightIcon', 'DarkIcon', 'SystemIcon',
+]
+
+/** The ten service category icons (AUTM-2140, Don's pick of R8 section C, 2026-11-14). */
+const CATEGORY = [
+    'CategoryExteriorIcon', 'CategoryInteriorIcon', 'CategoryProtectionIcon', 'CategoryStylingIcon',
+    'CategoryGraphicsIcon', 'CategoryComfortIcon', 'CategoryElectronicsIcon', 'CategoryPerformanceIcon',
+    'CategoryLuxuryIcon', 'CategoryFleetIcon',
 ]
 
 /** Every Solar glyph merchant-mobile imported (88: main's 84 plus four from AUTM-2042's branch). */
@@ -58,8 +67,8 @@ const svgOf = (el: ReactElement) => render(el).container.querySelector('svg')!
 
 describe('Autara icons (AUTM-2114)', () => {
     it('exports the whole set, including every approved glyph', () => {
-        expect(all.length).toBe(objects.length + utility.length)
-        expect(all.length).toBeGreaterThanOrEqual(78)
+        expect(all.length).toBe(objects.length + utility.length + category.length)
+        expect(all.length).toBeGreaterThanOrEqual(88)
         for (const name of APPROVED) expect(Icons).toHaveProperty(name)
     })
 
@@ -114,6 +123,7 @@ describe('Autara icons (AUTM-2114)', () => {
     it('gives every object icon a Bold twin, and of the utility glyphs only the closed ones', () => {
         const bold = ([, Icon]: Entry) => svgOf(<Icon active />).getAttribute('data-weight') === 'bold'
         expect(objects.filter((e) => !bold(e)).map(([name]) => name)).toEqual([])
+        expect(category.filter((e) => !bold(e)).map(([name]) => name)).toEqual([])
         expect(utility.filter(bold).map(([name]) => name).sort()).toEqual([...UTILITY_BOLD].sort())
     })
 
@@ -176,6 +186,15 @@ describe('Autara icons (AUTM-2114)', () => {
             // The bare mark sits in text and buttons and stays line; the ringed state fills when active.
             expect(svgOf(<Bare active />).getAttribute('data-weight')).toBe('linear')
             expect(svgOf(<Ringed active />).getAttribute('data-weight')).toBe('bold')
+        }
+    })
+
+    it('draws the ten service categories (AUTM-2140, R8), each as category-<key>', () => {
+        expect(category.map(([name]) => name).sort()).toEqual([...CATEGORY].sort())
+        for (const [name, Icon] of category) {
+            const key = name.replace(/^Category|Icon$/g, '').toLowerCase()
+            expect(svgOf(<Icon />).getAttribute('data-icon')).toBe(`category-${key}`)
+            expect(svgOf(<Icon active />).getAttribute('data-icon')).toBe(`category-${key}`)
         }
     })
 

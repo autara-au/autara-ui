@@ -184,8 +184,8 @@ docs/
   (AUTM-2140, Don 2026-11-14, shape A of the inputs concept). `.glass-edge`
   is the material (glass and lip on `::after`, the masked 1px ring on
   `::before` holding the cursor light, the scroll glint and the resting
-  hair). Input, Textarea, NativeSelect, PhoneInput and each OtpInput digit
-  therefore render a `.field-shell` around a borderless `.field-shell-control`:
+  hair). Input, Textarea, NativeSelect and PhoneInput therefore render a
+  `.field-shell` around a borderless `.field-shell-control`:
   **`className` and `style` go on the shell** (the field you see: margins,
   width, flex; type set there is inherited by the control), every other prop
   (ref, id, aria, `data-testid`) on the control. A consumer rule that targeted
@@ -201,6 +201,19 @@ docs/
   the fields are glass with the glint parked. In light, white glass vanishes
   on a white card: re-point `--field-glass` on the field for that surface
   (merchant-mobile maps it to its `--field-fill`).
+- **OtpInput is ONE pill with six slots, not six fields** (AUTM-2140 R2, Don's
+  pick A1, 2026-11-14). The `role="group"` is a plain block wrapper (`.otp`)
+  and a size container; inside it one `.field-shell.glass-edge.otp-field`
+  holds two runs of `.otp-slot`s split by `.otp-sep`, each slot an absolutely
+  filled `<input class="otp-slot-control">` (still "Digit N of 6",
+  `maxlength="1"`, which QA's portal sign-in case asserts on every box). A
+  consumer rule written for the old boxes (`[role=group]` flex, or `input`
+  width, border and fill) now lands on nothing or paints over the slots: delete
+  it. The slots shrink 50px to 44px, the gaps tighten under 24rem, and under
+  20.5rem (rem, so 200% text on a phone too) the threes stack. A focus on a
+  slot past the first empty one, or a press between slots, goes to the first
+  empty slot: the value is a string and cannot hold a hole. The caret is drawn
+  (`caret-color: transparent`), so reduced motion can hold it still.
 - **`GlassSurface lit` does nothing outside a `LitGroup`.** The group is the
   one pointer listener; it sets `--lx` / `--ly` / `--lo` on every `[data-lit]`
   descendant. Nine tiles, one handler. Touch pointers are ignored, so a
@@ -401,7 +414,13 @@ docs/
   a glyph never names `--accent`, `--lime` or a hex, and
   `AutaraIcons.test.tsx` fails if one does. The caller colours the current
   item. A Solar name merchant-mobile starts using goes into
-  `solar-map.ts` (and the test's list) in the same change. Never JSX at a
+  `solar-map.ts` (and the test's list) in the same change. The ten service
+  category icons (`Category*Icon`, AUTM-2140 R8) are generated into
+  `category-glyphs.tsx` from `.design-proofs/review-2026-11-14/icons.py` by
+  `gen_category_tsx.py` beside it, with the same pathops kit: their Bold twin
+  is the bold body filled WITH its stroke (it covers what the line covers,
+  as the concept's mask drew it) minus the knock-outs. Regenerate, never
+  hand-edit a path. Never JSX at a
   module's top level here: it compiles to an import-time `_jsx()` call.
 - **Photos (AUTM-1882): `preparePhoto` lives on the `/photo` subpath and the
   root, never `/utilities`** (that subpath is the CSS). It decides by the
