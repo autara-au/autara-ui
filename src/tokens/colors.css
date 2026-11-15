@@ -275,6 +275,26 @@
     --message-card: #f4f2ec;
     --message-card-action: #ffffff;
     --message-card-action-hover: #e9e6dc;
+
+    /* ─── Map (AUTM-2199, ChatShareCard) ───────────────────────────────
+     * The drawn town under a shared address: the native app's TownInk
+     * (autara-ios Customer/Town.swift), quiet so the pin carries the colour.
+     * `-pin` is the white ring and disc a pin stands on, the same in both
+     * themes; `-pin-edge` is the 1px edge that stands in for the native
+     * pin's drop shadow (no shadows here), so a white pin holds on light
+     * land. Decorative, so no text sits on these. */
+    --map-land: #efece6;
+    --map-house: #e4e0d8;
+    --map-road-edge: #e0dbd2;
+    --map-road: #ffffff;
+    --map-road-main: #fffdf8;
+    --map-tram: rgba(14, 10, 26, 0.1);
+    --map-garden: #dcedc8;
+    --map-garden-path: rgba(255, 255, 255, 0.8);
+    --map-tree: #cde3b5;
+    --map-water: #c9ebf2;
+    --map-pin: #ffffff;
+    --map-pin-edge: rgba(14, 10, 26, 0.16);
 }
 
 /* ─── Dark theme — set `data-theme="dark"` on <html> ───────────────────
@@ -469,6 +489,20 @@
     --message-card: #262036;
     --message-card-action: #0e0a1a;
     --message-card-action-hover: #1b1626;
+
+    /* Map, dark: TownInk's dark values; the pin stays white. */
+    --map-land: #141317;
+    --map-house: #1c1b21;
+    --map-road-edge: #0e0d11;
+    --map-road: #29282f;
+    --map-road-main: #35343c;
+    --map-tram: rgba(255, 255, 255, 0.08);
+    --map-garden: #18231a;
+    --map-garden-path: #223024;
+    --map-tree: #1d2c1f;
+    --map-water: #13282e;
+    --map-pin: #ffffff;
+    --map-pin-edge: rgba(0, 0, 0, 0.4);
 }
 
 @theme inline {

@@ -62,6 +62,10 @@ describe('conversation tokens', () => {
             ['danger', 'message-card'],
             ['text-strong', 'message-card-action'],
             ['text-strong', 'message-card-action-hover'],
+            // AUTM-2199: ChatShareCard's Directions on the incoming bubble, accent
+            // words on the action fill, at rest and hovered.
+            ['accent', 'message-card-action'],
+            ['accent', 'message-card-action-hover'],
             // The failed line and the "Sending" line sit on the page.
             ['danger', 'paper'],
             ['text-subtle', 'paper'],

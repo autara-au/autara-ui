@@ -439,6 +439,19 @@ docs/
   `photo-contrast.test.ts`. The plan's words are `PHOTO_COPY`, ASCII
   apostrophes. `MessageComposer canSend` replaces "the text is not empty",
   for a photo-only message.
+- **ChatShareCard (AUTM-2199) holds no map key and sends no place anywhere.**
+  Its HOME and SHOP picture is the native app's Town (autara-ios
+  `Customer/Town.swift`) ported to an SVG clipped to the card's 252 x 132
+  window, coloured by the `--map-*` tokens; `mapImageUrl` is a slot for a
+  consumer's own image, and a third-party map for a customer's HOME is the one
+  thing it must not be. `parseChatShare` is autara-contracts'
+  `parseAttachmentLine` byte for byte (prefixes and joins are a catalogued
+  contract; change both, and the native ChatPieces.swift parsers, together).
+  What sits on the picture (pins, logo badge, plate, the 3D car) is sized in
+  `cqi` of the picture, never rem, or 200% text swamps it; the plate is drawn
+  on `--au-rego` tokens rather than `.au-rego`, which is unlayered and beats
+  any utility that tries to size it. The 3D car is an inlined WebP
+  (`lib/chat-share-car-art.ts`), regenerated from the native PNG, never edited.
 - **Never put type or colour classes on an `h1` to `h6`; put them on an
   element inside it.** merchant-mobile (`src/main.css`) and customer-web
   (`src/app/globals.css`) both style headings with an UNLAYERED rule (colour

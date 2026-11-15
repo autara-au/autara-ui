@@ -147,6 +147,9 @@ export {
     MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState,
     // AUTM-1881 — a booking event from Autara in the booking thread
     ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone,
+    // AUTM-2199 — a car, an address, a shop or a booking shared in the chat, the native apps' card
+    ChatShareCard, type ChatShareCardProps,
+    parseChatShare, chatSharePlate, CHAT_SHARE_PREFIXES, type ChatShareAttachment, type ChatShareKind,
     QuickReplies, type QuickRepliesProps, type QuickReply,
     // AUTM-1867 — pick one of a few in one tap.
     ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction,
