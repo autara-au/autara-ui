@@ -88,6 +88,7 @@ const KEEPS: Record<string, string> = {
     'ChatEventCard.tsx': 'the 36px status disc of a booking event in the chat, a glyph in a circle like FactRows and ChoiceCard: purple act, aqua in flight, lime done (AUTM-1881)',
     'SplitPane.tsx': 'the splitter\'s grip, the sibling of Sheet\'s grabber pill: a 6px bar that says the line drags, never a button (AUTM-1755)',
     'PhotoTile.tsx': 'the remove control\'s disc on a photo, drawn at 24 to 28px inside a 44px target like Sheet\'s close disc (AUTM-1882)',
+    'ChatShareCard.tsx': 'the map pin, a place marker as the native card draws it (a purple disc with the house, or the pro\'s logo on a white disc); the logo itself is MediaFrame\'s round person (AUTM-2199)',
     // AUTM-2140 (Don, 2026-11-14): "all the input should be change to that",
     // the Jump to shape. A field is the glass pill: here is the value, type or
     // tap to change it. A field, never an action.

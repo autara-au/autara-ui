@@ -239,6 +239,15 @@ export { MessageThread, type MessageThreadProps, type MessageItem, type MessageS
 // AUTM-1806 — cards, quick replies and the attach menu for the booking thread
 export { MessageCard, type MessageCardProps, type MessageCardAction, type MessageCardState } from './MessageCard'
 export { ChatEventCard, chatEventGlyphs, type ChatEventCardProps, type ChatEventAction, type ChatEventTone } from './ChatEventCard'
+// AUTM-2199 — a car, an address, a shop or a booking shared in the chat, the native apps' card
+export { ChatShareCard, type ChatShareCardProps } from './ChatShareCard'
+export {
+    parseChatShare,
+    chatSharePlate,
+    CHAT_SHARE_PREFIXES,
+    type ChatShareAttachment,
+    type ChatShareKind,
+} from '../lib/chat-share'
 export { QuickReplies, type QuickRepliesProps, type QuickReply } from './QuickReplies'
 // AUTM-1867 — pick one of a few in one tap (services, times), with one trailing action.
 export { ChoiceChips, type ChoiceChipsProps, type ChoiceChipOption, type ChoiceChipsAction } from './ChoiceChips'
