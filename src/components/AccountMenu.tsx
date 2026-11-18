@@ -340,7 +340,7 @@ function PersonGlyph() {
  * 2px ring survives the panel's `overflow-hidden` instead of being clipped.
  */
 const FOCUS_ON_SURFACE =
-    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--surface)]'
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--band)]'
 
 /** The trigger sits on the page, not in the panel, so its band is the canvas. */
 const FOCUS_ON_BACKGROUND =
@@ -352,7 +352,7 @@ const FOCUS_ON_BACKGROUND =
  */
 const ROW_BASE = cn(
     'group/row relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3',
-    'rounded-autara-sm px-3 py-2.5 text-left text-sm font-medium transition-colors',
+    'rounded-[0.875rem] px-3 py-2 text-left text-[0.9375rem] font-medium transition-colors',
     'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
     'disabled:pointer-events-none disabled:opacity-50',
     FOCUS_ON_SURFACE
@@ -361,19 +361,19 @@ const ROW_BASE = cn(
 const ROW_TONE: Record<AccountMenuTone, string> = {
     default: cn(
         'text-[var(--text-strong)]',
-        'hover:bg-[var(--surface-elevated)] data-[highlighted]:bg-[var(--surface-elevated)]'
+        'hover:bg-[var(--band-press)] data-[highlighted]:bg-[var(--band-press)]'
     ),
     // Muted ink at 8:1 on --surface. Demoted is a HIERARCHY signal, not a
     // contrast one, so it darkens to full ink on hover rather than staying
     // faint once the user has clearly reached for it.
     demoted: cn(
         'text-[var(--text-muted)]',
-        'hover:bg-[var(--surface-elevated)] hover:text-[var(--text-strong)]',
-        'data-[highlighted]:bg-[var(--surface-elevated)] data-[highlighted]:text-[var(--text-strong)]'
+        'hover:bg-[var(--band-press)] hover:text-[var(--text-strong)]',
+        'data-[highlighted]:bg-[var(--band-press)] data-[highlighted]:text-[var(--text-strong)]'
     ),
     danger: cn(
         'text-[var(--intent-error-text)]',
-        'hover:bg-[var(--surface-elevated)] data-[highlighted]:bg-[var(--surface-elevated)]'
+        'hover:bg-[var(--band-press)] data-[highlighted]:bg-[var(--band-press)]'
     ),
 }
 
@@ -386,7 +386,9 @@ const ACCENT_FILL: Record<AccountMenuAccent, string> = {
         'bg-[var(--neutral-fill)] text-[var(--on-neutral)] hover:bg-[var(--neutral-fill-hover)] data-[highlighted]:bg-[var(--neutral-fill-hover)]',
 }
 
-const GROOVE = 'h-px bg-[var(--border-subtle)]'
+/** Groups sit apart by space, never a rule (Don, 2026-11-08: no hairlines,
+ *  floating panels included). */
+const GROUP_GAP = 'h-2'
 
 /* ─── Identity helpers ───────────────────────────────────────────────── */
 
@@ -448,7 +450,7 @@ function IdentityHeader({
 }) {
     if (loading) {
         return (
-            <div className="flex items-center gap-3 px-4 pb-3 pt-4">
+            <div className="flex items-center gap-3 px-2.5 pb-3 pt-2">
                 <Avatar size="md" className="shrink-0">
                     <Skeleton className="h-full w-full" label={null} />
                 </Avatar>
@@ -460,14 +462,14 @@ function IdentityHeader({
         )
     }
     return (
-        <div className="flex items-center gap-3 px-4 pb-3 pt-4">
+        <div className="flex items-center gap-3 px-2.5 pb-3 pt-2">
             <IdentityAvatar identity={identity} size="md" />
             <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-[var(--text-strong)]">
+                <p className="truncate text-[0.9375rem] font-bold text-[var(--text-strong)]">
                     {displayNameFor(identity)}
                 </p>
                 {identity.secondary ? (
-                    <p className="truncate text-xs font-normal text-[var(--text-muted)]">
+                    <p className="truncate text-[0.8125rem] font-normal text-[var(--text-muted)]">
                         {identity.secondary}
                     </p>
                 ) : null}
@@ -505,7 +507,7 @@ function RowBody({
             <span className="min-w-0 flex-1">
                 <span className="block truncate">{item.label}</span>
                 {item.description ? (
-                    <span className="mt-0.5 block truncate text-xs font-normal text-[var(--text-muted)]">
+                    <span className="mt-0.5 block truncate text-[0.8125rem] font-normal text-[var(--text-muted)]">
                         {item.description}
                     </span>
                 ) : null}
@@ -832,13 +834,13 @@ export function AccountMenu({
 
             return (
                 <React.Fragment key={group.key}>
-                    {index > 0 ? <div aria-hidden className={GROOVE} /> : null}
+                    {index > 0 ? <div aria-hidden className={GROUP_GAP} /> : null}
                     {host === 'menu' ? (
-                        <DropdownMenuGroup {...groupProps} className="px-2 py-2">
+                        <DropdownMenuGroup {...groupProps}>
                             {body}
                         </DropdownMenuGroup>
                     ) : (
-                        <div {...groupProps} className="px-2 py-2">
+                        <div {...groupProps}>
                             {body}
                         </div>
                     )}
@@ -850,17 +852,17 @@ export function AccountMenu({
     const panel = (
         <>
             <IdentityHeader identity={identity} loading={loading} />
-            <div aria-hidden className={GROOVE} />
+            <div aria-hidden className={GROUP_GAP} />
 
             {loading ? <LoadingRows /> : renderGroups()}
 
             {signOut && !loading ? (
                 <>
-                    <div aria-hidden className={GROOVE} />
+                    <div aria-hidden className={GROUP_GAP} />
                     {/* Its own groove so it reads as a trailing action rather
                         than one more destination, and inset from the panel
                         edge so the focus band is not clipped. */}
-                    <div className="px-2 py-2">
+                    <div>
                         <AccountRow
                             item={{ ...signOut, tone: signOut.tone ?? 'demoted' }}
                             host={host}
@@ -876,8 +878,8 @@ export function AccountMenu({
 
             {primaryAction && !loading ? (
                 <>
-                    <div aria-hidden className={GROOVE} />
-                    <div className="p-2">
+                    <div aria-hidden className={GROUP_GAP} />
+                    <div>
                         <AccountRow
                             item={{
                                 ...primaryAction,
@@ -910,16 +912,13 @@ export function AccountMenu({
      * 1px inset top highlight, no blur. See the header note on why a menu does
      * not take glass.
      */
-    const PANEL_MATERIAL = cn(
-        'overflow-hidden bg-[var(--surface)] text-[var(--text-strong)]',
-        'border border-[var(--glass-edge)] shadow-[inset_0_1px_0_var(--glass-hi)]'
-    )
+    const PANEL_MATERIAL = cn('overflow-hidden bg-[var(--band)] p-2 text-[var(--text-strong)]')
     /** The dropdown: the same material, lifted off the page (AUTM-1792). The
      *  edge colour and the shadow come from `.floating-surface`, which also
      *  carries the inset highlight, so neither is set here. */
     const DROPDOWN_MATERIAL = cn(
-        'overflow-hidden bg-[var(--surface)] text-[var(--text-strong)]',
-        'border floating-surface'
+        'overflow-hidden rounded-[1.25rem] bg-[var(--band)] text-[var(--text-strong)]',
+        'floating-surface'
     )
 
     const triggerNode = trigger ?? (
@@ -987,7 +986,7 @@ export function AccountMenu({
                    than step up to the card rung on its own. */
                 className={cn(
                     DROPDOWN_MATERIAL,
-                    'w-[min(20rem,calc(100vw-1.5rem))] p-0',
+                    'w-[min(19rem,calc(100vw-1.5rem))] p-2',
                     contentClassName
                 )}
             >
