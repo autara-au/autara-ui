@@ -99,6 +99,52 @@ describe('AU (AUTM-2184): the native pieces on the web', () => {
         }
     })
 
+    it('a service with no photo shows its name on ink, and the fee line under the price', () => {
+        const { container } = render(<AU.ServiceCard name="Headlight restore" price="$52.45" note="incl. $2.45 booking fee" />)
+        const ink = container.querySelector('.au-service-card__ink')
+        expect(ink?.getAttribute('aria-hidden')).toBe('true')
+        expect(ink?.textContent).toBe('Headlight restore')
+        expect(container.querySelector('.au-service-card__note')?.textContent).toBe('incl. $2.45 booking fee')
+    })
+
+    it('Segmented is a radio group whose arrow keys move the choice past a disabled one', () => {
+        const picks: string[] = []
+        const { getAllByRole } = render(
+            <AU.Segmented
+                label="Part of the day"
+                value="morning"
+                onChange={(v) => picks.push(v)}
+                options={[
+                    { value: 'morning', label: 'Morning' },
+                    { value: 'afternoon', label: 'Afternoon', disabled: true },
+                    { value: 'evening', label: 'Evening' },
+                ]}
+            />,
+        )
+        const radios = getAllByRole('radio')
+        expect(radios[0].getAttribute('aria-checked')).toBe('true')
+        expect(radios[0].tabIndex).toBe(0)
+        expect(radios[2].tabIndex).toBe(-1)
+        radios[0].dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }))
+        expect(picks).toEqual(['evening'])
+    })
+
+    it('DayStrip names a closed day as having nothing to book', () => {
+        const { getAllByRole } = render(
+            <AU.DayStrip
+                value="2026-11-21"
+                onChange={() => {}}
+                days={[
+                    { key: '2026-11-21', weekday: 'Sat', date: '21', label: 'Saturday 21 November' },
+                    { key: '2026-11-23', weekday: 'Mon', date: '23', label: 'Monday 23 November', closed: true },
+                ]}
+            />,
+        )
+        const [sat, mon] = getAllByRole('radio')
+        expect(sat.getAttribute('aria-checked')).toBe('true')
+        expect(mon.getAttribute('aria-label')).toBe('Monday 23 November, nothing to book')
+    })
+
     it('moves only inside prefers-reduced-motion: no-preference', () => {
         const css = readFileSync(join(__dirname, '../utilities/au.css'), 'utf8')
         const [before] = css.split('@media (prefers-reduced-motion: no-preference)')

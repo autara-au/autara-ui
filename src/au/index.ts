@@ -24,4 +24,7 @@ export { RemotePhoto, type RemotePhotoProps } from './Photo'
 export { Dock, type DockProps, type DockTab } from './Dock'
 export { Bubble, ChatEvent, Composer, type BubbleProps, type ComposerProps } from './Chat'
 export { ServiceCard, ProCard, type ServiceCardProps, type ProCardProps } from './ServiceCard'
+// AUTM-2202: the switch and the day strip of the native time picker and search.
+export { Segmented, type SegmentedProps, type SegmentedOption } from './Segmented'
+export { DayStrip, type DayStripProps, type StripDay } from './DayStrip'
 export { rise, Skeleton } from './Rise'
