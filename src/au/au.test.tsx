@@ -86,12 +86,14 @@ describe('AU (AUTM-2184): the native pieces on the web', () => {
         expect(container.textContent).toBe('MA')
     })
 
-    it('holds the native token values (Tokens.swift AU and AppTheme.ink)', () => {
+    it('holds the native token values (Tokens.swift AU and AppTheme.brand)', () => {
         const css = readFileSync(join(__dirname, '../tokens/au.css'), 'utf8')
         for (const [name, value] of [
             ['--au-room', '#f4f2ee'], ['--au-card', '#ffffff'], ['--au-press', '#e9e6df'], ['--au-ink', '#0e0a1a'],
             ['--au-muted', '#4d4a45'], ['--au-subtle', '#66625b'], ['--au-hero', '#14101f'], ['--au-lime', '#d4ff4f'],
             ['--au-aqua', '#4ceaff'], ['--au-rego', '#ffd84a'], ['--au-card-radius', '26px'], ['--au-plate-radius', '32px'],
+            // AUTM-2202: selected and yours is the brand purple with white (AppTheme.brand).
+            ['--au-tile', '#4e1bbd'], ['--au-tile-figure', '#ffffff'], ['--au-tile-label', '#ffffff'],
         ]) {
             expect(css).toContain(`${name}: ${value};`)
         }

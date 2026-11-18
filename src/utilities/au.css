@@ -25,6 +25,95 @@
     color: var(--au-ink);
 }
 
+/* ── The customer room: one look for every field and button ──────────────
+ *
+ * AUTM-2202 (Don, 2026-11-18: "all the UI should be changed to new UI
+ * direction. no outlines on the buttons and inputs. use same style
+ * everywhere"). While a `.au-room` is on the page, the library's own
+ * components take the native customer app's look, so a screen built from
+ * Input, Textarea, Select, SearchInput, PhoneInput, OtpInput and Button needs
+ * no styles of its own:
+ *
+ *   - the page is the room, cards are white, and on a card the next step down
+ *     is the room's tone again (Stone, AUTM-2130; the same values as `--au-*`);
+ *   - a field is a solid capsule (white on the room, the room's tone on a
+ *     card or in a dialog) with no edge, no lip, no glint and no blur, as
+ *     the native TextField. Focus keeps an edge in purple and an error keeps
+ *     the danger edge: those are the field telling you something, not an
+ *     outline at rest;
+ *   - a quiet button is a filled capsule the same way, never an outline.
+ *
+ * Keyed on `:root:has(.au-room)`, not on the room's own box, so a dialog, a
+ * sheet or a toast portalled to <body> takes it too. A page with no room
+ * (autara.au's marketing pages) is untouched. Light only: the customer web
+ * has no dark mode yet, and dark keeps the library's glass.
+ */
+:root:not([data-theme='dark']):has(.au-room) {
+    --paper: var(--au-room);
+    --band: var(--au-card);
+    --band-press: var(--au-press);
+    --surface: var(--au-room);
+    --raised: var(--au-card);
+    --text-muted: var(--au-muted);
+    --text-subtle: var(--au-subtle);
+    --field-fill: var(--au-card);
+    --field-fill-hover: var(--au-card);
+    --field-glass-focus: var(--field-fill);
+    --field-hair: transparent;
+    --field-lip: transparent;
+    --field-glint: transparent;
+    --field-shine: transparent;
+    --field-blur: 0px;
+    --field-saturate: 100%;
+    --field-edge-width: 2px;
+    --field-focus-edge: var(--au-act);
+    --icon-disc: var(--au-card);
+}
+/* On a card, and in a dialog or sheet (one white card over the room), the
+ * steps reverse: fields, quiet buttons and discs are the room's tone. */
+:root:not([data-theme='dark']):has(.au-room) :is(.au-card, [class~='bg-[var(--band)]'], [class~='bg-band'], .glass-surface, [role='dialog']) {
+    --field-fill: var(--au-well);
+    --field-fill-hover: var(--au-press);
+    --icon-disc: var(--au-well);
+}
+:root:not([data-theme='dark']):has(.au-room) [role='dialog'] {
+    --paper: var(--au-card);
+    --band: var(--au-well);
+    --raised: var(--au-card);
+}
+/* The glass is solid here: the fill at full strength, whatever opacity the
+ * Stone layer or the library gave it. */
+:root:not([data-theme='dark']):has(.au-room) :is(.glass-edge, .field-input, .field-textarea):not([data-theme='dark'], [data-theme='dark'] *) {
+    --field-glass: var(--field-fill);
+    --field-glass-hover: var(--field-fill-hover);
+    --edge-spot: transparent;
+}
+/* A quiet button on a white card or in a dialog: the room's tone, not white
+ * on white. (On the room it is already white: `--band` is the card.) */
+:root:not([data-theme='dark']):has(.au-room)
+    :is(.au-card, [class~='bg-[var(--band)]'], [class~='bg-band'], [role='dialog'])
+    :is(button, a)[class~='bg-[var(--band)]'] {
+    background-color: var(--au-well);
+}
+:root:not([data-theme='dark']):has(.au-room)
+    :is(.au-card, [class~='bg-[var(--band)]'], [class~='bg-band'], [role='dialog'])
+    :is(button, a)[class~='bg-[var(--band)]']:not(:disabled):hover {
+    background-color: var(--au-press);
+}
+/* An older field drawn with a border (`border-[var(--field-edge)]`): the
+ * same solid capsule, no border at rest. Checkbox, radio and switch keep
+ * their edge, because there the edge is the control. */
+:root:not([data-theme='dark']):has(.au-room)
+    :is(button, div, input, textarea, select)[class~='border-[var(--field-edge)]']:not([role='checkbox'], [role='radio'], [role='switch']) {
+    border-color: transparent;
+    background-color: var(--field-fill);
+    box-shadow: none;
+}
+:root:not([data-theme='dark']):has(.au-room)
+    :is(button, div, input, textarea, select)[class~='border-[var(--field-edge)]']:not([role='checkbox'], [role='radio'], [role='switch']):is(:focus-visible, :focus-within) {
+    border-color: var(--au-act);
+}
+
 /* `.card()`: white, 26pt continuous corners, padding by the caller. */
 .au-card {
     background: var(--au-card);

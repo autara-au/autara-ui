@@ -12,8 +12,11 @@
  * down (an icon disc, a field) is the room's tone again.
  *
  * The hero is the app's own accent, one per screen. The customer app's is
- * flat ink with the lime figure (Don, 2026-11-15, `AppTheme.ink`): no
- * gradient and no texture. The merchant app's is the deep purple plate;
+ * flat ink with the lime figure: no gradient and no texture. Everything
+ * selected or yours (a day, a time, the current tab, an unread count, your own
+ * message) is the brand purple with a white figure (Don, 2026-11-15,
+ * `AppTheme.brand`, which replaced `AppTheme.ink`'s ink tile the same night;
+ * the web caught up in AUTM-2202). The merchant app's is the deep purple plate;
  * `[data-au-theme="merchant"]` on any ancestor switches the hero and the
  * selected tile to it, as `AU.theme` does at launch in Swift.
  *
@@ -41,7 +44,7 @@
     --au-rego-ink: #161616;
     --au-alert: #e5484d;
 
-    /* The hero and the selected tile: AppTheme.ink */
+    /* The hero and the selected tile: AppTheme.brand */
     --au-hero: #14101f;
     --au-hero-ink: #ffffff;
     --au-hero-soft: rgba(255, 255, 255, 0.75);
@@ -50,8 +53,8 @@
     --au-step-done: #d4ff4f;
     --au-step-live: #4ceaff;
     --au-step-rest: rgba(255, 255, 255, 0.2);
-    --au-tile: #14101f;
-    --au-tile-figure: #d4ff4f;
+    --au-tile: #4e1bbd;
+    --au-tile-figure: #ffffff;
     --au-tile-label: #ffffff;
 
     /* One spacing grid: every gap and padding a multiple of 4. */
@@ -79,10 +82,10 @@
     --au-muted: #b9b9be;
     --au-subtle: #b0b0b6;
     --au-act: #b9a2ff;
-    --au-hero: #242427;
-    --au-tile: #d4ff4f;
-    --au-tile-figure: #0e0a1a;
-    --au-tile-label: #0e0a1a;
+    --au-hero: #211838;
+    --au-tile: #6d3df0;
+    --au-tile-figure: #ffffff;
+    --au-tile-label: #ffffff;
 }
 
 /* The merchant app's hero: the deep purple plate (AppTheme.merchant). */
