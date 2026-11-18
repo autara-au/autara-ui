@@ -58,6 +58,7 @@ src/
 │   ├── shadows.css         # ALL evaluate to `none` (Autara house rule)
 │   ├── radii.css
 │   ├── typography.css      # --font-brand + type scale (no @font-face, AUTM-1724)
+│   ├── stone.css           # opt-in merchant look (AUTM-2137): import after the tokens
 │   └── index.css           # @import all
 ├── utilities/              # CSS utility classes
 │   ├── forms.css           # .field-input, .field-textarea, .input-light alias
@@ -157,6 +158,17 @@ docs/
   with a hairline tick (`::before`) — anchors every section heading
 
 ## Known gotchas
+
+- **Stone is the merchant apps' look, and it lives here, never in an app**
+  (AUTM-2137, Don 2026-11-18: "all the UI should be identical right don't
+  drift"). `tokens/stone.css` is opt-in (`@import
+  "@autara-au/autara-ui/tokens/stone"` after the tokens): the room `#f4f2ee`,
+  white cards, dialogs as one white card with room-tone wells, no hairlines or
+  panel edges, the neutral float shadow, fields that take `--field-fill`, icon
+  discs, the 520ms and 160ms motion pair and the spacing scale. It was moved
+  out of merchant-mobile's `main.css`; merchant-web's onboarding kept an
+  imitation in `aw-wizard.css`, and the two drifted. A Stone value changes
+  here, in `au.css` and in autara-ios `Tokens.swift` together.
 
 - **Never commit a font file to this repo, and never add an @font-face that
   points at one** (AUTM-1724, Don 2026-10-04). This repository is PUBLIC and
