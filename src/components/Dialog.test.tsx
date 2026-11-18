@@ -273,6 +273,18 @@ describe('Dialog default layout is unchanged', () => {
         )
         expect(screen.getByRole('button', { name: 'Close address' })).toBeTruthy()
     })
+
+    it('puts a consumer test id on the close control', () => {
+        render(
+            <Dialog defaultOpen>
+                <DialogContent closeLabel="Close" closeTestId="address-close">
+                    <DialogTitle>Title</DialogTitle>
+                    <DialogDescription>Text</DialogDescription>
+                </DialogContent>
+            </Dialog>,
+        )
+        expect(screen.getByTestId('address-close')).toBe(screen.getByRole('button', { name: 'Close' }))
+    })
 })
 
 // Parts used outside a DialogContent fall back to the centred grammar rather
