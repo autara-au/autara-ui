@@ -28,7 +28,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(function Card(
     )
 })
 
-/** Rows on one card, split by the well's tone; `inset` starts the line past a disc. */
+/** Rows on one card, split by space, never a line (AUTM-2202). `inset` is kept so callers compile; it draws nothing. */
 export function Rows({ inset, className, ...rest }: React.HTMLAttributes<HTMLDivElement> & { inset?: boolean }) {
     return <div className={cn('au-rows', className)} data-inset={inset ? '' : undefined} {...rest} />
 }

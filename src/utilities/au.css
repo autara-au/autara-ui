@@ -475,12 +475,13 @@ button.au-disc-row {
 .au-disc-row__trailing > svg {
     color: var(--au-subtle);
 }
-/* Rows on one card, split by the well's tone, inset past the disc. */
-.au-rows > * + * {
-    border-top: 1px solid var(--au-well);
-}
-.au-rows[data-inset] > * + * {
-    margin-left: 3.75rem;
+/* Rows on one card, split by space, never a line (AUTM-2202, Don 18 Nov:
+ * no outlines, one style; Stone has no hairlines). `inset` is kept for
+ * source compatibility and draws nothing now. */
+.au-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 /* ── SectionTitle and PageTitle ────────────────────────────────────────── */
