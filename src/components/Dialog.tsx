@@ -187,6 +187,9 @@ export interface DialogContentProps
     size?: DialogSize
     /** Accessible name of the close control. */
     closeLabel?: string
+    /** `data-testid` of the close control, for a consumer whose shipped test
+     *  id named its own close button before it moved onto this one. */
+    closeTestId?: string
     /** @deprecated currently a no-op — dark companion deferred */
     theme?: 'dark' | 'light'
 }
@@ -242,6 +245,7 @@ const DialogContent = React.forwardRef<
             layout = 'centered',
             size = 'md',
             closeLabel = 'Close dialog',
+            closeTestId,
             theme: _theme,
             onOpenAutoFocus,
             onCloseAutoFocus,
@@ -297,6 +301,7 @@ const DialogContent = React.forwardRef<
                     <DialogPrimitive.Close asChild>
                         <CloseButton
                             label={closeLabel}
+                            data-testid={closeTestId}
                             className="absolute right-3 top-3 z-10"
                         />
                     </DialogPrimitive.Close>

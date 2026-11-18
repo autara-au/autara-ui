@@ -1,0 +1,255 @@
+/* ─── Stone: the merchant apps' look, in one place (AUTM-2137) ────────────
+ *
+ * Opt in after the tokens:
+ *
+ *     @import "@autara-au/autara-ui/tokens";
+ *     @import "@autara-au/autara-ui/tokens/stone";
+ *
+ * Until 18 Nov 2026 these rules lived in autara-merchant-mobile's main.css
+ * (AUTM-2130, AUTM-2140), and the merchant-web onboarding wizard kept its own
+ * imitation in aw-wizard.css, so the two drifted (Don, 2026-11-18: "all the UI
+ * should be identical right don't drift"). The values are the portal's, moved
+ * as they were; change them here, never in an app.
+ *
+ * The rule they carry (Don, 2026-11-11): the grey is the room, never the
+ * tiles. The page is the room (#f4f2ee), cards are white, and on a card the
+ * next step down (an icon disc, a field) is the room's tone again. A dialog or
+ * sheet floats over the room as one white card. No hairlines anywhere, and
+ * what floats lifts on a neutral shadow, never a purple one. The native apps
+ * carry the same values as `--au-*` (au.css).
+ *
+ * Only the shared layer is here: surfaces, dialogs, edge light, floating
+ * panels, fields, icon discs, the motion curve and the spacing scale. An
+ * app's own screens stay in the app.
+ */
+
+/* ─── Surfaces ────────────────────────────────────────────────────────── */
+
+:root {
+    --shell-canvas: #f4f2ee;
+}
+:root:not([data-theme="dark"]) {
+    --paper: #f4f2ee;
+    --band: #ffffff;
+    --band-press: #e9e6df;
+    --text-muted: #4d4a45;
+    --text-subtle: #66625b;
+}
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --shell-canvas: #060606;
+}
+
+/* On a card (or a floating panel, which is a card) the next step down is
+ * the room's tone. */
+:root:not([data-theme="dark"]) :is([class~="bg-[var(--band)]"], [class~="bg-band"], .glass-surface) {
+    --raised: var(--paper);
+}
+
+/* ─── Dialogs and sheets: one card over the room ─────────────────────────
+ * Inside it, the steps reverse: the page is white and the wells are the
+ * room's tone. The same rule in dark (AUTM-2150). */
+:root:not([data-theme="dark"]) [role="dialog"] {
+    --paper: #ffffff;
+    --band: #f4f2ee;
+    --raised: #ffffff;
+    --field-fill: var(--band);
+    --field-fill-hover: var(--band-press);
+    --icon-disc: var(--band);
+}
+:root[data-theme="dark"] {
+    --scrim: rgba(0, 0, 0, 0.72);
+}
+:root[data-theme="dark"] [role="dialog"] {
+    --paper: #191919;
+    --band: #232323;
+    --band-press: #2e2e2e;
+    --raised: #232323;
+    --field-fill: #232323;
+    --field-fill-hover: #2e2e2e;
+    --icon-disc: #232323;
+}
+/* No hairlines in dialogs (Don, 2026-11-08: the footer drew a rule over its
+ * buttons). */
+[role="dialog"] {
+    --hairline: transparent;
+}
+
+/* ─── Edge light: the top highlight only (Don, 2026-11-08) ───────────── */
+
+:root {
+    --edge-band: inset 0 1px 0 rgb(255 255 255 / 0.85);
+    --edge-hero: inset 0 1px 0 rgb(255 255 255 / 0.16);
+    --edge-lime: inset 0 1px 0 rgb(255 255 255 / 0.6);
+}
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --edge-band: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    --edge-hero: inset 0 1px 0 rgb(255 255 255 / 0.14);
+    --edge-lime: inset 0 1px 0 rgb(255 255 255 / 0.5);
+}
+@layer base {
+    [class~="bg-[var(--band)]"] {
+        box-shadow: var(--edge-band);
+    }
+    [class~="bg-[var(--hero)]"] {
+        box-shadow: var(--edge-hero);
+    }
+    [class~="bg-[var(--lime)]"] {
+        box-shadow: var(--edge-lime);
+    }
+}
+
+/* ─── Cards and floating panels ──────────────────────────────────────────
+ * The glass tokens resolve to the band card: `.glass-surface` paints band,
+ * with no edge, highlight or blur. Floating panels (dialogs, sheets,
+ * popovers, menus, tooltips) have no outline either (Don, 2026-11-08: no
+ * hairlines, floating panels included) and lift on two soft neutral layers
+ * (Don, 2026-11-12: "don't add purple drop shadows under boxes. make it more
+ * premium looking"). Forced-colors mode still draws CanvasText (glass.css).
+ * `:root[data-theme="dark"]` is listed because glass.css declares its dark
+ * values at that specificity. */
+:root,
+:root[data-theme="dark"] {
+    --glass-fill: var(--band);
+    --glass-fill-strong: var(--band);
+    --glass-hi: transparent;
+    --glass-edge: transparent;
+    --glass-edge-hi: transparent;
+    --float-edge: transparent;
+    --glass-blur: 0px;
+    --glass-saturate: 1;
+    --nav-glass-bg: var(--paper);
+}
+:root,
+:root[data-theme="light"] {
+    --float-shadow: 0 1px 2px rgb(28 25 20 / 0.05), 0 10px 28px -10px rgb(28 25 20 / 0.14);
+}
+:root[data-theme="dark"] {
+    --float-shadow: 0 1px 2px rgb(0 0 0 / 0.35), 0 12px 32px -10px rgb(0 0 0 / 0.55);
+}
+
+/* ─── Fields: the glass pill on Stone (AUTM-2140) ────────────────────────
+ * Every field is the library's glass pill (`.glass-edge`; render one
+ * `<GlassEdgeTracker />` at the app's root so its light moves). In light the
+ * library's glass is white at 78%: right on the room, invisible on a white
+ * card or in a dialog. So the glass takes the well its surface names in
+ * `--field-fill` (white on the room, the room's tone on a card or in a
+ * dialog), at the same 78%. Dark needs nothing: white at 5.5% steps up from
+ * any ground. Checkbox, radio and switch keep their edge, because there the
+ * edge is the control. */
+:root {
+    --field-fill: var(--band);
+    --field-fill-hover: var(--band-press);
+}
+[class~="bg-[var(--band)]"],
+.glass-surface {
+    --field-fill: var(--band-press);
+    --field-fill-hover: color-mix(in srgb, var(--band-press) 80%, var(--text-strong) 8%);
+}
+:root:not([data-theme="dark"]) {
+    --field-fill-hover: color-mix(in srgb, var(--band) 60%, var(--band-press));
+}
+:root:not([data-theme="dark"]) :is([class~="bg-[var(--band)]"], [class~="bg-band"], .glass-surface) {
+    --field-fill: var(--paper);
+    --field-fill-hover: var(--band-press);
+}
+:root:not([data-theme="dark"]) :is(.glass-edge, .field-input, .field-textarea):not([data-theme="dark"], [data-theme="dark"] *) {
+    --field-glass: color-mix(in srgb, var(--field-fill) 78%, transparent);
+}
+:is(button, div, input, textarea, select)[class~="border-[var(--field-edge)]"]:not([role="checkbox"]):not(
+        [role="radio"]
+    ):not([role="switch"]) {
+    border-color: transparent;
+    background-color: var(--field-fill);
+    box-shadow: none;
+}
+:is(button, div, input, textarea, select)[class~="border-[var(--field-edge)]"]:not([role="checkbox"]):not(
+        [role="radio"]
+    ):not([role="switch"]):hover:not(:disabled):not(:focus-within) {
+    border-color: transparent;
+    background-color: var(--field-fill-hover);
+}
+:is(button, div, input, textarea, select)[class~="border-[var(--field-edge)]"]:not([role="checkbox"]):not(
+        [role="radio"]
+    ):not([role="switch"]):is(:focus-visible, :focus-within) {
+    border-color: transparent;
+    background-color: var(--field-fill);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 75%, transparent);
+}
+
+/* ─── Icon discs ─────────────────────────────────────────────────────────
+ * Neutral, never lavender. On the room a disc is a white card; on a card it
+ * is the room's tone. */
+:root {
+    --icon-disc: var(--band-press);
+}
+:root:not([data-theme="dark"]) {
+    --icon-disc: var(--band);
+}
+:root:not([data-theme="dark"]) :is([class~="bg-[var(--band)]"], [class~="bg-band"], .glass-surface) {
+    --icon-disc: var(--paper);
+}
+:root[data-theme="dark"],
+[data-theme="dark"] {
+    --icon-disc: var(--band-press);
+}
+
+/* ─── Motion: one curve, two durations (AUTM-2140) ───────────────────────
+ * 520ms for a big move arriving; 160ms for every leave and for the hand.
+ * The native apps use the same pair (`--au-move`, `--au-touch`). */
+:root {
+    --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --motion-ease-in: var(--motion-ease-out);
+    --motion-ease-pop: var(--motion-ease-out);
+
+    --motion-modal-in: 520ms;
+    --motion-sheet-in: 520ms;
+    --motion-scrim-in: 520ms;
+    --motion-nav-in: 520ms;
+    --motion-page-in: 520ms;
+    --motion-enter: 520ms;
+    --motion-reveal: 520ms;
+    --motion-row: 520ms;
+    --motion-settle: 520ms;
+    --motion-tab: 520ms;
+    --motion-count: 520ms;
+
+    --motion-modal-out: 160ms;
+    --motion-sheet-out: 160ms;
+    --motion-scrim-out: 160ms;
+    --motion-nav-out: 160ms;
+    --motion-page-out: 160ms;
+
+    --motion-hover: 160ms;
+    --motion-press: 160ms;
+    --motion-panel-in: 160ms;
+    --motion-panel-out: 160ms;
+    --motion-menu-in: 160ms;
+    --motion-menu-out: 160ms;
+    --motion-pop: 160ms;
+    --motion-badge-in: 160ms;
+    --motion-crossfade: 160ms;
+}
+
+/* ─── Spacing: 4, 8, 12, 16, 24, 32 and 48px (AUTM-2140) ─────────────── */
+:root {
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 0.75rem;
+    --space-4: 1rem;
+    --space-6: 1.5rem;
+    --space-8: 2rem;
+    --space-12: 3rem;
+    --gap-pair: var(--space-1);
+    --gap-pair-lg: var(--space-2);
+    --gap-control: var(--space-2);
+    --gap-inline: var(--space-3);
+    --gap-row: var(--space-3);
+    --gap-well: var(--space-2);
+    --gap-head: var(--space-4);
+    --gap-group: var(--space-6);
+    --gap-section: var(--space-8);
+    --pad-card: var(--space-6);
+    --pad-card-narrow: var(--space-4);
+}
