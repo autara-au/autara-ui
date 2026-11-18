@@ -81,6 +81,20 @@
     --band: var(--au-well);
     --raised: var(--au-card);
 }
+/* A component that pins its own light theme (SocialButton sets
+ * `data-theme="light"`) re-declares the library's glass from forms.css on
+ * itself; inside the room it takes the room's field again. */
+:root:not([data-theme='dark']):has(.au-room) [data-theme='light'] {
+    --field-glass-focus: var(--field-fill);
+    --field-hair: transparent;
+    --field-lip: transparent;
+    --field-glint: transparent;
+    --field-shine: transparent;
+    --field-blur: 0px;
+    --field-saturate: 100%;
+    --field-edge-width: 2px;
+    --field-focus-edge: var(--au-act);
+}
 /* The glass is solid here: the fill at full strength, whatever opacity the
  * Stone layer or the library gave it. */
 :root:not([data-theme='dark']):has(.au-room) :is(.glass-edge, .field-input, .field-textarea):not([data-theme='dark'], [data-theme='dark'] *) {
@@ -843,6 +857,140 @@ button.au-disc-row {
     font-weight: 900;
     font-variant-numeric: tabular-nums;
 }
+/* AUTM-2202: the fee under the price, and the name on ink for a service
+ * with no photo (never an empty box, never a glyph to fill it). */
+.au-service-card__note {
+    font-size: 0.75rem;
+    color: var(--au-subtle);
+    overflow-wrap: anywhere;
+}
+.au-service-card__ink {
+    display: flex;
+    align-items: flex-end;
+    padding: 0.75rem;
+    background: var(--au-hero);
+    color: var(--au-hero-ink);
+    overflow: hidden;
+}
+.au-service-card__ink > span {
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* ── Segmented (AUTM-2202): a capsule track, the choice a sliding tile ─── */
+.au-segmented {
+    position: relative;
+    display: inline-flex;
+    padding: 0.25rem;
+    border-radius: 1.625rem;
+    background: var(--au-card);
+    isolation: isolate;
+    max-width: 100%;
+}
+.au-segmented[data-full] {
+    display: flex;
+    width: 100%;
+}
+.au-card .au-segmented,
+[role='dialog'] .au-segmented {
+    background: var(--au-well);
+}
+.au-segmented__tile {
+    position: absolute;
+    z-index: -1;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0.25rem;
+    width: calc((100% - 0.5rem) / var(--au-seg-count, 2));
+    border-radius: 1.375rem;
+    background: var(--au-tile);
+    transform: translateX(calc(var(--au-seg-index, 0) * 100%));
+}
+.au-segmented__option {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: 0.375rem 1.25rem;
+    border: 0;
+    border-radius: 1.375rem;
+    background: transparent;
+    color: var(--au-ink);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+}
+.au-segmented__option[aria-checked='true'] {
+    color: var(--au-tile-label);
+}
+.au-segmented__option:disabled {
+    color: var(--au-subtle);
+    cursor: not-allowed;
+}
+.au-segmented__option:focus-visible {
+    outline: 2px solid var(--au-act);
+    outline-offset: 2px;
+}
+
+/* ── DayStrip (AUTM-2202): weekday over date, the pick is the tile ─────── */
+.au-day {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    flex: none;
+    min-width: 3.5rem;
+    min-height: 5rem;
+    padding: 0.5rem 0.25rem;
+    border: 0;
+    border-radius: 1.75rem;
+    background: var(--au-card);
+    color: var(--au-ink);
+    font: inherit;
+    cursor: pointer;
+}
+.au-card .au-day,
+[role='dialog'] .au-day {
+    background: var(--au-well);
+}
+.au-day__weekday {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--au-muted);
+}
+.au-day__date {
+    font-size: 1.375rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+}
+.au-day[aria-checked='true'] {
+    background: var(--au-tile);
+    color: var(--au-tile-figure);
+}
+.au-day[aria-checked='true'] .au-day__weekday {
+    color: color-mix(in srgb, var(--au-tile-label) 80%, transparent);
+}
+.au-day[data-closed]:not([aria-checked='true']) {
+    background: transparent;
+    color: var(--au-subtle);
+}
+.au-day[data-closed]:not([aria-checked='true']) .au-day__weekday {
+    color: var(--au-subtle);
+}
+.au-day:focus-visible {
+    outline: 2px solid var(--au-act);
+    outline-offset: 2px;
+}
 
 .au-pro-card {
     display: flex;
@@ -926,6 +1074,13 @@ button.au-disc-row {
 /* ── Motion ────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: no-preference) {
+    .au-segmented__tile {
+        transition: transform var(--au-slide) var(--au-ease);
+    }
+    .au-day,
+    .au-segmented__option {
+        transition: background-color var(--au-touch) var(--au-ease), color var(--au-touch) var(--au-ease);
+    }
     /* A press: 97% and back, on the touch duration (AUButtonStyle). */
     .au-btn,
     .au-chip,
