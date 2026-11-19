@@ -17,20 +17,33 @@ export interface ServiceCardProps extends React.HTMLAttributes<HTMLDivElement> {
     length?: React.ReactNode
     /** "$80.00", formatted by the caller. */
     price?: React.ReactNode
+    /** The line under the price: the fee ("incl. $3.92 booking fee"), from the caller's money copy. */
+    note?: React.ReactNode
     asChild?: boolean
 }
 
 export const ServiceCard = React.forwardRef<HTMLDivElement, ServiceCardProps>(function ServiceCard(
-    { name, photo, length, price, asChild, className, children, ...rest },
+    { name, photo, length, price, note, asChild, className, children, ...rest },
     ref,
 ) {
+    /* AUTM-2202: a service with no photo is its name on ink, never an empty
+       box or a glyph filling the space (a glyph is for a control or a
+       destination). The ink copy is decoration; the name below is the read. */
+    const picture = photo ? (
+        <RemotePhoto className="au-service-card__photo" src={photo} name={null} />
+    ) : (
+        <span className="au-service-card__photo au-service-card__ink" aria-hidden="true">
+            <span>{name}</span>
+        </span>
+    )
     const inner = (
         <>
-            <RemotePhoto className="au-service-card__photo" src={photo} name={photo ? null : ''} />
+            {picture}
             <span className="au-service-card__text">
                 <span className="au-service-card__name">{name}</span>
                 {length ? <span className="au-service-card__length">{length}</span> : null}
                 {price ? <span className="au-service-card__price">{price}</span> : null}
+                {note ? <span className="au-service-card__note">{note}</span> : null}
             </span>
         </>
     )
