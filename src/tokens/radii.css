@@ -10,42 +10,25 @@
  * field sitting inside a 16px card needs a slightly tighter corner or the
  * two curves collide.
  *
- * Revised 2026-08-16 — the previous ladder (6/8/10/12/16/24) read square
- * next to the pill Button, and `full` was 24px, which is not a pill at all;
- * anything reaching for it expecting a capsule got a rounded rectangle.
+ * ─── THE SHAPE LANGUAGE (current; Don, 2026-11-20) ──────────────────────
  *
- * ─── THE SHAPE LANGUAGE (Don, 2026-09-01) ───────────────────────────────
+ * The components draw the shapes; these tokens are the ladder behind them.
  *
- * Two families. That is the whole rule, and two is what makes it
- * enforceable — three families is what nobody could hold in their head.
+ *   - BUTTONS are pills. `Button.tsx` sets the radius to half the size's
+ *     height in rem (not 9999px), so a label that wraps at 200% text grows
+ *     into a rounded rectangle instead of a capsule that eats it. They do
+ *     NOT use `md` (14px).
+ *   - BADGES are solid pills: `Badge` defaults to `shape="pill"`
+ *     (`rounded-full`). `shape="parallelogram"` (skewX(-12deg) + `md`) is
+ *     the optional skewed form, for status only.
+ *   - FIELDS are glass pills (AUTM-2140), drawn by `.field-shell`.
+ *   - `lg` 16px: cards and panels. `sm` 8px: chips and controls inside
+ *     controls. `xl` 24px: dialogs, sheets, hero images.
+ *   - `full`: avatars, indicator dots and status markers.
  *
- *   1. SHARED RADIUS — "a surface or a control".
- *        `md`  14px  input, BUTTON, and any 44px control. The pairing case:
- *                    a button and its field are ONE control group (type,
- *                    then act), so they take the same corner. A pill beside
- *                    a rounded rectangle reads as two unrelated objects that
- *                    happen to be adjacent.
- *        `lg`  16px  cards, panels — one step larger. Also the 48px control
- *                    rung, so `.field-input--lg` and `Button size="lg"`
- *                    match each other rather than the 44px pair.
- *        `sm`   8px  chips and controls-inside-controls — one step tighter.
- *                    Not decoration: at ~26px tall a 14px radius clamps to
- *                    height/2 and renders as a pill regardless, so the
- *                    shared token cannot express the rule at chip height.
- *
- *   2. ROUNDED PARALLELOGRAM — status, and ONLY status. `skewX(-12deg)` +
- *      a radius, label counter-skewed. That is `Badge`, and it goes nowhere
- *      else (rule 1 of the Autara Glass direction).
- *
- * `full` is now reserved for AVATARS, INDICATOR DOTS, and the small status
- * markers Don kept deliberately (`Badge shape="pill"` per AUTM-211,
- * `.section-pill`). Round therefore means "a person, a state light, or a
- * status marker" and NEVER "an action". That meaning only exists because
- * buttons gave it up — do not spend it on anything else.
- *
- * This reverses the 2026-08-16 note above for BUTTONS specifically. The
- * complaint then was that buttons "read square"; the answer was never a
- * pill, it was the input's own radius.
+ * The 2026-08-16 and 2026-09-01 notes that used to be here (14px shared
+ * control radius, buttons not pills, Badge as the only parallelogram) are
+ * superseded; they are kept in docs/claude-reference.md.
  */
 
 @theme inline {

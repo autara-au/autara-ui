@@ -1,0 +1,586 @@
+Reference for CLAUDE.md, not loaded automatically. Read the section you need.
+
+## Intro and stack
+
+# autara-ui — Autara Design System
+
+> The canonical UI package. Every reusable component, design token, and
+> Tailwind preset for every Autara surface lives here. Published as
+> `@autara-au/autara-ui` on GitHub Packages.
+
+## Stack
+
+| Layer | Choice |
+|---|---|
+| Build | `tsc` (no bundler — autara-ui ships .js + .d.ts + .css as-is; NO fonts, AUTM-1724) |
+| Components | React 19 + Radix primitives + CVA + tailwind-merge |
+| Tokens | CSS custom properties via Tailwind v4 `@theme inline` |
+| Storybook | v10 + `@storybook/react-vite` + Tailwind v4 via `@tailwindcss/vite` |
+| Release | semantic-release on PR merge → GitHub Packages |
+| Distribution | `@autara-au/autara-ui` (consumer pins via `package.json`) |
+
+
+## Local dev (full)
+
+## Local dev
+
+```sh
+pnpm install
+pnpm storybook       # http://localhost:6006
+pnpm build           # tsc → dist/
+pnpm build-storybook # storybook-static/ — deployable to Vercel
+pnpm typecheck       # tsc --noEmit
+pnpm test            # vitest in jsdom
+pnpm test:browser    # vitest in real Chromium (*.browser.test.tsx); first run:
+                     # pnpm exec playwright install chromium
+```
+
+## File layout
+
+## File layout
+
+```
+src/
+├── components/             # React components — one per file
+│   ├── <Component>.tsx
+│   ├── <Component>.stories.tsx   ← REQUIRED for new components
+│   └── index.ts            # bulk re-export
+├── tokens/                 # CSS custom properties
+│   ├── colors.css          # semantic surface stack + brand colors
+│   ├── shadows.css         # ALL evaluate to `none` (Autara house rule)
+│   ├── radii.css
+│   ├── typography.css      # --font-brand + type scale (no @font-face, AUTM-1724)
+│   ├── stone.css           # opt-in merchant look (AUTM-2137): import after the tokens
+│   └── index.css           # @import all
+├── utilities/              # CSS utility classes
+│   ├── forms.css           # .field-input, .field-textarea, .input-light alias
+│   ├── glass.css           # retired by AUTM-1594; kept for old consumers
+│   ├── editorial.css       # .hairline-grid, .editorial-eyebrow, .counter-huge
+│   ├── noise.css           # .noise-overlay
+│   ├── buttons.css, gradients.css, sections.css, animations.css
+│   └── index.css
+├── preset/index.mjs        # Tailwind v4 preset (consumers import this)
+├── lib/cn.ts               # clsx + tailwind-merge helper
+├── icons/                  # AUTM-2114: Autara's own icon set (also the `/icons` subpath)
+└── index.ts                # public package surface
+
+.storybook/
+├── main.ts                 # framework + viteFinal
+├── preview.ts              # global decorator + viewports
+└── storybook.css           # loads tokens + utilities + forces the paper ground
+
+docs/
+├── Introduction.mdx
+└── Tokens.mdx              # visual token explorer
+```
+
+## Adding a new component
+
+1. **Audit first.** Grep `src/components/` for the closest existing
+   primitive. Extend rather than duplicate when possible.
+2. **Read the [`globals.css`](../autara-customer-web/src/app/globals.css)
+   philosophy comment.** *"NO DROP SHADOWS. The brand reads as solid,
+   editorial, hairline-edged — never floating-card."* Honor it. Lift
+   comes from border-color shifts on hover, never `box-shadow`, never
+   `translateY` on static surfaces (interactive buttons may translate).
+3. **Use semantic tokens, never raw hex.** `var(--text-strong)` not
+   `#0E0A1A`. `var(--surface)` not `#FFFFFF`. The exceptions are when
+   you genuinely need a one-off color (rare — almost always wrong).
+4. **Polymorphism via Radix Slot (`asChild`)**, not by importing the
+   consumer's framework. autara-ui must NEVER `import "next/link"` or
+   `from "react-router-dom"`. Slot composes with anything.
+5. **Write the story alongside the component.**
+   - Default
+   - Each meaningful variant
+   - At least one edge case (long text, missing optional fields, error
+     state)
+   - An "in context" story showing real consumer usage when the
+     component composes others (see `MerchantCard.stories.tsx`'s
+     `TopRatedRail` story for the canonical example)
+6. **Export from `src/components/index.ts` AND `src/index.ts`.**
+7. **Run `pnpm typecheck`, `pnpm build`, and `pnpm storybook`** — all
+   three must be clean before opening a PR.
+8. **Commit message follows semantic-release conventions:**
+   - `feat: add MerchantCard` → minor bump (v1.1 → v1.2)
+   - `fix: ...` → patch bump
+   - `feat!: ...` or `BREAKING CHANGE:` in body → major bump
+
+## Aesthetic invariants
+
+
+- **Paper ground** `--background` / `--surface` `#ffffff`, with `band`
+  (`#f4f2ec`) cards on it and one `brand-deep` hero per screen (AUTM-1594,
+  canvas v44). *Corrected 2026-10-23 (AUTM-2025): this said warm cream
+  `#FBFAF6`, retired by AUTM-1594.*
+- **Hairline borders** at `rgba(17,24,39,0.08)` for dividers; cards are set
+  apart by fill, not by a border
+- **NO drop shadows** — `--shadow-*` tokens all evaluate to `none`; the one
+  exception is `--float-shadow` on floating sheets and popovers
+- **Lime is the one primary action** — `Button variant="primary"`, lime with
+  an ink label, on paper, band, sheets and dialogs alike. Everything else is
+  `quiet`. **No black buttons anywhere** (Don, 2026-10-12, AUTM-1838).
+  Brand purple (`--accent`) is for links, focus, selected states and status;
+  never hardcode `#4E1BBD` for text or borders, since it vanishes on dark.
+  *Corrected 2026-10-23 (AUTM-2025): this said primary CTAs are solid black
+  (`BrandButton variant="dark"`), which AUTM-1838 retired.*
+- **No glass, no gradients** on product surfaces (AUTM-1594), with one
+  exception: **every field is glass** (AUTM-2140, Don 2026-11-14, see the
+  gotcha below). `glass.css` and `gradients.css` still ship for old
+  consumers; do not use them in new work.
+- **Motion**: one ease-out (`--motion-ease-out`), transform and opacity only,
+  durations from the `--motion-*` tokens (`src/lib/motion-tokens.ts` in JS),
+  and reduced motion honoured. A JS animation must honour it itself
+  (`useReducedMotion`); the stylesheet clamp cannot reach it.
+- **Satoshi typography** — NOT bundled since AUTM-1724: the tokens name the
+  family and every consumer self-hosts the faces (see Known gotchas). Use
+  weights 400 / 500 / 700 for body and UI; 700 is Satoshi Bold. 900 is
+  Satoshi Black, for display figures, page titles (Don, 2026-11-15, AUTM-2184:
+  as the native apps draw them) and dialog and sheet titles (Don,
+  2026-10-02). Never 300, 600 or 800. *Corrected 2026-10-01 (AUTM-1568): this said "Black mapped to 700",
+  and the package did exactly that, so every bold label in every consumer
+  rendered Black and a 900 heading had no face of its own. The weight to
+  file mapping now lives in each consumer's own @font-face.*
+- **Focus signature (AUTM-2140): the field's 1px edge in the accent at 75%
+  and a faint accent tint, NO halo, no outline.** A button reached by the
+  keyboard keeps a 2px accent outline 3px out. Corrected 2026-11-14: this
+  said "warm-cream tint + solid brand-purple border" (v2.4), and before
+  2026-09-01 "a 4px brand-purple halo"; both propagated into consumer docs
+  and agent briefs before the code was checked. Read the rule in
+  `src/utilities/forms.css`, not the prose.
+
+## Known gotchas
+
+
+- **Stone is the merchant apps' look, and it lives here, never in an app**
+  (AUTM-2137, Don 2026-11-18: "all the UI should be identical right don't
+  drift"). `tokens/stone.css` is opt-in (`@import
+  "@autara-au/autara-ui/tokens/stone"` after the tokens): the room `#f4f2ee`,
+  white cards, dialogs as one white card with room-tone wells, no hairlines or
+  panel edges, the neutral float shadow, fields that take `--field-fill`, icon
+  discs, the 520ms and 160ms motion pair and the spacing scale. It was moved
+  out of merchant-mobile's `main.css`; merchant-web's onboarding kept an
+  imitation in `aw-wizard.css`, and the two drifted. A Stone value changes
+  here, in `au.css` and in autara-ios `Tokens.swift` together.
+
+- **Never commit a font file to this repo, and never add an @font-face that
+  points at one** (AUTM-1724, Don 2026-10-04). This repository is PUBLIC and
+  Satoshi's licence (ITF FFL v2.0, section 02) forbids making the files
+  available to anyone else; section 01 lets each app self-host its own copy.
+  So the package names the family `"Satoshi"` in `--font-brand` and nothing
+  more, and every consumer declares its own faces for 400, 500, 700 and 900
+  from Fontshare's official files, unaltered, in a PRIVATE repo. A consumer
+  that declares only some weights draws every weight with the nearest face it
+  has (only Black declared means body text in Black). Old commits still
+  contain the .otf files; purging history needs a force-push and is Don's
+  call. `src/tokens/typography.test.ts` fails if a font file or a font URL
+  comes back. Storybook renders the system stack unless you drop your own
+  WOFF2s into the gitignored `.storybook/local-fonts/`, which only
+  `storybook dev` serves; `storybook build` never includes them.
+
+- **`BloomField` is GPU work and belongs on a hero and a footer only**
+  (AUTM-1475, Don 2026-09-28). It is `GradientGround` with a WebGL2 canvas
+  over it; the shader READS the bloom tokens from the element's computed
+  style, so never pass it a colour. Half resolution, 30 fps cap, stops when
+  off-screen, one frame under reduced motion, static ground without WebGL2.
+  Consumer budget is under 2 ms a frame on the iPad Pro 11", measured on the
+  device: over that, ship `GradientGround`. Count live fields on a page with
+  `document.querySelectorAll('[data-ground="live"]')`.
+- **Every field is the glass pill, and an `<input>` cannot draw it**
+  (AUTM-2140, Don 2026-11-14, shape A of the inputs concept). `.glass-edge`
+  is the material (glass and lip on `::after`, the masked 1px ring on
+  `::before` holding the cursor light, the scroll glint and the resting
+  hair). Input, Textarea, NativeSelect and PhoneInput therefore render a
+  `.field-shell` around a borderless `.field-shell-control`:
+  **`className` and `style` go on the shell** (the field you see: margins,
+  width, flex; type set there is inherited by the control), every other prop
+  (ref, id, aria, `data-testid`) on the control. A consumer rule that targeted
+  `.field-input.X` on an Input must target `.field-shell.X` now; the shell's
+  rules are unlayered (as `.field-input` was), so a utility that sets the
+  same property on the control loses, so put type on `className`. Button
+  fields (Select, PickerTrigger, DurationPicker) carry `glass-edge
+  field-trigger`, whose focus look is `:focus-visible` or open, never mouse
+  focus. A bare `.field-input` gets the same glass and edges as inset
+  shadows but no light. The light needs `<GlassEdgeTracker />` once at the
+  app's root (`lib/glass-edge.ts`: one listener set, rAF-coalesced, reads
+  then writes, touch ignored, reduced motion parks the glint); without it
+  the fields are glass with the glint parked. In light, white glass vanishes
+  on a white card: re-point `--field-glass` on the field for that surface
+  (merchant-mobile maps it to its `--field-fill`).
+- **OtpInput is ONE pill with six slots, not six fields** (AUTM-2140 R2, Don's
+  pick A1, 2026-11-14). The `role="group"` is a plain block wrapper (`.otp`)
+  and a size container; inside it one `.field-shell.glass-edge.otp-field`
+  holds two runs of `.otp-slot`s split by `.otp-sep`, each slot an absolutely
+  filled `<input class="otp-slot-control">` (still "Digit N of 6",
+  `maxlength="1"`, which QA's portal sign-in case asserts on every box). A
+  consumer rule written for the old boxes (`[role=group]` flex, or `input`
+  width, border and fill) now lands on nothing or paints over the slots: delete
+  it. The slots shrink 50px to 44px, the gaps tighten under 24rem, and under
+  20.5rem (rem, so 200% text on a phone too) the threes stack. A focus on a
+  slot past the first empty one, or a press between slots, goes to the first
+  empty slot: the value is a string and cannot hold a hole. The caret is drawn
+  (`caret-color: transparent`), so reduced motion can hold it still.
+- **`GlassSurface lit` does nothing outside a `LitGroup`.** The group is the
+  one pointer listener; it sets `--lx` / `--ly` / `--lo` on every `[data-lit]`
+  descendant. Nine tiles, one handler. Touch pointers are ignored, so a
+  phone sees the flat highlight.
+- **`Reveal` (scroll-driven) is not `ScrollReveal` (observer).** `Reveal`
+  is a server component whose class does nothing until `@supports
+  (animation-timeline: view())` and `prefers-reduced-motion: no-preference`
+  both hold, so nothing is ever held at `opacity: 0` waiting for a script.
+  Prefer it for new marketing work; `ScrollReveal` stays for consumers that
+  already use it.
+- **Nothing inside a page draws a scrollbar; the page keeps its brand bar**
+  (AUTM-1899, Don 2026-10-16: "scrollbars everywhere showing, can we hide
+  them?", reversing AUTM-1756's always-visible thumb). utilities/scrollbars.css,
+  base layer, mouse and trackpad only (`(hover: hover) and (pointer: fine)`):
+  `:where(:not(:root)) { scrollbar-width: none }` (a zero-size
+  `::-webkit-scrollbar` where `scrollbar-width` is unsupported), and the thin
+  `--accent` thumb on `:root` alone (`::-webkit-scrollbar` in Blink and WebKit,
+  the standard properties in Firefox ONLY: Chromium 121+ ignores the drawn
+  thumb on an element whose `scrollbar-width` or `scrollbar-color` is not
+  `auto`). Never give `<body>` a `::-webkit-scrollbar` rule: Chromium styles
+  the viewport's bar from `<body>` first, so it would take the page's bar with
+  it. `scrollbar-width: none` also drops any `scrollbar-gutter` lane, so a
+  consumer's `stable both-edges` reserves nothing. Forced colours: system bars
+  everywhere; a finger: the platform overlay. `useScrollbarReveal` is a
+  deprecated no-op and ScrollArea no longer marks `data-scrollbar-reveal`.
+  `scrollbars.browser.test.ts` measures the lanes in a Chromium launched
+  without `--hide-scrollbars` (the headless shell hides every bar, and the
+  suite's context is touch). A system bar's lane is 0 on macOS (overlay) and
+  about 15 on Linux, so that test compares against a control scroller. On a
+  brand-deep page put `.scroll-on-deep` on <html> AND give <html> the deep
+  background: the page's scrollbar belongs to the root, and its transparent
+  track shows the canvas behind it.
+- **A row of chips is a `ChipRow`, and it never draws a scrollbar** (AUTM-1756
+  follow-up, Don 2026-10-15: "instead of scrollbar can add an chevron arrow in
+  the ending ... also dragable"). FilterChipRow, QuickReplies `row`, ChoiceChips
+  `row` and DatePicker's day rail are all built on it; never a horizontal
+  ScrollArea or a bare `overflow-x-auto` row for chips. The chevrons follow
+  `arrows="auto"`: shown where `(any-pointer: fine)` matches, so a finger-only
+  phone gets the fade and the native swipe, and the Vitest browser context
+  (`hasTouch: true`) matches nothing fine: browser tests that press a chevron
+  pass `arrows="always"`. `--chip-row-edge` is both the scroll padding and the
+  end of the fade; the mask is clear under the disc (`--chip-row-solid`), so
+  change the two together. A mouse or pen drag swallows the click its release
+  would fire (capture phase on the row), so a chip's own `onClick` never sees a
+  drag. The chevrons are `tabIndex={-1}` (Tab walks the chips) and keep
+  DatePicker's QA test ids `-earlier` / `-later`. A chip taken by the keyboard
+  is revealed by `chipRowRevealTarget`: clear of the fades if it fits between
+  them, else clear of the chevrons, else its start clear of the start
+  chevron; and again one frame after focus, because Chromium's own focus
+  scroll runs AFTER the focus event and uses the scroll padding alone. Chip
+  widths follow the font the machine has: CI's Linux fallback is wider than
+  macOS's, which is how #162 went green locally and red in CI. A browser test
+  never assumes a chip fits; it measures, or sets the widths from the row.
+- **`PageContainer` / `.page-container` is the page track** (AUTM-1739):
+  1440px of content (`--page-max`) between a fluid `--page-gutter` (16px to
+  96px). Sections, grids and product visuals take the full track; running
+  text takes `.page-measure` (30em, about 67 characters of Satoshi). Never
+  `ch` for a measure here: Satoshi's "0" is wide, so 68ch set ~103
+  characters a line. Change the tokens, not the class.
+- **`ScrollStory` pins at `top: 0`, never under a header offset** (AUTM-1679).
+  The room for a fixed header is padding inside the pin
+  (`--scroll-story-top`), so a header that hides and shows on scroll
+  (`useAutoHideHeader`) slides over that padding and the stage never moves.
+  Its chip rails fill on CSS scroll-driven animations, one named view timeline
+  per step sentinel, which the chips can only reach because the root sets
+  `timeline-scope` to every step's name; drop that and every rail sits empty
+  with no error. The sentinels' `view-timeline-inset: 50% 50%` is what makes
+  a rail fill over exactly its step (top crossing the middle line to bottom
+  crossing it).
+- **`Disclosure` keeps the answer in the HTML, open or closed** (AUTM-1679).
+  It is `<details>`; Radix `Accordion` unmounts a closed answer, which drops
+  it from the server render a FAQ is indexed by. Use `Disclosure` for a
+  marketing FAQ, `Accordion` inside an app.
+- **Loading has three answers, and they are not interchangeable** (AUTM-1706).
+  `AutaraLoader` (the mark, turning) for app boot, a route with nothing to show
+  yet, and a button's busy state; `Skeleton` / `AsyncSkeleton` for content
+  whose shape is known; `Spinner` for work on something already on screen
+  (since AUTM-1708 it draws the same mark, same API). No component draws its
+  own ring or relabels itself "Saving…" while busy; `busy-and-press.test.tsx`
+  greps for it.
+  `Button busy` draws the mark OVER the label: the label and icons stay in the
+  layout at opacity 0, so the width holds and the accessible name is unchanged.
+  A test that looks for the label by visible text still finds it in the DOM;
+  one that expected the leading icon to be removed while busy will not.
+- **Buttons never mute** (AUTM-1719, Don 2026-10-04: "don't mute the button
+  colours even if disabled, show the real colour, everywhere, also loading").
+  Button, IconButton and SocialButton keep the variant's real fill and text
+  when disabled or busy: no opacity, no filter. Disabled is said by
+  `aria-disabled`, the not-allowed cursor and no hover or press; busy by
+  `aria-busy` and the mark. So a form's primary button is never disabled: it
+  validates on press (the "Validate on press" story). `Button.colour.test.ts`
+  holds every variant label to 4.5:1 on its fill in both themes, which is now
+  also its disabled and busy contrast.
+- **Button presses by default** (AUTM-1708): `motion-press`, or
+  `motion-press-row` when `fullWidth`, never on `link`; `press={false}` opts
+  out, and `buttonVariants` carries the same. So do IconButton (through
+  Button), SocialButton, tappable ListSectionRows and FilterChipRow chips. Do
+  not add a local `transform: scale` press to anything built on these: it
+  multiplies with the library's `scale` (97% x 97% is about 94%).
+
+- **Page motion has tokens; never type a duration or a curve** (AUTM-1678).
+  `--motion-reveal/-stagger/-settle/-hover/-press/-page-in/-page-out/-skeleton/-crossfade`
+  in `utilities/animations.css`, typed in `lib/motion-tokens.ts`, with classes
+  `.motion-stagger`, `.motion-settle`, `.motion-press`, `.motion-press-row`,
+  `.motion-hover-lift`, `.motion-page`, `.motion-skeleton`, `.motion-crossfade`
+  and `Reveal stagger`. Two traps behind them: under Tailwind v4,
+  `transition-[transform] active:scale-[0.97]` never animates, because
+  `scale-*` compiles to the standalone `scale` property; and the global
+  reduced-motion clamp shortens duration but not delay, so a staggered rule
+  outside `prefers-reduced-motion: no-preference` leaves a reduced-motion user
+  staring at invisible items. `motion-system.test.ts` holds both.
+- **One motion vocabulary for every app** (AUTM-1792 and AUTM-1781, built in
+  parallel and merged into one before either shipped). One ease-out
+  (`--motion-ease-out`; no "soft" second curve), `--motion-ease-pop` only for
+  a menu's movement; `--motion-tab` is every 450ms slide (TabsList's pill,
+  AppTabBar's pill, `.motion-screen`); sheets and dialogs are the plain Sheet
+  and Dialog on `--motion-sheet-in`/`-modal-in`, no opt-in class; one
+  `CountUp` (`format` for client code, `text` plus `formatOptions` from a
+  server component). `.motion-pop` plays when the class is put on: add it at
+  the moment of choice (FilterChipRow), never on every option of a group, or
+  the one already chosen pops on arrival. Before adding a motion token or
+  class, search `animations.css` for the job: a second name for the same
+  move is the failure this rule exists for. `app-motion.test.ts` holds it.
+- **A stretched hit area dies the moment anything between it and its card
+  becomes a containing block** (AUTM-1786). ServiceCard is one link (or one
+  radio label) whose `::after` covers the card; a transform, `scale`,
+  `translate`, `filter` or `position` on the link, the heading or any wrapper
+  shrinks that `::after` to the element. On qa.autara.au customer-web's press
+  rule scaled every `a[href]` to 98.5% while pressed, so mid-press the hit area
+  became the name and a tap on the photo opened nothing. The card now pins its
+  link with important resets, reaches its `::after` out by what its own 98.5%
+  press takes in (only while pressed), and forwards any other click on the card
+  to the link (`forwardStrayClick`). jsdom cannot hit-test: the guard is
+  `ServiceCard.browser.test.tsx` (`pnpm test:browser`, real Chromium, run in
+  CI), which runs the card under customer-web's actual rule. Never add a
+  transform or a position to anything between a `[data-hit]` and its card.
+- **ServiceCard `layout="menu"` is the customer's menu row (AUTM-1866), and
+  its foot is a subgrid.** Text left, photo right (30% of the card in `cqi`,
+  at most 8.5rem), no placeholder without a photo, one meta line, no More,
+  `priceNote` for the fee, and Book as its own control (`bookHref` /
+  `onBook`, `data-slot="book"`, above the stretched hit area): a solid
+  `--accent-fill` pill under `--on-accent` with a trailing arrow (Don,
+  revised). Never `--accent` for that fill: it is text grade and lifts to
+  lavender in dark, under 2:1 with a white label. `onOpen` makes the card open
+  `ServiceDetailSheet`; with `onSelect` too (the picker) the name opens and the
+  radio's state light becomes its own 44px control, the radio keeping its
+  test id and its name. The foot is
+  `grid-cols-subgrid` so Book takes exactly the photo's column; a subgrid
+  with its own column gap shifts its items by half the difference from the
+  parent's gap, so the foot must carry the row's `gap-x-4` (Book sat 2px off
+  the photo until it did). The other layouts render byte-for-byte as before;
+  the catalogue tile and PackageCard depend on that.
+- **The vehicle catalog is a copy of customer-api's, by name** (AUTM-1870).
+  `src/lib/vehicle-catalog.ts` holds customer-api's
+  `src/functions/vehicles/vehicleData.ts` makes and models spelled the same
+  ("HiLux", "Mercedes-Benz"), plus a body type per model and the popular
+  tiles. The server decides `is_custom_make` / `is_custom_model` from its own
+  list (case-insensitive), so a name changed here alone turns picked cars into
+  "custom" ones. Change both lists in the same change: `vehicle-catalog.test.ts`
+  here and customer-api's `tests/unit/vehicleData.test.ts` pin the same fingerprint of
+  every make and model name (AUTM-2005), so a name added to one list fails a
+  test until the other matches. The makes are every make in the Green Vehicle
+  Guide (greenvehicleguide.gov.au) still plausibly on the road, plus the
+  supercar and luxury makes (80 since AUTM-2005); never rename one a saved car
+  carries. VehiclePicker searches this copy because one box over
+  make AND model needs every model at once, which the API serves one make at
+  a time and without bodies. Its messages keep the old form's words
+  byte for byte ("Pick the type that's closest.", ASCII apostrophe): QA's
+  AUTM-TC-700 matches them. The make marks (`src/lib/vehicle-make-logos.ts`)
+  are GENERATED from Simple Icons by `scripts/gen-vehicle-make-logos.mjs`
+  (42 of the 80 makes since AUTM-2147; the rest draw a monogram in
+  `VehicleMakeMark`). `simple-icons` is an exact-pinned devDependency only,
+  never a runtime one (3,400 icons for 42): bump it, run the script, commit the
+  generated file. Logos come from Simple Icons only and are never hotlinked.
+  Its data is CC0; the marks are their makers' trademarks, shown only to name
+  the customer's car. `hasVehicleMakeLogo` / `vehicleMakeLogoPath` take a make
+  as a booking stores it (any case, catalog aliases such as "VW"); a caller
+  that must not show a monogram (merchant-mobile's job ticket keeps its car
+  icon) asks `hasVehicleMakeLogo` first. Simple Icons' "proton" is Proton AG
+  and its "mahindra" is a group wordmark: both stay unmapped.
+- **Autara icons (AUTM-2114) are function declarations, never `icon(...)`
+  factory calls, and never pick a colour.** The set Don approved in
+  merchant-mobile was built with `export const X = icon(name, <>...</>)`;
+  that top-level call breaks the AUTM-1688 contract (`side-effects.test.ts`)
+  and a bundler cannot drop it, so each glyph here is `export function XIcon`
+  over the internal `AutaraIcon` svg, same output. Since 2026-11-09 the
+  set is drawn in Solar's grammar (Don rejected the duotone set): Linear at
+  rest, 1.5 strokes, and `active` draws the glyph's Bold twin, one evenodd
+  path filled `currentColor` with no stroke (`data-weight="bold"`). Every
+  object icon has a twin; of the utility glyphs only the closed ones do
+  (the ringed set, error, warning, blocked, play, pause, lock, more), so
+  `active` on a chevron keeps the line. The glyph paths come from
+  merchant-mobile's `src/components/icons/autara/` (made by the generator in
+  the workspace, `.design-proofs/icons-solar-style-2026-11-09/`), so a
+  redraw is ported by copying those files. The duotone body and its
+  `--icon-body` knob are gone. A fixed lavender body and a lime active fill
+  were turned down on 2026-11-08 ("not compatible when dark and light"), so
+  a glyph never names `--accent`, `--lime` or a hex, and
+  `AutaraIcons.test.tsx` fails if one does. The caller colours the current
+  item. A Solar name merchant-mobile starts using goes into
+  `solar-map.ts` (and the test's list) in the same change. The ten service
+  category icons (`Category*Icon`, AUTM-2140 R8) are generated into
+  `category-glyphs.tsx` from `.design-proofs/review-2026-11-14/icons.py` by
+  `gen_category_tsx.py` beside it, with the same pathops kit: their Bold twin
+  is the bold body filled WITH its stroke (it covers what the line covers,
+  as the concept's mask drew it) minus the knock-outs. Regenerate, never
+  hand-edit a path. Never JSX at a
+  module's top level here: it compiles to an import-time `_jsx()` call.
+- **Photos (AUTM-1882): `preparePhoto` lives on the `/photo` subpath and the
+  root, never `/utilities`** (that subpath is the CSS). It decides by the
+  file's first bytes, never its name or MIME type, and strips APP1 to APP15
+  and COM from the canvas export, keeping JFIF and an ICC profile, as the
+  server does. Chromium writes an sRGB ICC APP2 into every canvas JPEG, so a
+  test that asserts "no metadata" must skip an `ICC_PROFILE` APP2. jsdom has
+  no decoder, canvas or `Blob.arrayBuffer`: `prepare-photo.test.ts` can only
+  check the order of the steps; the proof (GPS gone, orientation applied,
+  transparency on white) is `prepare-photo.browser.test.ts` on the fixtures
+  in `src/lib/__fixtures__/photos/` (regenerate with its `make-fixtures.py`).
+  On a photo, words and the upload ring sit on `--photo-scrim` and a
+  control's disc is `--photo-disc` (an ink scrim disc vanishes on the
+  viewer's ink margin); both are static in both themes and pinned by
+  `photo-contrast.test.ts`. The plan's words are `PHOTO_COPY`, ASCII
+  apostrophes. `MessageComposer canSend` replaces "the text is not empty",
+  for a photo-only message.
+- **ChatShareCard (AUTM-2199) holds no map key and sends no place anywhere.**
+  Its HOME and SHOP picture is the native app's Town (autara-ios
+  `Customer/Town.swift`) ported to an SVG clipped to the card's 252 x 132
+  window, coloured by the `--map-*` tokens; `mapImageUrl` is a slot for a
+  consumer's own image, and a third-party map for a customer's HOME is the one
+  thing it must not be. `parseChatShare` is autara-contracts'
+  `parseAttachmentLine` byte for byte (prefixes and joins are a catalogued
+  contract; change both, and the native ChatPieces.swift parsers, together).
+  What sits on the picture (pins, logo badge, plate, the 3D car) is sized in
+  `cqi` of the picture, never rem, or 200% text swamps it; the plate is drawn
+  on `--au-rego` tokens rather than `.au-rego`, which is unlayered and beats
+  any utility that tries to size it. The 3D car is an inlined WebP
+  (`lib/chat-share-car-art.ts`), regenerated from the native PNG, never edited.
+- **Never put type or colour classes on an `h1` to `h6`; put them on an
+  element inside it.** merchant-mobile (`src/main.css`) and customer-web
+  (`src/app/globals.css`) both style headings with an UNLAYERED rule (colour
+  `--text-strong`, line-height 1.1, -0.02em tracking), and unlayered CSS beats
+  every Tailwind utility on the same element. Storybook's own heading rule is
+  layered, so a story looks right while a consumer paints, for example,
+  ServiceCard's selected name ink on deep purple. Found under AUTM-1694;
+  `ServiceCard.test.tsx` pins it.
+- **Toast (AUTM-1871, AUTM-1813): the capsule has NO live role.** The provider
+  keeps one polite `role="status"` region (and one `role="alert"` for errors)
+  in a persistent "Notifications" region and renders each toast INSIDE its
+  region, so QA's `getByRole('status').filter({ hasText })` finds the region
+  holding the toast; style or measure the capsule by `[data-toast]`. Never a
+  hidden copy of the words beside the capsule: every `getByText` on a toast
+  then finds two elements (it broke the portal's specs the first time). `groupKey` collapses a burst into one toast in place (the
+  merchant portal passes the booking). Defaults: 6 s, pausing on hover, focus
+  and a hidden page; three at most; `position="auto"` (top centre under 40rem,
+  bottom right from it). `variant` is a no-op now (one raised token surface).
+- Storybook 10's default canvas is dark; `storybook.css` forces
+  warm-cream via `!important` on `html`, `body`, `#storybook-root`,
+  `.docs-story`, `.sb-show-main`, `.sbdocs-*` so stories render in the
+  canonical background. If you add a new Storybook chrome surface that
+  ignores this, extend the selector list rather than removing the
+  `!important`.
+- Tokens are two-layer since AUTM-734: raw *themed* values live on
+  `:root` / `:root[data-theme="dark"]` blocks in `colors.css`, and the
+  `@theme inline` block maps Tailwind-facing names onto them with
+  `var()` references. Add a themed token to BOTH root blocks; add a
+  Tailwind-utility name only in `@theme inline`. A bare hex directly in
+  `@theme inline` means "static in both themes" (brand hexes, grays,
+  intent fills) — that's a deliberate choice, not an omission.
+- Dark mode keys off `data-theme="dark"` on `<html>` — never
+  `prefers-color-scheme` (the app owns switching/persistence). A
+  `dark` custom variant is declared in `tokens/index.css`; prefer
+  token-driven theming over `dark:` classes. Interactive/text purple
+  must use `var(--accent)` (readable in both themes), solid fills use
+  `var(--accent-fill)`; the `--color-autara-purple` alias resolves to
+  the fill. `#4E1BBD` measures ~1:1 against dark surfaces — never
+  hardcode it for text/borders. The Storybook toolbar has a Theme
+  switcher — check every story in both modes.
+- **A `theme` prop's default may be a TypeScript PARAMETER default, and
+  `default-variant.test.ts`'s cva scan cannot see one.** That scan reads
+  `defaultVariants:` out of a `cva()` call, so `({ theme = 'dark' })` is not
+  merely missed by it — it is unreachable by that technique. Three components
+  defaulted to the static ink treatment for months behind that blind spot
+  (`Table`, `Avatar`'s fallback, `Progress`'s track); a bare `<Table>`
+  measured **1.00:1** on the cream canvas. AUTM-975 extended the test to
+  resolve parameter defaults, including the `const isDark = theme === 'dark'`
+  alias form. Related trap in the naming: on these components `theme="light"`
+  means *"the branch built from semantic tokens"*, i.e. the one that TRACKS
+  the theme in both directions — `theme="dark"` is the static opt-in for a
+  photo or marketing surface, not dark mode. The value names are published
+  API and are not being renamed.
+- The Tailwind preset (`src/preset/index.mjs`) maps `bg-autara-purple`
+  and friends. Consumers must include the preset in their Tailwind
+  config OR import the CSS tokens — pick one consistent path per app.
+- **Storybook can paint over the focus ring you are trying to check.**
+  `.storybook/storybook.css` carries a `*:focus-visible` fallback outline. It
+  used to sit UNLAYERED right after `@import "tailwindcss"`, and unlayered CSS
+  beats layered CSS regardless of specificity — Tailwind v4 puts utilities in
+  `@layer utilities`, so that one rule overrode `focus-visible:outline-none`
+  on every component in the library. A focused `Button` computed
+  `outline: rgb(78, 27, 189) solid 2px` from Storybook while its own ring sat
+  at 35% alpha underneath, and no consumer ever rendered that outline because
+  `.storybook/` ships nowhere. That is how 27 focus rings drifted below the
+  WCAG 2.4.11 floor while every story looked right (AUTM-977). It is now in
+  `@layer base` and `solid-emphasis.test.ts` fails if it leaves the layer.
+  Corollary when measuring anything focus-related: `Button`'s BASE carries
+  `transition-all duration-200`, so screenshotting straight after a `Tab`
+  samples frame 1 and reports a ~0px ring at ~0.004 alpha. Settle first.
+- Components must NOT import `motion/react` for layout-critical
+  visuals — `whileInView` + variants are flaky on Next 16 + React 19 +
+  motion v12 in customer-web. Use IntersectionObserver or direct
+  scroll-driven `useMotionValue` if motion is unavoidable. See
+  `HowItWorks.tsx` in customer-web for the working pattern.
+
+## Versioning
+
+## Versioning
+
+semantic-release fires on PR merge to `main`. The current major is
+v1; v1.1.0 introduces the customer-web aesthetic + Storybook + 8
+promoted components (MerchantCard, SectionHeading, CarouselHeader,
+BrandButton, MetaChip, RatingStars, EmptyState, plus the existing
+Card/Input/Button etc.). v1.2.0 is reserved for the remaining
+component promotions (ServiceCard horizontal-thumb variant, TrustItem,
+HowItWorks step-card pattern).
+
+## Superseded, kept for history
+
+These no longer apply (workspace rules replaced them, or Don ruled otherwise). Do not follow them.
+
+### Storybook-first, never inline (replaced by workspace "Components: inline first")
+
+Read the workspace [`CLAUDE.md`](../CLAUDE.md) end-to-end before any work
+in this repo — three gates apply, "Storybook-first" is a hard rule, and
+the Cross-Repo Contracts Catalog is the source of truth.
+
+## The hard rule that brought v1.1.0 into being
+
+**If a component is reusable, it lives here, with a Storybook story,
+before any consumer imports it.**
+
+This rule is non-negotiable. It exists because customer-web spent six
+months evolving an editorial aesthetic that took the v1.1.0 harvest
+project to recover into the shared package — six months of consumer
+drift. Don't reintroduce that drift.
+
+Full rule + workflow: workspace [`CLAUDE.md` §
+Component architecture](../CLAUDE.md#component-architecture--storybook-first-always).
+
+### Editorial eyebrow (Don, 2026-11-20: labels are sentence case, never letterspaced uppercase)
+
+- **Editorial eyebrow** — uppercase 11px, `letter-spacing: 0.22em`,
+  with a hairline tick (`::before`) — anchors every section heading
+
+### Solar grammar for icons
+
+Autara icons (AUTM-2114) were drawn in Solar's grammar from 2026-11-09 (Linear at rest, 1.5 strokes, `active` draws a Bold twin; duotone set rejected). The workspace says Solar is going; the sentence is in the Autara icons gotcha above, and `solar-map.ts` still exists for merchant-mobile names.
+
+### Autara Glass shape language, as radii.css described it before 2026-11-20 (14px buttons, parallelogram badges)
+
+Superseded: components draw pills (Button.tsx half-height radius, Badge default `shape="pill"`).
+
+```
+/* ─── Autara Border Radius Tokens ───
+*/
+```
